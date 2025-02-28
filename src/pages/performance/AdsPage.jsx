@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import Menu from "../../components/organisms/Menu";
-import Footer from "../../components/organisms/footer";
+import Footer from "../../components/organisms/Footer";
 
 export default function PerformanceAdsPage() {
     return (
