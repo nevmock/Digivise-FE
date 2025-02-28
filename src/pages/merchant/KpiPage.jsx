@@ -15,25 +15,25 @@ export default function MerchantKpiPage() {
                                     <div className="d-flex flex-column gap-3">
                                         <div className="bg-white" style={{ width: `300px`, height: `25px` }}></div>
                                         <div className="bg-white" style={{ width: `300px`, height: `25px` }}></div>
-                                        <div className="bg-white" style={{ width: `300px`, height: `25px` }}></div>`
+                                        <div className="bg-white" style={{ width: `300px`, height: `25px` }}></div>
                                     </div>
                                 </div>
                                 <div className="px-3 py-4 d-flex bg-secondary-subtle">
                                     <div className="d-flex flex-column gap-3">
                                         <div className="d-flex gap-3">
-                                            <span className="fs-4 text-black" style={{ width: "50px" }}>CPC</span>
+                                            <span className="fs-4 text-dark" style={{ width: "50px" }}>CPC</span>
                                             <div className="bg-white" style={{ width: `300px`, height: `25px` }}></div>
                                         </div>
                                         <div className="d-flex gap-3">
-                                            <span className="fs-4 text-black" style={{ width: "50px" }}>ACOS</span>
+                                            <span className="fs-4 text-dark" style={{ width: "50px" }}>ACOS</span>
                                             <div className="bg-white" style={{ width: `300px`, height: `25px` }}></div>
                                         </div>
                                         <div className="d-flex gap-3">
-                                            <span className="fs-4 text-black" style={{ width: "50px" }}>CTR</span>
+                                            <span className="fs-4 text-dark" style={{ width: "50px" }}>CTR</span>
                                             <div className="bg-white" style={{ width: `300px`, height: `25px` }}></div>
                                         </div>
                                         <div className="d-flex gap-3">
-                                            <span className="fs-4 text-black" style={{ width: "50px" }}>CR</span>
+                                            <span className="fs-4 text-dark" style={{ width: "50px" }}>CR</span>
                                             <div className="bg-white" style={{ width: `300px`, height: `25px` }}></div>
                                         </div>
                                     </div>

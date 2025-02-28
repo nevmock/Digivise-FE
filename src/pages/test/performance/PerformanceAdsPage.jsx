@@ -15,7 +15,7 @@ export default function PerformanceAds() {
                             <p className="text-black fs-2">rank</p>    
                         </div>
                     </div>
-                    <Link to="/dashboard/performance/ads/detail" style={{ height: "350px"}} className="w-100 bg-secondary-subtle d-flex justify-content-center align-items-center">
+                    <Link to="/dashboard/performance/ads/detail" style={{ height: "350px", textDecoration: "none"}} className="w-100 bg-secondary-subtle d-flex justify-content-center align-items-center">
                         <p className="text-black fs-2">Product Ads Table</p>  
                     </Link>
                 </div>
