@@ -1,6 +1,6 @@
 import Menu from "../components/organisms/Menu";
 import PageTitle from "../components/organisms/PageTitle";
-import Footer from "../components/organisms/footer";
+import Footer from "../components/organisms/Footer";
 
 
 export default function Home() {
