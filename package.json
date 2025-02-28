@@ -1,5 +1,4 @@
 {
-  "homepage": "https://nevmock.github.io/Digivise-FE/",
   "name": "digivise-shopee-monitoring",
   "private": true,
   "version": "0.0.0",
@@ -12,9 +11,12 @@
   },
   "dependencies": {
     "@popperjs/core": "^2.11.8",
+    "apexcharts": "^4.4.0",
     "bootstrap": "^5.3.3",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-helmet-async": "^2.0.5",
+    "react-router-dom": "^7.2.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.19.0",
