@@ -46,7 +46,8 @@ html[data-bs-theme=dark],
 html[data-sidebar-color=light] {
   --bs-sidebar-bg: #ffffff;
   --bs-sidebar-item-color: #6e708c;
-  --bs-sidebar-item-hover-bg: #f4f3f6;
+  /* --bs-sidebar-item-hover-bg: #f4f3f6; */
+  --bs-sidebar-item-hover-bg: #8042D4;
   --bs-sidebar-item-hover-color: #3d4756;
   --bs-sidebar-border-color: #eaedf1;
 }
@@ -55,7 +56,8 @@ html[data-sidebar-color=light] {
 html[data-sidebar-color=dark] {
   --bs-sidebar-bg: #393f4a;
   --bs-sidebar-item-color: #afb9cf;
-  --bs-sidebar-item-hover-bg: #4697ce;
+  /* --bs-sidebar-item-hover-bg: #4697ce; */
+  --bs-sidebar-item-hover-bg: #8042D4;
   --bs-sidebar-item-hover-color: #ffffff;
   --bs-sidebar-border-color: #272f37;
 }
@@ -2907,11 +2909,11 @@ progress {
   line-height: 1.5;
   color: var(--bs-body-color);
   -webkit-appearance: none;
-     -moz-appearance: none;
+  -moz-appearance: none;
           appearance: none;
   background-color: var(--bs-secondary-bg);
   background-clip: padding-box;
-  border: 20px solid var(--bs-input-border-color);
+  border: 2px solid var(--bs-input-border-color);
   border-radius: 0.35rem;
   -webkit-transition: border-color 0.15s ease-in-out, -webkit-box-shadow 0.15s ease-in-out;
   transition: border-color 0.15s ease-in-out, -webkit-box-shadow 0.15s ease-in-out;
@@ -10432,6 +10434,7 @@ textarea.form-control-lg {
 }
 
 .text-danger {
+  padding-top: 2px;
   --bs-text-opacity: 1;
   color: rgba(var(--bs-danger-rgb), var(--bs-text-opacity)) !important;
 }
@@ -15027,6 +15030,9 @@ textarea.form-control-lg {
   min-height: calc(100vh - var(--bs-topbar-height));
   padding: 1.5rem 0.75rem var(--bs-footer-height) 0.75rem;
   margin-left: var(--bs-sidebar-width);
+  background-image : url('/assets/images/bg-pattern.png');
+  background-repeat: no-repeat;
+  background-size: cover;
 }
 
 .animated-stars {
@@ -15495,14 +15501,14 @@ html[data-sidebar-size=hidden] .app-topbar {
   -webkit-transition: all 0.3s ease-in-out;
   transition: all 0.3s ease-in-out;
   line-height: var(--bs-topbar-height);
-  padding: 0 calc(var(--bs-sidebar-width-sm) * 0.5 - var(--bs-logo-sm-height) * 0.5);
+  /* padding: 0 calc(var(--bs-sidebar-width-sm) * 0.5 - var(--bs-logo-sm-height) * 0.5); */
 }
 .logo-box .logo-sm {
   display: none;
   height: var(--bs-logo-sm-height);
 }
 .logo-box .logo-lg {
-  height: 10px;
+  height: 60px;
 }
 .logo-box .logo-light {
   display: none;
@@ -15578,11 +15584,11 @@ html[data-sidebar-size=hidden] .app-topbar {
   display: -ms-flexbox;
   display: flex;
   gap: 12px;
-  line-height: 1;
+  /* line-height: 1; */
   font-weight: 400;
   -webkit-box-align: center;
-      -ms-flex-align: center;
-          align-items: center;
+  -ms-flex-align: center;
+  align-items: center;
   white-space: nowrap;
   -webkit-transition: all 0.3s ease-in-out;
   transition: all 0.3s ease-in-out;
@@ -15592,8 +15598,15 @@ html[data-sidebar-size=hidden] .app-topbar {
   padding: var(--bs-sidebar-item-padding-y) var(--bs-sidebar-item-padding-x);
   margin: var(--bs-sidebar-item-margin-y) 0;
 }
-.app-sidebar .navbar-nav .nav-item .nav-link.show, .app-sidebar .navbar-nav .nav-item .nav-link:active, .app-sidebar .navbar-nav .nav-item .nav-link.active, .app-sidebar .navbar-nav .nav-item .nav-link:hover, .app-sidebar .navbar-nav .nav-item .nav-link:focus {
-  color: var(--bs-sidebar-item-hover-color);
+
+.app-sidebar .navbar-nav .nav-item .nav-link:hover, .app-sidebar .navbar-nav .nav-item .nav-link:focus {
+  /* color: var(--bs-sidebar-item-hover-color); */
+  color: #000000;
+}
+
+.app-sidebar .navbar-nav .nav-item .nav-link.show, .app-sidebar .navbar-nav .nav-item .nav-link:active, .app-sidebar .navbar-nav .nav-item .nav-link.active, .app-sidebar .navbar-nav .nav-item .nav-link.active:hover, .app-sidebar .navbar-nav .nav-item .nav-link.active:focus {
+  /* color: var(--bs-sidebar-item-hover-color); */
+  color: #ffffff;
 }
 .app-sidebar .navbar-nav .nav-item .nav-link.active {
   background-color: var(--bs-sidebar-item-hover-bg);
@@ -15679,6 +15692,7 @@ html[data-sidebar-size=condensed] .app-sidebar .logo-box .logo-lg {
 }
 html[data-sidebar-size=condensed] .app-sidebar .logo-box .logo-sm {
   display: inline-block;
+  height: 50px;
 }
 html[data-sidebar-size=condensed] .app-sidebar .menu-title {
   height: 0;
@@ -16014,7 +16028,7 @@ html[data-sidebar-color=brand] .app-sidebar .logo-box .logo-dark {
   padding: 0 calc(1.5rem * 0.5);
   color: var(--bs-link-color);
   height: var(--bs-footer-height);
-  border-top: var(--bs-border-width) solid var(--bs-border-color);
+  /* border-top: var(--bs-border-width) solid var(--bs-border-color); */
 }
 
 .footer-text {

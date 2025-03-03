@@ -5,7 +5,7 @@ import Footer from "../components/organisms/Footer";
 
 export default function Home() {
     const subtitle = "Dashboard";
-    const title = "Darkone";
+    const title = "Digivise";
 
     return (
         <>
