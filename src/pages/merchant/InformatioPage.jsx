@@ -4,37 +4,26 @@ import Footer from "../../components/organisms/Footer";
 export default function MerchantInformationPage() {
     return (
         <>
-            <html lang="en">
                 <div className="app-wrapper">
                     <Menu />
                     <div className="page-content">
                         <div className="container-fluid">
-                            <div className="d-flex flex-column gap-5">
-                                <div className="p-3 d-flex gap-5 bg-secondary-subtle">
-                                    <div className="bg-white" style={{ width: `150px`, height: `150px` }}></div>
-                                    <div className="d-flex flex-column gap-3">
-                                        <div className="bg-white" style={{ width: `300px`, height: `25px` }}></div>
-                                        <div className="bg-white" style={{ width: `300px`, height: `25px` }}></div>
-                                        <div className="bg-white" style={{ width: `300px`, height: `25px` }}></div>
-                                    </div>
-                                </div>
-                                <div className="px-3 py-4 d-flex bg-secondary-subtle">
-                                    <div className="d-flex flex-column gap-3">
-                                        <div className="d-flex gap-3">
-                                            <span className="fs-4 text-dark" style={{ width: "50px" }}>CPC</span>
-                                            <div className="bg-white" style={{ width: `300px`, height: `25px` }}></div>
+                            <div className="d-flex flex-column gap-3 justify-content-center p-4 card">
+                                <h4 className="text-left">Informasi Merchant</h4>
+                                <div className="d-flex gap-2 align-items-start">
+                                    <span className="d-flex align-items-center">
+                                        <img className="rounded-circle" width="100" src="../../assets/images/users/avatar-1.jpg" alt="avatar-3" />
+                                    </span>
+                                    <div className="d-flex flex-column gap-1">
+                                        <div>
+                                            <span>Nama Toko</span>
+                                            <h4>Merchant Official Shop</h4>
                                         </div>
-                                        <div className="d-flex gap-3">
-                                            <span className="fs-4 text-dark" style={{ width: "50px" }}>ACOS</span>
-                                            <div className="bg-white" style={{ width: `300px`, height: `25px` }}></div>
-                                        </div>
-                                        <div className="d-flex gap-3">
-                                            <span className="fs-4 text-dark" style={{ width: "50px" }}>CTR</span>
-                                            <div className="bg-white" style={{ width: `300px`, height: `25px` }}></div>
-                                        </div>
-                                        <div className="d-flex gap-3">
-                                            <span className="fs-4 text-dark" style={{ width: "50px" }}>CR</span>
-                                            <div className="bg-white" style={{ width: `300px`, height: `25px` }}></div>
+                                        <div>
+                                            <span>Deskripsi Toko</span>
+                                            <p className="text-black">
+                                                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam. Sed nisi.
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
@@ -43,7 +32,6 @@ export default function MerchantInformationPage() {
                         <Footer />
                     </div>
                 </div>
-            </html>
         </>
     );
 };
