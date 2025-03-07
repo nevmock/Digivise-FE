@@ -47,48 +47,46 @@ export default function MerchantKpiPage() {
     <div className="card">
       <div className="card-body">
         <h5 className="text-left pb-2">{title}</h5>
-        <div className="d-flex justify-content-between align-items-center bg-dark text-white py-2 rounded-top">
-          <div className="ps-3" style={{ flex: 1 }}>
-            Name
-          </div>
-          <div className="ps-3" style={{ flex: 1 }}>
-            Value
-          </div>
-          <div className="ps-3" style={{ flex: 1 }}>
-            New Value
-          </div>
+        <div className="table-responsive">
+          <table className="table table-centered">
+            <thead className="table-dark">
+              <tr>
+                {/* <th scope="col">#</th> */}
+                <th scope="col">Name</th>
+                <th scope="col">Value</th>
+                <th scope="col">New Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              {kpiData
+                .filter((item) => item.category === category)
+                .map((item, index) => (
+                  <tr key={index}>
+                    {/* <td>{index + 1}</td> */}
+                    <td>{item.name}</td>
+                    <td>{item.value}</td>
+                    <td>
+                      <input
+                        style={{
+                          width: "100%",
+                          padding: "0.375rem 0.75rem",
+                          fontSize: "1rem",
+                          fontWeight: "400",
+                          lineHeight: "1.5",
+                          color: "#495057",
+                          border: "1px solid #ced4da",
+                          borderRadius: "0.25rem",
+                        }}
+                        type="number"
+                        value={item.newValue}
+                        onChange={(e) => handleInputChange(index, e.target.value)}
+                      />
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
         </div>
-        {kpiData
-          .filter((item) => item.category === category)
-          .map((item, index) => (
-            <div
-              key={index}
-              className="d-flex justify-content-between align-items-center border"
-            >
-              <div className="ps-3" style={{ flex: 1 }}>
-                {item.name}
-              </div>
-              <div className="ps-3" style={{ flex: 1 }}>
-                {item.value}
-              </div>
-              <div className="ps-3" style={{ flex: 1 }}>
-                <input
-                  style={{
-                    width: "100%",
-                    padding: "0.375rem 0.75rem",
-                    fontSize: "1rem",
-                    fontWeight: "400",
-                    lineHeight: "1.5",
-                    color: "#495057",
-                    border: "none",
-                  }}
-                  type="number"
-                  value={item.newValue}
-                  onChange={(e) => handleInputChange(index, e.target.value)}
-                />
-              </div>
-            </div>
-          ))}
         <div className="w-full d-flex justify-content-end">
           <button
             className="fw-semibold btn btn-primary mt-3 w-25"
@@ -101,6 +99,66 @@ export default function MerchantKpiPage() {
       </div>
     </div>
   );
+
+  // const renderKpiSection = (title, category) => (
+  //   <div className="card">
+  //     <div className="card-body">
+  //       <h5 className="text-left pb-2">{title}</h5>
+  //       <div className="d-flex justify-content-between align-items-center bg-dark text-white py-2 rounded-top">
+  //         <div className="ps-3" style={{ flex: 1 }}>
+  //           Name
+  //         </div>
+  //         <div className="ps-3" style={{ flex: 1 }}>
+  //           Value
+  //         </div>
+  //         <div className="ps-3" style={{ flex: 1 }}>
+  //           New Value
+  //         </div>
+  //       </div>
+  //       {kpiData
+  //         .filter((item) => item.category === category)
+  //         .map((item, index) => (
+  //           <div
+  //             key={index}
+  //             className="d-flex justify-content-between align-items-center border"
+  //           >
+  //             <div className="ps-3" style={{ flex: 1 }}>
+  //               {item.name}
+  //             </div>
+  //             <div className="ps-3" style={{ flex: 1 }}>
+  //               {item.value}
+  //             </div>
+  //             <div className="ps-3" style={{ flex: 1 }}>
+  //               <input
+  //                 style={{
+  //                   width: "100%",
+  //                   padding: "0.375rem 0.75rem",
+  //                   fontSize: "1rem",
+  //                   fontWeight: "400",
+  //                   lineHeight: "1.5",
+  //                   color: "#495057",
+  //                   border: "none",
+  //                 }}
+  //                 type="number"
+  //                 value={item.newValue}
+  //                 onChange={(e) => handleInputChange(index, e.target.value)}
+  //               />
+  //             </div>
+  //           </div>
+  //         ))}
+  //       <div className="w-full d-flex justify-content-end">
+  //         <button
+  //           className="fw-semibold btn btn-primary mt-3 w-25"
+  //           type="submit"
+  //           onClick={handleUpdate}
+  //         >
+  //           Update
+  //         </button>
+  //       </div>
+  //     </div>
+  //   </div>
+  // );
+
   return (
     <>
       <div className="app-wrapper">

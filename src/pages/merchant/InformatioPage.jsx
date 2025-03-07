@@ -1,7 +1,6 @@
 import Menu from "../../components/organisms/Menu";
 import Footer from "../../components/organisms/Footer";
 
-
 export default function MerchantInformationPage() {
   return (
     <>
@@ -9,7 +8,7 @@ export default function MerchantInformationPage() {
         <Menu />
         <div className="page-content">
           <div className="container-fluid">
-            <div className="d-flex flex-column gap-3 justify-content-center card">
+            <div className="card">
               <div className="card-body">
                 <h4 className="text-left pb-3">Informasi Merchant</h4>
                 <div className="d-flex gap-2 align-items-start">
@@ -33,6 +32,78 @@ export default function MerchantInformationPage() {
                         Integer nec odio. Praesent libero. Sed cursus ante
                         dapibus diam. Sed nisi.
                       </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="row row-cols-lg-2 gx-3">
+              <div className="col">
+                <div class="card">
+                  <div class="card-header">
+                    <h5 class="card-title mb-0">Matrix Peforma Toko</h5>
+                  </div>
+
+                  <div class="card-body">
+                    <div>
+                      <div>
+                        <div className="d-flex w-full gap-2">
+                            <span>Omset :</span>
+                            <p>20</p>
+                        </div>
+                        <div className="d-flex w-full gap-2">
+                            <span>Traffic :</span>
+                            <p>20</p>
+                        </div>
+                        <div className="d-flex w-full gap-2">
+                            <span>Click Add To Cart :</span>
+                            <p>20</p>
+                        </div>
+                        <div className="d-flex w-full gap-2">
+                            <span>Convertion Rate : </span>
+                            <p>20</p>
+                        </div>
+                        <div className="d-flex w-full gap-2">
+                            <span>Ratio pengungjung baru dan lama :</span>
+                            <p>20</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col">
+                <div class="card">
+                  <div class="card-header">
+                    <h5 class="card-title mb-0">Matrix Iklan</h5>
+                  </div>
+                  
+                  <div class="card-body">
+                    <div>
+                      <div>
+                        <div className="d-flex w-full gap-2">
+                            <span>Custom harian :</span>
+                            <p>20</p>
+                        </div>
+                        <div className="d-flex w-full gap-2">
+                            <span>ACOS bulan:</span>
+                            <p>20</p>
+                        </div>
+                        <div className="d-flex w-full gap-2">
+                            <span>CPC bulan :</span>
+                            <p>20</p>
+                        </div>
+                        <div className="d-flex w-full gap-2">
+                            <span>CTR bulan berjalan :</span>
+                            <p>20</p>
+                        </div>
+                        <div className="d-flex w-full gap-2">
+                            <span>Biaya Iklan :</span>
+                            <p>20</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
