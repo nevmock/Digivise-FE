@@ -1,0 +1,3391 @@
+{
+    "code": 0,
+    "message": "success",
+    "user_message": "success",
+    "data": {
+        "page_info": {
+            "total": 16,
+            "page_number": 1,
+            "page_size": 12
+        },
+        "products": [
+            {
+                "state": "ongoing",
+                "code": 1021,
+                "condition" : "baik",
+                "id": 26360011113,
+                "name": "Udeng Merah Putih - Topi Udeng Bulu Viral - Ikat Kepala Udeng Rambut Palsu - Iket Kepala Merah Putih",
+                "status": 1,
+                "cover_image": "id-11134207-7r98s-m0cinkcvf78617",
+                "parent_sku": "UMP",
+                "price_detail": {
+                    "price_min": "129000.00",
+                    "price_max": "129000.00",
+                    "has_discount": false,
+                    "max_discount_percentage": 100,
+                    "max_discount": 0,
+                    "selling_price_min": "129000.00",
+                    "selling_price_max": "129000.00"
+                },
+                "stock_detail": {
+                    "total_available_stock": 50,
+                    "total_seller_stock": 0,
+                    "total_shopee_stock": 0,
+                    "low_stock_status": 0,
+                    "enable_stock_reminder": false,
+                    "model_seller_stock_sold_out": true,
+                    "model_shopee_stock_sold_out": false,
+                    "advanced_stock": {
+                        "sellable_stock": 0,
+                        "in_transit_stock": 0
+                    },
+                    "enable_stock_reminder_status": 0
+                },
+                "promotion": {
+                    "wholesale": false,
+                    "has_bundle_deal": false
+                },
+                "statistics": {
+                    "view_count": 0,
+                    "liked_count": 0,
+                    "sold_count": 50
+                },
+                "tag": {
+                    "is_virtual_sku": false,
+                    "unlist": false,
+                    "has_discount": false,
+                    "wholesale": false,
+                    "has_bundle_deal": false,
+                    "has_add_on_deal": false,
+                    "live_sku": false,
+                    "ssp": false,
+                    "member_exclusive": false,
+                    "is_ipr_appealing": false
+                },
+                "boost_info": {
+                    "boost_entry_status": 2,
+                    "show_boost_history": false,
+                    "campaign_id": 277725878
+                },
+                "modify_time": 1730581050,
+                "create_time": 1725320003,
+                "model_list": [
+                    {
+                        "id": 138034277452,
+                        "name": "Merah Putih",
+                        "sku": "",
+                        "tier_index": [
+                            0
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 10,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98q-lzpfxykldi3i21",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 10
+                        },
+                        "price_detail": {
+                            "origin_price": "129000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 138034277453,
+                        "name": "Hitam",
+                        "sku": "",
+                        "tier_index": [
+                            1
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 10,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98t-lzpfxyklewny89",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 10
+                        },
+                        "price_detail": {
+                            "origin_price": "129000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 138034277454,
+                        "name": "Putih Hitam",
+                        "sku": "",
+                        "tier_index": [
+                            2
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 10,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r992-lzpfxyklgb8eef",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 10
+                        },
+                        "price_detail": {
+                            "origin_price": "129000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 138034277455,
+                        "name": "Krem Hitam",
+                        "sku": "",
+                        "tier_index": [
+                            3
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 20,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98o-lzpfxyklhpsu1e",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 20
+                        },
+                        "price_detail": {
+                            "origin_price": "129000.00",
+                            "promotion_price": "0.00"
+                        }
+                    }
+                ],
+                "promotion_detail": {},
+                "scheduled_publish_time": 0,
+                "appeal_info": {
+                    "ipr_appeal_info": {
+                        "appeal_opt": 0,
+                        "can_not_appeal_transify_key": "",
+                        "reference_id": 0,
+                        "appeal_status": 0
+                    }
+                }
+            },
+            {
+                "condition" : "buruk",
+                "id": 24785707560,
+                "name": "Topi Rambut Supporter Bola - Supporter Esport - Topi Rambut Palsu Palestina",
+                "status": 1,
+                "cover_image": "id-11134207-7r990-lzty4rul199c76",
+                "parent_sku": "TD",
+                "price_detail": {
+                    "price_min": "100000.00",
+                    "price_max": "100000.00",
+                    "has_discount": false,
+                    "max_discount_percentage": 100,
+                    "max_discount": 0,
+                    "selling_price_min": "100000.00",
+                    "selling_price_max": "100000.00"
+                },
+                "stock_detail": {
+                    "total_available_stock": 0,
+                    "total_seller_stock": 0,
+                    "total_shopee_stock": 0,
+                    "low_stock_status": 0,
+                    "enable_stock_reminder": false,
+                    "model_seller_stock_sold_out": true,
+                    "model_shopee_stock_sold_out": false,
+                    "advanced_stock": {
+                        "sellable_stock": 0,
+                        "in_transit_stock": 0
+                    },
+                    "enable_stock_reminder_status": 0
+                },
+                "promotion": {
+                    "wholesale": false,
+                    "has_bundle_deal": false
+                },
+                "statistics": {
+                    "view_count": 0,
+                    "liked_count": 0,
+                    "sold_count": 2
+                },
+                "tag": {
+                    "is_virtual_sku": false,
+                    "unlist": false,
+                    "has_discount": false,
+                    "wholesale": false,
+                    "has_bundle_deal": false,
+                    "has_add_on_deal": false,
+                    "live_sku": false,
+                    "ssp": false,
+                    "member_exclusive": false,
+                    "is_ipr_appealing": false
+                },
+                "boost_info": {
+                    "boost_entry_status": 2,
+                    "show_boost_history": false,
+                    "campaign_id": 277724566
+                },
+                "modify_time": 1727855360,
+                "create_time": 1725592541,
+                "model_list": [
+                    {
+                        "id": 256704217361,
+                        "name": "Timnas",
+                        "sku": "",
+                        "tier_index": [
+                            8
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7rasg-m0vc2cbrqb1221",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 1
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 256704217358,
+                        "name": "Arema",
+                        "sku": "",
+                        "tier_index": [
+                            9
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7rasl-m0vc2cbrrplic4",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 256704217365,
+                        "name": "Palestine Polos",
+                        "sku": "",
+                        "tier_index": [
+                            6
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7rash-m0vc2cbrnhw685",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 256704217363,
+                        "name": "Onic",
+                        "sku": "",
+                        "tier_index": [
+                            7
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7rasj-m0vc2cbrowgmfd",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 256704217360,
+                        "name": "Evos",
+                        "sku": "",
+                        "tier_index": [
+                            11
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7rasi-m0vc2cbruiqec1",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 256704217357,
+                        "name": "Palestine Logo",
+                        "sku": "",
+                        "tier_index": [
+                            5
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7rasm-m0vc2cbrm3bq00",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 256704217356,
+                        "name": "Persija",
+                        "sku": "",
+                        "tier_index": [
+                            4
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7rasd-m0vc2cbrkoraaa",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 256704217355,
+                        "name": "Madura United",
+                        "sku": "",
+                        "tier_index": [
+                            10
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7rash-m0vc2cbrt45yb5",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 256704217359,
+                        "name": "Rans Blue",
+                        "sku": "",
+                        "tier_index": [
+                            1
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7rasl-m0vbuqrg7r2k8d",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 256704217362,
+                        "name": "Rans Black",
+                        "sku": "",
+                        "tier_index": [
+                            2
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7rasb-m0vbuqrg95n0b4",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 246538898679,
+                        "name": "RRQ",
+                        "sku": "",
+                        "tier_index": [
+                            0
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7rase-m0vbuqrg6ci46d",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 1
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 256704217364,
+                        "name": "Persib",
+                        "sku": "",
+                        "tier_index": [
+                            3
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7rash-m0vc2cbrja6uea",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    }
+                ],
+                "promotion_detail": {},
+                "scheduled_publish_time": 0,
+                "appeal_info": {
+                    "ipr_appeal_info": {
+                        "appeal_opt": 0,
+                        "can_not_appeal_transify_key": "",
+                        "reference_id": 0,
+                        "appeal_status": 0
+                    }
+                }
+            },
+            {
+                "condition" : "sangat baik",
+                "id": 25685707370,
+                "name": "Topi Rambut Palsu - Topi Wig - Topi Bulu - Topi Sule - Topi Rambut",
+                "status": 1,
+                "cover_image": "id-11134207-7r98y-m0ci6qppe9a667",
+                "parent_sku": "TD",
+                "price_detail": {
+                    "price_min": "100000.00",
+                    "price_max": "100000.00",
+                    "has_discount": false,
+                    "max_discount_percentage": 100,
+                    "max_discount": 0,
+                    "selling_price_min": "100000.00",
+                    "selling_price_max": "100000.00"
+                },
+                "stock_detail": {
+                    "total_available_stock": 0,
+                    "total_seller_stock": 0,
+                    "total_shopee_stock": 0,
+                    "low_stock_status": 0,
+                    "enable_stock_reminder": false,
+                    "model_seller_stock_sold_out": true,
+                    "model_shopee_stock_sold_out": false,
+                    "advanced_stock": {
+                        "sellable_stock": 0,
+                        "in_transit_stock": 0
+                    },
+                    "enable_stock_reminder_status": 0
+                },
+                "promotion": {
+                    "wholesale": false,
+                    "has_bundle_deal": false
+                },
+                "statistics": {
+                    "view_count": 0,
+                    "liked_count": 0,
+                    "sold_count": 0
+                },
+                "tag": {
+                    "is_virtual_sku": false,
+                    "unlist": false,
+                    "has_discount": false,
+                    "wholesale": false,
+                    "has_bundle_deal": false,
+                    "has_add_on_deal": false,
+                    "live_sku": false,
+                    "ssp": false,
+                    "member_exclusive": false,
+                    "is_ipr_appealing": false
+                },
+                "boost_info": {
+                    "boost_entry_status": 2,
+                    "show_boost_history": false,
+                    "campaign_id": 278165176
+                },
+                "modify_time": 1727854889,
+                "create_time": 1725591781,
+                "model_list": [
+                    {
+                        "id": 205370233556,
+                        "name": "Biru Hitam",
+                        "sku": "",
+                        "tier_index": [
+                            20
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98z-lztxshm8f76wd9",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 205370233539,
+                        "name": "Merah",
+                        "sku": "",
+                        "tier_index": [
+                            10
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r991-lztxpdomkoqt87",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 205370233572,
+                        "name": "Cokelat Muda",
+                        "sku": "",
+                        "tier_index": [
+                            18
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r991-lztxshm8ce2013",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 205370233540,
+                        "name": "Hitam Merah",
+                        "sku": "",
+                        "tier_index": [
+                            11
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98o-lztxpdomowg56b",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 205370233562,
+                        "name": "Ungu Tua",
+                        "sku": "",
+                        "tier_index": [
+                            1
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98y-lztxe7ryfznp1c",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 205370233549,
+                        "name": "Hitam Magenta",
+                        "sku": "",
+                        "tier_index": [
+                            15
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r991-lztxshm86rs877",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 205370233541,
+                        "name": "Cokelat Hitam",
+                        "sku": "",
+                        "tier_index": [
+                            19
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98z-lztxshm8dsmg9e",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 205370233553,
+                        "name": "Hitam Tosca",
+                        "sku": "",
+                        "tier_index": [
+                            14
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98x-lztxpdomt45hdf",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 205370233558,
+                        "name": "Pink Muda",
+                        "sku": "",
+                        "tier_index": [
+                            5
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98y-lztxkyvgfeg84b",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 205370233557,
+                        "name": "Putih",
+                        "sku": "",
+                        "tier_index": [
+                            4
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r991-lztxkyvgdzvs7d",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 205370233569,
+                        "name": "Abu-abu",
+                        "sku": "",
+                        "tier_index": [
+                            0
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98x-lztxe7ryel39b2",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 205370233571,
+                        "name": "Krem",
+                        "sku": "",
+                        "tier_index": [
+                            17
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98z-lztxshm8azhk2c",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 205370233560,
+                        "name": "Luxury Blue",
+                        "sku": "",
+                        "tier_index": [
+                            8
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98r-lztxpdomhvlx68",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 205370233552,
+                        "name": "Hitam Cream",
+                        "sku": "",
+                        "tier_index": [
+                            12
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98z-lztxpdomqb0l2e",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 205370233544,
+                        "name": "Cokelat Tua",
+                        "sku": "",
+                        "tier_index": [
+                            16
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98t-lztxshm89kx40f",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 205370233564,
+                        "name": "Hitam Orange",
+                        "sku": "",
+                        "tier_index": [
+                            6
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r990-lztxkyvgmfag41",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 205370233545,
+                        "name": "Silver",
+                        "sku": "",
+                        "tier_index": [
+                            3
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98p-lztxe7ryissl75",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 205370233567,
+                        "name": "Kuning",
+                        "sku": "",
+                        "tier_index": [
+                            9
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98s-lztxpdomja6d41",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 205370233563,
+                        "name": "Tosca",
+                        "sku": "",
+                        "tier_index": [
+                            2
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98t-lztxe7ryhe853b",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 205370233570,
+                        "name": "Hitam",
+                        "sku": "",
+                        "tier_index": [
+                            13
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98u-lztxpdomrpl1f4",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 205370233565,
+                        "name": "Orange",
+                        "sku": "",
+                        "tier_index": [
+                            7
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98z-lztxkyvgp8fcac",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    }
+                ],
+                "promotion_detail": {},
+                "scheduled_publish_time": 0,
+                "appeal_info": {
+                    "ipr_appeal_info": {
+                        "appeal_opt": 0,
+                        "can_not_appeal_transify_key": "",
+                        "reference_id": 0,
+                        "appeal_status": 0
+                    }
+                }
+            },
+            {
+                "condition" : "sangat baik",
+                "id": 26910219677,
+                "name": "Topi Rambut Palsu - Topi Golf Rambut Palsu - Topi Golf",
+                "status": 1,
+                "cover_image": "id-11134207-7rasc-m0s12wsryj7wc0",
+                "parent_sku": "TGR",
+                "price_detail": {
+                    "price_min": "98000.00",
+                    "price_max": "98000.00",
+                    "has_discount": false,
+                    "max_discount_percentage": 100,
+                    "max_discount": 0,
+                    "selling_price_min": "98000.00",
+                    "selling_price_max": "98000.00"
+                },
+                "stock_detail": {
+                    "total_available_stock": 0,
+                    "total_seller_stock": 0,
+                    "total_shopee_stock": 0,
+                    "low_stock_status": 0,
+                    "enable_stock_reminder": false,
+                    "model_seller_stock_sold_out": true,
+                    "model_shopee_stock_sold_out": false,
+                    "advanced_stock": {
+                        "sellable_stock": 0,
+                        "in_transit_stock": 0
+                    },
+                    "enable_stock_reminder_status": 0
+                },
+                "promotion": {
+                    "wholesale": false,
+                    "has_bundle_deal": false
+                },
+                "statistics": {
+                    "view_count": 0,
+                    "liked_count": 9,
+                    "sold_count": 41
+                },
+                "tag": {
+                    "is_virtual_sku": false,
+                    "unlist": false,
+                    "has_discount": false,
+                    "wholesale": false,
+                    "has_bundle_deal": false,
+                    "has_add_on_deal": false,
+                    "live_sku": false,
+                    "ssp": false,
+                    "member_exclusive": false,
+                    "is_ipr_appealing": false
+                },
+                "boost_info": {
+                    "boost_entry_status": 2,
+                    "show_boost_history": false,
+                    "campaign_id": 277232029
+                },
+                "modify_time": 1727680866,
+                "create_time": 1725488301,
+                "model_list": [
+                    {
+                        "id": 108447494946,
+                        "name": "Hitam Tosca",
+                        "sku": "",
+                        "tier_index": [
+                            4
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98t-lzpervnuf1mw19",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "98000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 108447494947,
+                        "name": "Hitam krem",
+                        "sku": "",
+                        "tier_index": [
+                            5
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98u-lzpervnugg7c87",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 7
+                        },
+                        "price_detail": {
+                            "origin_price": "98000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 108447494948,
+                        "name": "Hitam Merah",
+                        "sku": "",
+                        "tier_index": [
+                            6
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98p-lzpervnuhurs28",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 3
+                        },
+                        "price_detail": {
+                            "origin_price": "98000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 108447494949,
+                        "name": "Silver",
+                        "sku": "",
+                        "tier_index": [
+                            0
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98q-lzpervnu80sod6",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 13
+                        },
+                        "price_detail": {
+                            "origin_price": "98000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 108447494950,
+                        "name": "Putih",
+                        "sku": "",
+                        "tier_index": [
+                            1
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98o-lzpervnu9fd418",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 6
+                        },
+                        "price_detail": {
+                            "origin_price": "98000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 108447494944,
+                        "name": "Biru Luxury",
+                        "sku": "",
+                        "tier_index": [
+                            2
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98t-lzpervnuatxke6",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 6
+                        },
+                        "price_detail": {
+                            "origin_price": "98000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 108447494945,
+                        "name": "Luxury Black",
+                        "sku": "",
+                        "tier_index": [
+                            3
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98y-lzpervnuc8i0fd",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 6
+                        },
+                        "price_detail": {
+                            "origin_price": "98000.00",
+                            "promotion_price": "0.00"
+                        }
+                    }
+                ],
+                "promotion_detail": {},
+                "scheduled_publish_time": 0,
+                "appeal_info": {
+                    "ipr_appeal_info": {
+                        "appeal_opt": 0,
+                        "can_not_appeal_transify_key": "",
+                        "reference_id": 0,
+                        "appeal_status": 0
+                    }
+                }
+            },
+            {
+                "condition" : "tidak ada informasi",
+                "id": 29611481745,
+                "name": "Topi Rambut Palsu - Udeng Rambut Palsu - Udeng Topi Rambut Palsu - Udeng Rambut Palsu Pria",
+                "status": 1,
+                "cover_image": "id-11134207-7r98q-m0cinkcv86dy60",
+                "parent_sku": "UBD",
+                "price_detail": {
+                    "price_min": "129000.00",
+                    "price_max": "129000.00",
+                    "has_discount": false,
+                    "max_discount_percentage": 100,
+                    "max_discount": 0,
+                    "selling_price_min": "129000.00",
+                    "selling_price_max": "129000.00"
+                },
+                "stock_detail": {
+                    "total_available_stock": 0,
+                    "total_seller_stock": 0,
+                    "total_shopee_stock": 0,
+                    "low_stock_status": 0,
+                    "enable_stock_reminder": false,
+                    "model_seller_stock_sold_out": true,
+                    "model_shopee_stock_sold_out": false,
+                    "advanced_stock": {
+                        "sellable_stock": 0,
+                        "in_transit_stock": 0
+                    },
+                    "enable_stock_reminder_status": 0
+                },
+                "promotion": {
+                    "wholesale": false,
+                    "has_bundle_deal": false
+                },
+                "statistics": {
+                    "view_count": 0,
+                    "liked_count": 4,
+                    "sold_count": 2
+                },
+                "tag": {
+                    "is_virtual_sku": false,
+                    "unlist": false,
+                    "has_discount": false,
+                    "wholesale": false,
+                    "has_bundle_deal": false,
+                    "has_add_on_deal": false,
+                    "live_sku": false,
+                    "ssp": false,
+                    "member_exclusive": false,
+                    "is_ipr_appealing": false
+                },
+                "boost_info": {
+                    "boost_entry_status": 2,
+                    "show_boost_history": false,
+                    "campaign_id": 287593101
+                },
+                "modify_time": 1727655139,
+                "create_time": 1726540122,
+                "model_list": [
+                    {
+                        "id": 256607292351,
+                        "name": "Krem",
+                        "sku": "",
+                        "tier_index": [
+                            6
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98s-m09luw77hqim47",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "129000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 256607292352,
+                        "name": "Silver",
+                        "sku": "",
+                        "tier_index": [
+                            0
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98y-m09lic9t11xoa3",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "129000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 256607292353,
+                        "name": "Biru Luxury",
+                        "sku": "",
+                        "tier_index": [
+                            1
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98r-m09lic9t2gi431",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "129000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 256607292354,
+                        "name": "Oranye",
+                        "sku": "",
+                        "tier_index": [
+                            2
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98w-m09lic9t3v2kf7",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "129000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 256607292355,
+                        "name": "Cokelat Tua",
+                        "sku": "",
+                        "tier_index": [
+                            3
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r992-m09lic9t59n0f0",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 1
+                        },
+                        "price_detail": {
+                            "origin_price": "129000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 256607292349,
+                        "name": "Merah",
+                        "sku": "",
+                        "tier_index": [
+                            4
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98r-m09lic9t6o7gaf",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "129000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 256607292350,
+                        "name": "Hitam",
+                        "sku": "",
+                        "tier_index": [
+                            5
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r992-m09luw77gby6b3",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 1
+                        },
+                        "price_detail": {
+                            "origin_price": "129000.00",
+                            "promotion_price": "0.00"
+                        }
+                    }
+                ],
+                "promotion_detail": {},
+                "scheduled_publish_time": 0,
+                "appeal_info": {
+                    "ipr_appeal_info": {
+                        "appeal_opt": 0,
+                        "can_not_appeal_transify_key": "",
+                        "reference_id": 0,
+                        "appeal_status": 0
+                    }
+                }
+            },
+            {
+                "condition" : "sangat baik",
+                "id": 26662054467,
+                "name": "Udeng Kujang Rambut Palsu - Udeng Rambut Palsu - Topi Rambut Palsu - Ikat Kepala Sunda",
+                "status": 1,
+                "cover_image": "id-11134207-7rasf-m0gpqyw6flna6b",
+                "parent_sku": "KJNG",
+                "price_detail": {
+                    "price_min": "139000.00",
+                    "price_max": "139000.00",
+                    "has_discount": false,
+                    "max_discount_percentage": 100,
+                    "max_discount": 0,
+                    "selling_price_min": "139000.00",
+                    "selling_price_max": "139000.00"
+                },
+                "stock_detail": {
+                    "total_available_stock": 0,
+                    "total_seller_stock": 0,
+                    "total_shopee_stock": 0,
+                    "low_stock_status": 0,
+                    "enable_stock_reminder": false,
+                    "model_seller_stock_sold_out": true,
+                    "model_shopee_stock_sold_out": false,
+                    "advanced_stock": {
+                        "sellable_stock": 0,
+                        "in_transit_stock": 0
+                    },
+                    "enable_stock_reminder_status": 0
+                },
+                "promotion": {
+                    "wholesale": false,
+                    "has_bundle_deal": false
+                },
+                "statistics": {
+                    "view_count": 0,
+                    "liked_count": 0,
+                    "sold_count": 0
+                },
+                "tag": {
+                    "is_virtual_sku": false,
+                    "unlist": false,
+                    "has_discount": false,
+                    "wholesale": false,
+                    "has_bundle_deal": false,
+                    "has_add_on_deal": false,
+                    "live_sku": false,
+                    "ssp": false,
+                    "member_exclusive": false,
+                    "is_ipr_appealing": false
+                },
+                "boost_info": {
+                    "boost_entry_status": 2,
+                    "show_boost_history": false,
+                    "campaign_id": 277724198
+                },
+                "modify_time": 1727654954,
+                "create_time": 1726971855,
+                "model_list": [
+                    {
+                        "id": 109270283175,
+                        "name": "Kujang Hitam Cream",
+                        "sku": "",
+                        "tier_index": [
+                            3
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7rash-m0gpqyw6mmhi23",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "139000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 109270283172,
+                        "name": "Kujang Putih Silver",
+                        "sku": "",
+                        "tier_index": [
+                            0
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7rasa-m0gpqyw6ies612",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "139000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 109270283173,
+                        "name": "Kujang Putih Cream",
+                        "sku": "",
+                        "tier_index": [
+                            1
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7rasj-m0gpqyw6jtcm78",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "139000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 109270283174,
+                        "name": "Kujang Hitam Silver",
+                        "sku": "",
+                        "tier_index": [
+                            2
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7ras9-m0gpqyw6l7x2aa",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "139000.00",
+                            "promotion_price": "0.00"
+                        }
+                    }
+                ],
+                "promotion_detail": {},
+                "scheduled_publish_time": 0,
+                "appeal_info": {
+                    "ipr_appeal_info": {
+                        "appeal_opt": 0,
+                        "can_not_appeal_transify_key": "",
+                        "reference_id": 0,
+                        "appeal_status": 0
+                    }
+                }
+            },
+            {
+                "condition" : "buruk",
+                "id": 28362158630,
+                "name": "Topi Rambut Palsu Motif Paisley - Topi Wig Rambut Palsu Paisley - Topi Bulu Paisley",
+                "status": 1,
+                "cover_image": "id-11134207-7ras8-m0ingtdhfp5scb",
+                "parent_sku": "PSY",
+                "price_detail": {
+                    "price_min": "135000.00",
+                    "price_max": "135000.00",
+                    "has_discount": false,
+                    "max_discount_percentage": 100,
+                    "max_discount": 0,
+                    "selling_price_min": "135000.00",
+                    "selling_price_max": "135000.00"
+                },
+                "stock_detail": {
+                    "total_available_stock": 0,
+                    "total_seller_stock": 0,
+                    "total_shopee_stock": 0,
+                    "low_stock_status": 0,
+                    "enable_stock_reminder": false,
+                    "model_seller_stock_sold_out": true,
+                    "model_shopee_stock_sold_out": false,
+                    "advanced_stock": {
+                        "sellable_stock": 0,
+                        "in_transit_stock": 0
+                    },
+                    "enable_stock_reminder_status": 0
+                },
+                "promotion": {
+                    "wholesale": false,
+                    "has_bundle_deal": false
+                },
+                "statistics": {
+                    "view_count": 0,
+                    "liked_count": 0,
+                    "sold_count": 0
+                },
+                "tag": {
+                    "is_virtual_sku": false,
+                    "unlist": false,
+                    "has_discount": false,
+                    "wholesale": false,
+                    "has_bundle_deal": false,
+                    "has_add_on_deal": false,
+                    "live_sku": false,
+                    "ssp": false,
+                    "member_exclusive": false,
+                    "is_ipr_appealing": false
+                },
+                "boost_info": {
+                    "boost_entry_status": 3,
+                    "show_boost_history": false,
+                    "campaign_id": 0
+                },
+                "modify_time": 1727089882,
+                "create_time": 1727088472,
+                "model_list": [
+                    {
+                        "id": 109271280360,
+                        "name": "Cokelat Tua",
+                        "sku": "",
+                        "tier_index": [
+                            2
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7rasl-m0io0llf5cgsc8",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "135000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 109271280361,
+                        "name": "Cokelat Muda",
+                        "sku": "",
+                        "tier_index": [
+                            3
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7rasj-m0io0llf6r18ce",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "135000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 109271280362,
+                        "name": "Krem",
+                        "sku": "",
+                        "tier_index": [
+                            4
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7rasd-m0io0llf85lo47",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "135000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 109271280363,
+                        "name": "Merah",
+                        "sku": "",
+                        "tier_index": [
+                            5
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7rasg-m0io0llf9k6457",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "135000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 109271280358,
+                        "name": "Silver",
+                        "sku": "",
+                        "tier_index": [
+                            0
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7rasi-m0ingtdhqxpc66",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "135000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 109271280359,
+                        "name": "Hitam",
+                        "sku": "",
+                        "tier_index": [
+                            1
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7rash-m0ingtdhsc9sd7",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "135000.00",
+                            "promotion_price": "0.00"
+                        }
+                    }
+                ],
+                "promotion_detail": {},
+                "scheduled_publish_time": 0,
+                "appeal_info": {
+                    "ipr_appeal_info": {
+                        "appeal_opt": 0,
+                        "can_not_appeal_transify_key": "",
+                        "reference_id": 0,
+                        "appeal_status": 0
+                    }
+                }
+            },
+            {
+                "condition" : "buruk",
+                "id": 24536334723,
+                "name": "Udeng Rambut Palsu Anak - Udeng Rambut Batik Anak - Topi Rambut Palsu Anak - Topi Wig Anak",
+                "status": 1,
+                "cover_image": "id-11134207-7rask-m0gr90c3h3v0c5",
+                "parent_sku": "UBA",
+                "price_detail": {
+                    "price_min": "100000.00",
+                    "price_max": "100000.00",
+                    "has_discount": false,
+                    "max_discount_percentage": 100,
+                    "max_discount": 0,
+                    "selling_price_min": "100000.00",
+                    "selling_price_max": "100000.00"
+                },
+                "stock_detail": {
+                    "total_available_stock": 0,
+                    "total_seller_stock": 0,
+                    "total_shopee_stock": 0,
+                    "low_stock_status": 0,
+                    "enable_stock_reminder": false,
+                    "model_seller_stock_sold_out": true,
+                    "model_shopee_stock_sold_out": false,
+                    "advanced_stock": {
+                        "sellable_stock": 0,
+                        "in_transit_stock": 0
+                    },
+                    "enable_stock_reminder_status": 0
+                },
+                "promotion": {
+                    "wholesale": false,
+                    "has_bundle_deal": false
+                },
+                "statistics": {
+                    "view_count": 0,
+                    "liked_count": 0,
+                    "sold_count": 0
+                },
+                "tag": {
+                    "is_virtual_sku": false,
+                    "unlist": false,
+                    "has_discount": false,
+                    "wholesale": false,
+                    "has_bundle_deal": false,
+                    "has_add_on_deal": false,
+                    "live_sku": false,
+                    "ssp": false,
+                    "member_exclusive": false,
+                    "is_ipr_appealing": false
+                },
+                "boost_info": {
+                    "boost_entry_status": 2,
+                    "show_boost_history": false,
+                    "campaign_id": 277728325
+                },
+                "modify_time": 1726987600,
+                "create_time": 1726987597,
+                "model_list": [
+                    {
+                        "id": 223249915591,
+                        "name": "Luxury Black",
+                        "sku": "",
+                        "tier_index": [
+                            2
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7rasa-m0gr90c3pj9oda",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 223249915592,
+                        "name": "Luxury Blue",
+                        "sku": "",
+                        "tier_index": [
+                            3
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7rasf-m0gzt21kvh703b",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 223249915593,
+                        "name": "Hitam Merah",
+                        "sku": "",
+                        "tier_index": [
+                            4
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7rasg-m0gzt21kwvrg38",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 223249915589,
+                        "name": "Silver",
+                        "sku": "",
+                        "tier_index": [
+                            0
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7rasd-m0gr90c3mq4sb4",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 223249915590,
+                        "name": "Hitam Cream",
+                        "sku": "",
+                        "tier_index": [
+                            1
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7rase-m0gr90c3o4p8ec",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    }
+                ],
+                "promotion_detail": {},
+                "scheduled_publish_time": 0,
+                "appeal_info": {
+                    "ipr_appeal_info": {
+                        "appeal_opt": 0,
+                        "can_not_appeal_transify_key": "",
+                        "reference_id": 0,
+                        "appeal_status": 0
+                    }
+                }
+            },
+            {
+                "condition" : "buruk",
+                "id": 24486191891,
+                "name": "Topi Rambut Palsu - Topi Rambut Brigez - Topi Rambut XTC - Topi Bulu - Topi Wig",
+                "status": 1,
+                "cover_image": "id-11134207-7rasa-m0gr90c3bhl888",
+                "parent_sku": "TD",
+                "price_detail": {
+                    "price_min": "100000.00",
+                    "price_max": "100000.00",
+                    "has_discount": false,
+                    "max_discount_percentage": 100,
+                    "max_discount": 0,
+                    "selling_price_min": "100000.00",
+                    "selling_price_max": "100000.00"
+                },
+                "stock_detail": {
+                    "total_available_stock": 0,
+                    "total_seller_stock": 0,
+                    "total_shopee_stock": 0,
+                    "low_stock_status": 0,
+                    "enable_stock_reminder": false,
+                    "model_seller_stock_sold_out": true,
+                    "model_shopee_stock_sold_out": false,
+                    "advanced_stock": {
+                        "sellable_stock": 0,
+                        "in_transit_stock": 0
+                    },
+                    "enable_stock_reminder_status": 0
+                },
+                "promotion": {
+                    "wholesale": false,
+                    "has_bundle_deal": false
+                },
+                "statistics": {
+                    "view_count": 0,
+                    "liked_count": 0,
+                    "sold_count": 0
+                },
+                "tag": {
+                    "is_virtual_sku": false,
+                    "unlist": false,
+                    "has_discount": false,
+                    "wholesale": false,
+                    "has_bundle_deal": false,
+                    "has_add_on_deal": false,
+                    "live_sku": false,
+                    "ssp": false,
+                    "member_exclusive": false,
+                    "is_ipr_appealing": false
+                },
+                "boost_info": {
+                    "boost_entry_status": 2,
+                    "show_boost_history": false,
+                    "campaign_id": 277727816
+                },
+                "modify_time": 1726972688,
+                "create_time": 1726716355,
+                "model_list": [
+                    {
+                        "id": 207818075257,
+                        "name": "XTC",
+                        "sku": "",
+                        "tier_index": [
+                            0
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98o-m0cinkcv5d9272",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 207818075258,
+                        "name": "Brigez",
+                        "sku": "",
+                        "tier_index": [
+                            1
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7rasa-m0cinkcv6rti84",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    }
+                ],
+                "promotion_detail": {},
+                "scheduled_publish_time": 0,
+                "appeal_info": {
+                    "ipr_appeal_info": {
+                        "appeal_opt": 0,
+                        "can_not_appeal_transify_key": "",
+                        "reference_id": 0,
+                        "appeal_status": 0
+                    }
+                }
+            },
+            {
+                "condition" : "buruk",
+                "id": 29410132862,
+                "name": "Udeng Rambut Palsu - Topi Rambut Palsu - Udeng Merah Putih - Udeng Rambut Palsu Pria",
+                "status": 1,
+                "cover_image": "id-11134207-7rasj-m0dxnmki9h7g95",
+                "parent_sku": "UMP",
+                "price_detail": {
+                    "price_min": "129000.00",
+                    "price_max": "129000.00",
+                    "has_discount": false,
+                    "max_discount_percentage": 100,
+                    "max_discount": 0,
+                    "selling_price_min": "129000.00",
+                    "selling_price_max": "129000.00"
+                },
+                "stock_detail": {
+                    "total_available_stock": 0,
+                    "total_seller_stock": 0,
+                    "total_shopee_stock": 0,
+                    "low_stock_status": 0,
+                    "enable_stock_reminder": false,
+                    "model_seller_stock_sold_out": true,
+                    "model_shopee_stock_sold_out": false,
+                    "advanced_stock": {
+                        "sellable_stock": 0,
+                        "in_transit_stock": 0
+                    },
+                    "enable_stock_reminder_status": 0
+                },
+                "promotion": {
+                    "wholesale": false,
+                    "has_bundle_deal": false
+                },
+                "statistics": {
+                    "view_count": 0,
+                    "liked_count": 0,
+                    "sold_count": 1
+                },
+                "tag": {
+                    "is_virtual_sku": false,
+                    "unlist": false,
+                    "has_discount": false,
+                    "wholesale": false,
+                    "has_bundle_deal": false,
+                    "has_add_on_deal": false,
+                    "live_sku": false,
+                    "ssp": false,
+                    "member_exclusive": false,
+                    "is_ipr_appealing": false
+                },
+                "boost_info": {
+                    "boost_entry_status": 2,
+                    "show_boost_history": false,
+                    "campaign_id": 278163545
+                },
+                "modify_time": 1726802114,
+                "create_time": 1725419982,
+                "model_list": [
+                    {
+                        "id": 246524533929,
+                        "name": "Putih Hitam",
+                        "sku": "",
+                        "tier_index": [
+                            2
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r992-lzpfxyklgb8eef",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "129000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 246524533930,
+                        "name": "Krem Hitam",
+                        "sku": "",
+                        "tier_index": [
+                            3
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98o-lzpfxyklhpsu1e",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "129000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 246524533927,
+                        "name": "Merah Putih",
+                        "sku": "",
+                        "tier_index": [
+                            0
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98q-lzpfxykldi3i21",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 1
+                        },
+                        "price_detail": {
+                            "origin_price": "129000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 246524533928,
+                        "name": "Hitam",
+                        "sku": "",
+                        "tier_index": [
+                            1
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98t-lzpfxyklewny89",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "129000.00",
+                            "promotion_price": "0.00"
+                        }
+                    }
+                ],
+                "promotion_detail": {},
+                "scheduled_publish_time": 0,
+                "appeal_info": {
+                    "ipr_appeal_info": {
+                        "appeal_opt": 0,
+                        "can_not_appeal_transify_key": "",
+                        "reference_id": 0,
+                        "appeal_status": 0
+                    }
+                }
+            },
+            {
+                "condition" : "buruk",
+                "id": 28759922421,
+                "name": "Topi Wig Anak - Topi Rambut Palsu Anak- Topi Cosplay Anime Anak Viral - Topi Sule Anak - Topi Bulu Korea Anak",
+                "status": 1,
+                "cover_image": "id-11134207-7rasg-m0dxnmki82n053",
+                "parent_sku": "TA",
+                "price_detail": {
+                    "price_min": "90000.00",
+                    "price_max": "90000.00",
+                    "has_discount": false,
+                    "max_discount_percentage": 100,
+                    "max_discount": 0,
+                    "selling_price_min": "90000.00",
+                    "selling_price_max": "90000.00"
+                },
+                "stock_detail": {
+                    "total_available_stock": 0,
+                    "total_seller_stock": 0,
+                    "total_shopee_stock": 0,
+                    "low_stock_status": 0,
+                    "enable_stock_reminder": false,
+                    "model_seller_stock_sold_out": true,
+                    "model_shopee_stock_sold_out": false,
+                    "advanced_stock": {
+                        "sellable_stock": 0,
+                        "in_transit_stock": 0
+                    },
+                    "enable_stock_reminder_status": 0
+                },
+                "promotion": {
+                    "wholesale": false,
+                    "has_bundle_deal": false
+                },
+                "statistics": {
+                    "view_count": 0,
+                    "liked_count": 0,
+                    "sold_count": 15
+                },
+                "tag": {
+                    "is_virtual_sku": false,
+                    "unlist": false,
+                    "has_discount": false,
+                    "wholesale": false,
+                    "has_bundle_deal": false,
+                    "has_add_on_deal": false,
+                    "live_sku": false,
+                    "ssp": false,
+                    "member_exclusive": false,
+                    "is_ipr_appealing": false
+                },
+                "boost_info": {
+                    "boost_entry_status": 2,
+                    "show_boost_history": false,
+                    "campaign_id": 309681820
+                },
+                "modify_time": 1726801847,
+                "create_time": 1725262103,
+                "model_list": [
+                    {
+                        "id": 195359902211,
+                        "name": "Hitam Luxury",
+                        "sku": "",
+                        "tier_index": [
+                            0
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98q-lzoh3dgt1ckof8",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 13
+                        },
+                        "price_detail": {
+                            "origin_price": "90000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 207774307447,
+                        "name": "Biru Luxury",
+                        "sku": "",
+                        "tier_index": [
+                            1
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98u-lzoh3dgt2r5404",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 1
+                        },
+                        "price_detail": {
+                            "origin_price": "90000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 195359902205,
+                        "name": "Krem Putih",
+                        "sku": "",
+                        "tier_index": [
+                            2
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98q-lzoh3dgt45pkaa",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 1
+                        },
+                        "price_detail": {
+                            "origin_price": "90000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 195359902206,
+                        "name": "Abu-abu",
+                        "sku": "",
+                        "tier_index": [
+                            3
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98r-lzoh3dgt5ka089",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "90000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 195359902207,
+                        "name": "Kuning Luxury",
+                        "sku": "",
+                        "tier_index": [
+                            4
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r991-lzoh3dgt6yug24",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "90000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 195359902208,
+                        "name": "Merah Luxury",
+                        "sku": "",
+                        "tier_index": [
+                            5
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r992-lzoh3dgt8dew69",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "90000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 195359902209,
+                        "name": "Pink Luxury",
+                        "sku": "",
+                        "tier_index": [
+                            6
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r990-lzoh3dgt9rzc01",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "90000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 195359902210,
+                        "name": "Hijau Luxury",
+                        "sku": "",
+                        "tier_index": [
+                            7
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98w-lzoh3dgtb6jsa1",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "90000.00",
+                            "promotion_price": "0.00"
+                        }
+                    }
+                ],
+                "promotion_detail": {},
+                "scheduled_publish_time": 0,
+                "appeal_info": {
+                    "ipr_appeal_info": {
+                        "appeal_opt": 0,
+                        "can_not_appeal_transify_key": "",
+                        "reference_id": 0,
+                        "appeal_status": 0
+                    }
+                }
+            },
+            {
+                "condition" : "buruk",
+                "id": 26110563106,
+                "name": "Topi Rambut Suporter Timnas - Topi Rambut Persib - Topi Rambut Persija - Topi Rambut Arema - Topi Rambut Madura United - Topi Rambut Suporter Bola",
+                "status": 1,
+                "cover_image": "id-11134207-7r98w-lzwqvkazrila34",
+                "parent_sku": "TD",
+                "price_detail": {
+                    "price_min": "100000.00",
+                    "price_max": "100000.00",
+                    "has_discount": false,
+                    "max_discount_percentage": 100,
+                    "max_discount": 0,
+                    "selling_price_min": "100000.00",
+                    "selling_price_max": "100000.00"
+                },
+                "stock_detail": {
+                    "total_available_stock": 0,
+                    "total_seller_stock": 0,
+                    "total_shopee_stock": 0,
+                    "low_stock_status": 0,
+                    "enable_stock_reminder": false,
+                    "model_seller_stock_sold_out": true,
+                    "model_shopee_stock_sold_out": false,
+                    "advanced_stock": {
+                        "sellable_stock": 0,
+                        "in_transit_stock": 0
+                    },
+                    "enable_stock_reminder_status": 0
+                },
+                "promotion": {
+                    "wholesale": false,
+                    "has_bundle_deal": false
+                },
+                "statistics": {
+                    "view_count": 0,
+                    "liked_count": 0,
+                    "sold_count": 0
+                },
+                "tag": {
+                    "is_virtual_sku": false,
+                    "unlist": false,
+                    "has_discount": false,
+                    "wholesale": false,
+                    "has_bundle_deal": false,
+                    "has_add_on_deal": false,
+                    "live_sku": false,
+                    "ssp": false,
+                    "member_exclusive": false,
+                    "is_ipr_appealing": false
+                },
+                "boost_info": {
+                    "boost_entry_status": 2,
+                    "show_boost_history": false,
+                    "campaign_id": 278165938
+                },
+                "modify_time": 1725761767,
+                "create_time": 1725761764,
+                "model_list": [
+                    {
+                        "id": 79811060968,
+                        "name": "Timnas",
+                        "sku": "",
+                        "tier_index": [
+                            0
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98s-lzwqvkazzxzy0d",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 79460700480,
+                        "name": "Persib",
+                        "sku": "",
+                        "tier_index": [
+                            1
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r992-lzwqvkb02r4uf8",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 79460700481,
+                        "name": "Persija",
+                        "sku": "",
+                        "tier_index": [
+                            2
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98o-lzwqvkb045pafc",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 79460700482,
+                        "name": "Arema",
+                        "sku": "",
+                        "tier_index": [
+                            3
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r990-lzwqvkb05k9q25",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 79460700483,
+                        "name": "Madura United",
+                        "sku": "",
+                        "tier_index": [
+                            4
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98v-lzwr2n7ar3u012",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 79460700484,
+                        "name": "Rans Blue",
+                        "sku": "",
+                        "tier_index": [
+                            5
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98u-lzwr2n7asiegc8",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    },
+                    {
+                        "id": 79811060967,
+                        "name": "Rans Black",
+                        "sku": "",
+                        "tier_index": [
+                            6
+                        ],
+                        "stock_detail": {
+                            "advanced_stock": {
+                                "sellable_stock": 0,
+                                "in_transit_stock": 0
+                            },
+                            "total_available_stock": 0,
+                            "total_seller_stock": 0,
+                            "total_shopee_stock": 0
+                        },
+                        "is_default": false,
+                        "image": "id-11134207-7r98u-lzwr2n7avbjc83",
+                        "tag": {
+                            "is_partial_fulfillment": false
+                        },
+                        "statistics": {
+                            "sold_count": 0
+                        },
+                        "price_detail": {
+                            "origin_price": "100000.00",
+                            "promotion_price": "0.00"
+                        }
+                    }
+                ],
+                "promotion_detail": {},
+                "scheduled_publish_time": 0,
+                "appeal_info": {
+                    "ipr_appeal_info": {
+                        "appeal_opt": 0,
+                        "can_not_appeal_transify_key": "",
+                        "reference_id": 0,
+                        "appeal_status": 0
+                    }
+                }
+            }
+        ]
+    }
+}
