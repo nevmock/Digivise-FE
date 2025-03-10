@@ -2,48 +2,117 @@ import Menu from "../../components/organisms/Menu";
 import Footer from "../../components/organisms/Footer";
 
 export default function MerchantInformationPage() {
-    return (
-        <>
-            <html lang="en">
-                <div className="app-wrapper">
-                    <Menu />
-                    <div className="page-content">
-                        <div className="container-fluid">
-                            <div className="d-flex flex-column gap-5">
-                                <div className="p-3 d-flex gap-5 bg-secondary-subtle">
-                                    <div className="bg-white" style={{ width: `150px`, height: `150px` }}></div>
-                                    <div className="d-flex flex-column gap-3">
-                                        <div className="bg-white" style={{ width: `300px`, height: `25px` }}></div>
-                                        <div className="bg-white" style={{ width: `300px`, height: `25px` }}></div>
-                                        <div className="bg-white" style={{ width: `300px`, height: `25px` }}></div>
-                                    </div>
-                                </div>
-                                <div className="px-3 py-4 d-flex bg-secondary-subtle">
-                                    <div className="d-flex flex-column gap-3">
-                                        <div className="d-flex gap-3">
-                                            <span className="fs-4 text-dark" style={{ width: "50px" }}>CPC</span>
-                                            <div className="bg-white" style={{ width: `300px`, height: `25px` }}></div>
-                                        </div>
-                                        <div className="d-flex gap-3">
-                                            <span className="fs-4 text-dark" style={{ width: "50px" }}>ACOS</span>
-                                            <div className="bg-white" style={{ width: `300px`, height: `25px` }}></div>
-                                        </div>
-                                        <div className="d-flex gap-3">
-                                            <span className="fs-4 text-dark" style={{ width: "50px" }}>CTR</span>
-                                            <div className="bg-white" style={{ width: `300px`, height: `25px` }}></div>
-                                        </div>
-                                        <div className="d-flex gap-3">
-                                            <span className="fs-4 text-dark" style={{ width: "50px" }}>CR</span>
-                                            <div className="bg-white" style={{ width: `300px`, height: `25px` }}></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <Footer />
+  return (
+    <>
+      <div className="app-wrapper">
+        <Menu />
+        <div className="page-content">
+          <div className="container-fluid">
+            <div className="card">
+              <div className="card-body">
+                <h4 className="text-left pb-3">Informasi Merchant</h4>
+                <div className="d-flex gap-2 align-items-start">
+                  <span className="d-flex align-items-center">
+                    <img
+                      className="rounded-circle"
+                      width="100"
+                      src="../../assets/images/users/avatar-1.jpg"
+                      alt="avatar-3"
+                    />
+                  </span>
+                  <div className="d-flex flex-column gap-1">
+                    <div>
+                      <span>Nama Toko</span>
+                      <h4>Merchant Official Shop</h4>
                     </div>
+                    <div>
+                      <span>Deskripsi Toko</span>
+                      <p className="text-black">
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                        Integer nec odio. Praesent libero. Sed cursus ante
+                        dapibus diam. Sed nisi.
+                      </p>
+                    </div>
+                  </div>
                 </div>
-            </html>
-        </>
-    );
+              </div>
+            </div>
+
+            <div className="row row-cols-lg-2 gx-3">
+              <div className="col">
+                <div class="card">
+                  <div class="card-header">
+                    <h5 class="card-title mb-0">Matrix Peforma Toko</h5>
+                  </div>
+
+                  <div class="card-body">
+                    <div>
+                      <div>
+                        <div className="d-flex w-full gap-2">
+                            <span>Omset :</span>
+                            <p>20</p>
+                        </div>
+                        <div className="d-flex w-full gap-2">
+                            <span>Traffic :</span>
+                            <p>20</p>
+                        </div>
+                        <div className="d-flex w-full gap-2">
+                            <span>Click Add To Cart :</span>
+                            <p>20</p>
+                        </div>
+                        <div className="d-flex w-full gap-2">
+                            <span>Convertion Rate : </span>
+                            <p>20</p>
+                        </div>
+                        <div className="d-flex w-full gap-2">
+                            <span>Ratio pengungjung baru dan lama :</span>
+                            <p>20</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col">
+                <div class="card">
+                  <div class="card-header">
+                    <h5 class="card-title mb-0">Matrix Iklan</h5>
+                  </div>
+                  
+                  <div class="card-body">
+                    <div>
+                      <div>
+                        <div className="d-flex w-full gap-2">
+                            <span>Custom harian :</span>
+                            <p>20</p>
+                        </div>
+                        <div className="d-flex w-full gap-2">
+                            <span>ACOS bulan:</span>
+                            <p>20</p>
+                        </div>
+                        <div className="d-flex w-full gap-2">
+                            <span>CPC bulan :</span>
+                            <p>20</p>
+                        </div>
+                        <div className="d-flex w-full gap-2">
+                            <span>CTR bulan berjalan :</span>
+                            <p>20</p>
+                        </div>
+                        <div className="d-flex w-full gap-2">
+                            <span>Biaya Iklan :</span>
+                            <p>20</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <Footer />
+        </div>
+      </div>
+    </>
+  );
 };
