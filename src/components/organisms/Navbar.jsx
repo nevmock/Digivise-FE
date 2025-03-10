@@ -41,7 +41,7 @@ const Navbar = () => {
                         <div className="d-flex align-items-center gap-2">
                             <div className="topbar-item position-relative" ref={dropdownRef}>
                                 <button type="button" className="btn btn-primary" onClick={toggleDropdown}>
-                                    Switch Account
+                                    Switch Merchant
                                 </button>
                                 {showDropdown && (
                                     <div className="dropdown-menu show position-absolute shadow p-2 rounded" style={{ width: "200px" }}>
