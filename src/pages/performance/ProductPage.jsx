@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import Menu from "../../components/organisms/Menu";
 import Footer from "../../components/organisms/Footer";
+import ProductTable from "../../components/organisms/Product/Table";
+import jsonData from '../../api/product.json';
 
 export default function PerformanceProductPage() {
     return (
@@ -11,18 +13,7 @@ export default function PerformanceProductPage() {
                     <div className="page-content">
                         <div className="container-fluid">
                             <div className="d-flex flex-column gap-4">
-                                <div className="w-100 bg-secondary-subtle" style={{ height: "80px" }}></div>
-                                <div style={{ height: "200px" }} className="w-100 d-flex gap-3">
-                                    <div className="w-75 h-100 bg-secondary-subtle d-flex justify-content-center align-items-center">
-                                        <p className="text-dark fs-2">performance chart</p>
-                                    </div>
-                                    <div className="w-25 h-100 bg-secondary-subtle d-flex justify-content-center align-items-center">
-                                        <p className="text-dark fs-2">rank</p>
-                                    </div>
-                                </div>
-                                <Link to="/performance/ads/detail" style={{ height: "350px" }} className="w-100 bg-secondary-subtle d-flex justify-content-center align-items-center">
-                                    <p className="text-dark fs-2">Product Ads Table</p>
-                                </Link>
+                                <ProductTable data={jsonData.data} />
                             </div>
                         </div>
                         <Footer />

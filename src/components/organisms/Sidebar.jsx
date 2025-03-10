@@ -49,10 +49,10 @@ const Sidebar = () => {
                             <div className="collapse" id="sidebarMultiLevelDemo">
                                 <ul className="nav sub-navbar-nav">
                                     <li className="sub-nav-item">
-                                        <a className="sub-nav-link" href="/performance/ads">Product</a>
+                                        <a className="sub-nav-link" href="/performance/product">Product</a>
                                     </li>
                                     <li className="sub-nav-item">
-                                        <a className="sub-nav-link" href="/performance/product">Ads</a>
+                                        <a className="sub-nav-link" href="/performance/ads">Ads</a>
                                     </li>
                                 </ul>
                             </div>

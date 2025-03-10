@@ -14,3 +14,30 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+.marker {
+  width: 8px;
+  height: 8px;
+  border-radius: 100%;
+  background-color: green;
+}
+
+.animated-circle {
+  animation: spread-pulse 2s infinite;
+  transform-origin: center;
+}
+
+@keyframes spread-pulse {
+  0% {
+    r: 5;
+    opacity: 1;
+  }
+  50% {
+    r: 8;
+    opacity: 0.5;
+  }
+  100% {
+    r: 5;
+    opacity: 1;
+  }
+}
