@@ -1,23 +1,11 @@
 import React, { useState, useEffect, useCallback } from "react";
-import {
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
 import Select from "react-select";
 import useDebounce from "../../hooks/useDebounce";
 
 import iconArrowUp from "../../assets/icon/arrow-up.png";
 import iconArrowDown from "../../assets/icon/arrow-down.png";
 
-const ProductTable = ({ data }) => {
+const AdsTable = ({ data }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredData, setFilteredData] = useState(data.products);
   const [activeFilter, setActiveFilter] = useState("all");
@@ -26,7 +14,6 @@ const ProductTable = ({ data }) => {
   const [showColumn, setShowColumn] = useState(false);
   const [allRevenue, setAllRevenue] = useState(0);
   const [expandedRows, setExpandedRows] = useState({});
-  const [chartData, setChartData] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [sortOrder, setSortOrder] = useState(null);
 
@@ -46,80 +33,6 @@ const ProductTable = ({ data }) => {
       setFilteredData(sortedData);
     }
   };
-
-  const convertEpochToDate = (epoch) => {
-    const date = new Date(epoch * 1000);
-    return date.toISOString().split("T")[0];
-  };
-
-  useEffect(() => {
-    if (data.products.length > 0) {
-      const stockMap = {};
-
-      data.products.forEach((product) => {
-        const date = convertEpochToDate(product.campaign.start_time);
-        const stock = product.stock_detail?.total_available_stock || 0;
-
-        if (!stockMap[date]) {
-          stockMap[date] = 0;
-        }
-        stockMap[date] += stock;
-      });
-
-      const formattedData = Object.keys(stockMap).map((date) => ({
-        date,
-        totalStock: stockMap[date],
-      }));
-
-      setChartData(formattedData);
-    }
-  }, [data]);
-
-  const handleProductClick = (product) => {
-    if (selectedProduct?.id === product.id) {
-      setSelectedProduct(null);
-      setChartData(generateChartData());
-      return;
-    }
-
-    setSelectedProduct(product);
-    setChartData([
-      {
-        date: convertEpochToDate(product.campaign.start_time),
-        totalStock: product.stock_detail?.total_available_stock || 0,
-      },
-    ]);
-  };
-
-  const getDaysInMonth = () => {
-    const today = new Date();
-    return [
-      `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(
-        2,
-        "0"
-      )}-${String(today.getDate()).padStart(2, "0")}`,
-    ];
-  };
-
-  const generateChartData = (product = null) => {
-    const today = getDaysInMonth();
-    return today.map((date) => ({
-      date,
-      totalStock: product
-        ? product.stock_detail?.total_available_stock || 0
-        : data.products.reduce(
-            (total, entry) =>
-              total + (entry.stock_detail?.total_available_stock || 0),
-            0
-          ),
-    }));
-  };
-
-  useEffect(() => {
-    if (!selectedProduct) {
-      setChartData(generateChartData());
-    }
-  }, [data.products]);
 
   // FILTER COLUMNS FEATURE
   // Define all columns
@@ -184,107 +97,10 @@ const ProductTable = ({ data }) => {
     data.products,
   ]);
 
-  // SALES CLASSIFICATION FEATURE
-  // Define sales classification options
-  const typeOptions = [
-    { value: "best_seller", label: "Best Seller" },
-    { value: "middle_moving", label: "Middle Moving" },
-    { value: "slow_moving", label: "Slow Moving" },
-  ];
-
-  // Calculate all revenue
-  const calculateAllRevenue = () => {
-    return data.products.reduce((sum, product) => {
-      return (
-        sum +
-        parseFloat(product.price_detail.selling_price_max) *
-          product.statistics.sold_count
-      );
-    }, 0);
-  };
-
-  // Get sales classification
-  const getClassification = (entry, allRevenue) => {
-    if (allRevenue === 0) return "";
-
-    const revenue =
-      parseFloat(entry.price_detail.selling_price_max) *
-      entry.statistics.sold_count;
-    const contribution = (revenue / allRevenue) * 100;
-
-    if (contribution > 70) return "best_seller";
-    if (contribution > 20) return "middle_moving";
-    if (contribution > 10) return "slow_moving";
-    return "";
-  };
-
-  // Handle type change by list of options sales classification
-  const handleTypeChange = (selectedOptions) => {
-    setSelectedTypes(selectedOptions);
-  };
-
-  useEffect(() => {
-    const totalRevenue = calculateAllRevenue();
-    setAllRevenue(totalRevenue);
-
-    let filtered = data.products || [];
-
-    if (selectedTypes.length > 0) {
-      filtered = filtered.filter((entry) => {
-        const classification = getClassification(entry, totalRevenue);
-        return selectedTypes.some((type) => type.value === classification);
-      });
-    }
-
-    setFilteredData(filtered);
-  }, [selectedTypes, data.products]);
-
-  // STOCK DETAILING FEATURE
-  // Classify stock is more than 70% of default stock
-  const checkStock = (variants, defaultStock) => {
-    const totalNewStock = variants.reduce(
-      (acc, variant) => acc + variant.stock_detail.total_available_stock,
-      0
-    );
-    return totalNewStock > 0.7 * defaultStock + 1;
-  };
-
-  // Check if stock is recommended
-  const checkStockIsRecommended = (variants, defaultStock) => {
-    return checkStock(variants, defaultStock) ? (
-      ""
-    ) : (
-      <span className="custom-text-danger" style={{ fontSize: "12px" }}>
-        *stok &#60;=70%
-      </span>
-    );
-  };
-
   return (
     <div className="card">
       <div className="card-body">
         <h5 className="mb-3">{data.page_info.total} total produk</h5>
-        <div className="card p-3 shadow">
-          <h6 className="text-center">Data Stock</h6>
-          <ResponsiveContainer width="100%" height={400}>
-            <BarChart
-              data={chartData}
-              margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
-            >
-              <CartesianGrid stroke="transparent" />
-              <XAxis dataKey="date" />
-              <YAxis />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "#fff",
-                  border: "1px solid #ddd",
-                }}
-              />
-              <Legend />
-              <Bar dataKey="totalStock" fill="#F6881F" name="Total Stock" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
         <div className="d-flex flex-column">
           {/*status filter*/}
           <div
@@ -589,7 +405,7 @@ const ProductTable = ({ data }) => {
   );
 };
 
-export default ProductTable;
+export default AdsTable;
 
 {
   /* <ResponsiveContainer width="100%" height={400}>
