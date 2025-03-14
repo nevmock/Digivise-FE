@@ -1,7 +1,6 @@
-import { Link } from "react-router-dom";
 import Menu from "../../components/organisms/Menu";
 import Footer from "../../components/organisms/Footer";
-import ProductTable from "../../components/organisms/Product/Table";
+import ProductTable from "../../components/organisms/productTable";
 import jsonData from '../../api/product.json';
 
 export default function PerformanceProductPage() {

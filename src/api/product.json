@@ -10,6 +10,9 @@
         },
         "products": [
             {
+                "campaign" : {
+                    "start_time" : "1741935100"
+                },
                 "state": "ongoing",
                 "code": 1021,
                 "condition" : "baik",
@@ -73,6 +76,7 @@
                     {
                         "id": 138034277452,
                         "name": "Merah Putih",
+                        "code": "1021",
                         "sku": "",
                         "tier_index": [
                             0
@@ -199,6 +203,9 @@
                 }
             },
             {
+                "campaign" : {
+                    "start_time" : "1741935100"
+                },
                 "condition" : "buruk",
                 "id": 24785707560,
                 "name": "Topi Rambut Supporter Bola - Supporter Esport - Topi Rambut Palsu Palestina",
@@ -215,7 +222,7 @@
                     "selling_price_max": "100000.00"
                 },
                 "stock_detail": {
-                    "total_available_stock": 0,
+                    "total_available_stock": 20,
                     "total_seller_stock": 0,
                     "total_shopee_stock": 0,
                     "low_stock_status": 0,
@@ -269,7 +276,7 @@
                                 "sellable_stock": 0,
                                 "in_transit_stock": 0
                             },
-                            "total_available_stock": 0,
+                            "total_available_stock": 2,
                             "total_seller_stock": 0,
                             "total_shopee_stock": 0
                         },
@@ -298,7 +305,7 @@
                                 "sellable_stock": 0,
                                 "in_transit_stock": 0
                             },
-                            "total_available_stock": 0,
+                            "total_available_stock": 18,
                             "total_seller_stock": 0,
                             "total_shopee_stock": 0
                         },
@@ -618,6 +625,9 @@
                 }
             },
             {
+                "campaign" : {
+                    "start_time" : "1741935100"
+                },
                 "condition" : "sangat baik",
                 "id": 25685707370,
                 "name": "Topi Rambut Palsu - Topi Wig - Topi Bulu - Topi Sule - Topi Rambut",
@@ -634,7 +644,7 @@
                     "selling_price_max": "100000.00"
                 },
                 "stock_detail": {
-                    "total_available_stock": 0,
+                    "total_available_stock": 1,
                     "total_seller_stock": 0,
                     "total_shopee_stock": 0,
                     "low_stock_status": 0,
@@ -688,7 +698,7 @@
                                 "sellable_stock": 0,
                                 "in_transit_stock": 0
                             },
-                            "total_available_stock": 0,
+                            "total_available_stock": 1,
                             "total_seller_stock": 0,
                             "total_shopee_stock": 0
                         },
@@ -1298,6 +1308,9 @@
                 }
             },
             {
+                "campaign" : {
+                    "start_time" : "1741935100"
+                },
                 "condition" : "sangat baik",
                 "id": 26910219677,
                 "name": "Topi Rambut Palsu - Topi Golf Rambut Palsu - Topi Golf",
@@ -1360,6 +1373,7 @@
                         "id": 108447494946,
                         "name": "Hitam Tosca",
                         "sku": "",
+                        "code": "1021",
                         "tier_index": [
                             4
                         ],
@@ -1572,6 +1586,9 @@
                 }
             },
             {
+                "campaign" : {
+                    "start_time" : "1741935100"
+                },
                 "condition" : "tidak ada informasi",
                 "id": 29611481745,
                 "name": "Topi Rambut Palsu - Udeng Rambut Palsu - Udeng Topi Rambut Palsu - Udeng Rambut Palsu Pria",
@@ -1846,6 +1863,9 @@
                 }
             },
             {
+                "campaign" : {
+                    "start_time" : "1741935100"
+                },
                 "condition" : "sangat baik",
                 "id": 26662054467,
                 "name": "Udeng Kujang Rambut Palsu - Udeng Rambut Palsu - Topi Rambut Palsu - Ikat Kepala Sunda",
@@ -2033,6 +2053,9 @@
                 }
             },
             {
+                "campaign" : {
+                    "start_time" : "1741935100"
+                },
                 "condition" : "buruk",
                 "id": 28362158630,
                 "name": "Topi Rambut Palsu Motif Paisley - Topi Wig Rambut Palsu Paisley - Topi Bulu Paisley",
@@ -2278,6 +2301,9 @@
                 }
             },
             {
+                "campaign" : {
+                    "start_time" : "1741935100"
+                },
                 "condition" : "buruk",
                 "id": 24536334723,
                 "name": "Udeng Rambut Palsu Anak - Udeng Rambut Batik Anak - Topi Rambut Palsu Anak - Topi Wig Anak",
@@ -2494,6 +2520,9 @@
                 }
             },
             {
+                "campaign" : {
+                    "start_time" : "1741935100"
+                },
                 "condition" : "buruk",
                 "id": 24486191891,
                 "name": "Topi Rambut Palsu - Topi Rambut Brigez - Topi Rambut XTC - Topi Bulu - Topi Wig",
@@ -2623,6 +2652,9 @@
                 }
             },
             {
+                "campaign" : {
+                    "start_time" : "1741935100"
+                },
                 "condition" : "buruk",
                 "id": 29410132862,
                 "name": "Udeng Rambut Palsu - Topi Rambut Palsu - Udeng Merah Putih - Udeng Rambut Palsu Pria",
@@ -2810,6 +2842,9 @@
                 }
             },
             {
+                "campaign" : {
+                    "start_time" : "1741935100"
+                },
                 "condition" : "buruk",
                 "id": 28759922421,
                 "name": "Topi Wig Anak - Topi Rambut Palsu Anak- Topi Cosplay Anime Anak Viral - Topi Sule Anak - Topi Bulu Korea Anak",
@@ -3113,6 +3148,9 @@
                 }
             },
             {
+                "campaign" : {
+                    "start_time" : "1741935100"
+                },
                 "condition" : "buruk",
                 "id": 26110563106,
                 "name": "Topi Rambut Suporter Timnas - Topi Rambut Persib - Topi Rambut Persija - Topi Rambut Arema - Topi Rambut Madura United - Topi Rambut Suporter Bola",

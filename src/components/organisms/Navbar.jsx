@@ -40,7 +40,7 @@ const Navbar = () => {
 
                         <div className="d-flex align-items-center gap-2">
                             <div className="topbar-item position-relative" ref={dropdownRef}>
-                                <button type="button" className="btn btn-primary" onClick={toggleDropdown}>
+                                <button type="button" className="btn" style={{ backgroundColor: "#8042D4", color: "white" }} onClick={toggleDropdown}>
                                     Switch Merchant
                                 </button>
                                 {showDropdown && (
