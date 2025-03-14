@@ -17,6 +17,22 @@ const ProductTable = ({ data }) => {
   const [expandedRows, setExpandedRows] = useState({});
   const [chartData, setChartData] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [sortOrder, setSortOrder] = useState(null);
+
+  const handleSortStock = (order) => {
+    if (sortOrder === order) {
+      setSortOrder(null);
+      setFilteredData(data.products);
+    } else {
+      setSortOrder(order);
+      const sortedData = [...filteredData].sort((a, b) => {
+        return order === "asc"
+          ? a.stock_detail.total_available_stock - b.stock_detail.total_available_stock
+          : b.stock_detail.total_available_stock - a.stock_detail.total_available_stock;
+      });
+      setFilteredData(sortedData);
+    }
+  };  
 
   const convertEpochToDate = (epoch) => {
     const date = new Date(epoch * 1000);
@@ -360,23 +376,23 @@ const ProductTable = ({ data }) => {
                               src={iconArrowUp}
                               alt="Sort Asc"
                               style={{
-                                width: "8px",
-                                height: "8px",
+                                width: "12px",
+                                height: "12px",
                                 cursor: "pointer",
-                                // opacity: sortOrder === "asc" ? 1 : 0.5,
+                                opacity: sortOrder === "asc" ? 1 : 0.5,
                               }}
-                              onClick={() => handleSort("asc")}
+                              onClick={() => handleSortStock("asc")}
                             />
                             <img
                               src={iconArrowDown}
                               alt="Sort Desc"
                               style={{
-                                width: "8px",
-                                height: "8px",
+                                width: "12px",
+                                height: "12px",
                                 cursor: "pointer",
-                                // opacity: sortOrder === "desc" ? 1 : 0.5,
+                                opacity: sortOrder === "desc" ? 1 : 0.5,
                               }}
-                              onClick={() => handleSort("desc")}
+                              onClick={() => handleSortStock("desc")}
                             />
                           </div>
                         )}
