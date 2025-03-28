@@ -4,7 +4,6 @@
 .env.*.local
 
 # CI/CD
-.github/workflows/*.yml
 vercel.json
 
 # Logs
