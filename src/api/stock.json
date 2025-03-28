@@ -11,10 +11,9 @@
         "products": [
             {
                 "campaign" : {
-                    "start_time" : "1741136400"
+                    "start_time" : "1740790800"
                 },
                 "state": "ongoing",
-                "code": 1021,
                 "id": 26360011113,
                 "name": "Udeng Merah Putih - Topi Udeng Bulu Viral - Ikat Kepala Udeng Rambut Palsu - Iket Kepala Merah Putih",
                 "status": 1,
@@ -203,7 +202,7 @@
             },
             {
                 "campaign" : {
-                    "start_time" : "1741136400"
+                    "start_time" : "1740877200"
                 },
                 "state": "paused",
                 "id": 24785707560,
@@ -625,7 +624,7 @@
             },
             {
                 "campaign" : {
-                    "start_time" : "1741136400"
+                    "start_time" : "1740963600"
                 },
                 "state": "paused",
                 "id": 25685707370,
@@ -1308,7 +1307,7 @@
             },
             {
                 "campaign" : {
-                    "start_time" : "1741136400"
+                    "start_time" : "1741050000"
                 },
                 "state": "paused",
                 "id": 26910219677,

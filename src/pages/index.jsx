@@ -1,12 +1,8 @@
 import Menu from "../components/organisms/Menu";
-import PageTitle from "../components/organisms/PageTitle";
 import Footer from "../components/organisms/Footer";
 
 
 export default function Home() {
-    const subtitle = "Dashboard";
-    const title = "Digivise";
-
     return (
         <>
             <html lang="en">
@@ -15,7 +11,6 @@ export default function Home() {
                     <Menu />
                     <div className="page-content">
                         <div className="container-fluid">
-                            <PageTitle title={title} subtitle={subtitle} />
                             <div className="row d-flex justify-content-center align-items-center">
                                 <h1 className="text-dark text-center">WELCOME TO DIGIVISE APP</h1>
                             </div>

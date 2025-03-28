@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { Calendar } from "primereact/calendar";
 import {
   LineChart,
   Line,
@@ -17,12 +18,14 @@ import useDebounce from "../../hooks/useDebounce";
 import iconArrowUp from "../../assets/icon/arrow-up.png";
 import iconArrowDown from "../../assets/icon/arrow-down.png";
 
+
 const ProductTable = ({ data }) => {
+  const [range, setRange] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [filteredData, setFilteredData] = useState(data.products);
   const [activeFilter, setActiveFilter] = useState("all");
   const [selectedTypes, setSelectedTypes] = useState([]);
-  const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [showColumn, setShowColumn] = useState(false);
   const [allRevenue, setAllRevenue] = useState(0);
   const [expandedRows, setExpandedRows] = useState({});
@@ -263,23 +266,28 @@ const ProductTable = ({ data }) => {
   return (
     <div className="card">
       <div className="card-body">
-        <h5 className="mb-3">{data.page_info.total} total produk</h5>
+        <div className="d-flex justify-content-between align-items-start pb-3">
+          <h5>{data.page_info.total} total produk</h5>
+          <Calendar 
+            value={range} 
+            onChange={(e) => setRange(e.value)} 
+            selectionMode="range" 
+            numberOfMonths={2} 
+            showIcon
+            dateFormat="dd/mm/yy"
+            style={{ width: "250px", height: "35px", borderRadius: "10px" }} 
+          />
+        </div>
         <div className="card p-3 shadow">
-          <h6 className="text-center">Data Stock</h6>
           <ResponsiveContainer width="100%" height={400}>
             <BarChart
+              barSize={50}
               data={chartData}
               margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
             >
-              <CartesianGrid stroke="transparent" />
               <XAxis dataKey="date" />
               <YAxis />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "#fff",
-                  border: "1px solid #ddd",
-                }}
-              />
+              <Tooltip/>
               <Legend />
               <Bar dataKey="totalStock" fill="#F6881F" name="Total Stock" />
             </BarChart>
@@ -406,8 +414,8 @@ const ProductTable = ({ data }) => {
                                 src={iconArrowUp}
                                 alt="Sort Asc"
                                 style={{
-                                  width: "12px",
-                                  height: "12px",
+                                  width: "10px",
+                                  height: "10px",
                                   cursor: "pointer",
                                   opacity: sortOrder === "asc" ? 1 : 0.5,
                                 }}
@@ -417,8 +425,8 @@ const ProductTable = ({ data }) => {
                                 src={iconArrowDown}
                                 alt="Sort Desc"
                                 style={{
-                                  width: "12px",
-                                  height: "12px",
+                                  width: "10px",
+                                  height: "10px",
                                   cursor: "pointer",
                                   opacity: sortOrder === "desc" ? 1 : 0.5,
                                 }}
