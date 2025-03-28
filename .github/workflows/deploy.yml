@@ -1,0 +1,48 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches: 
+      - '**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.11.0'
+    - name: Load variables
+      run: |
+        touch .env
+        echo PORT=${{ secrets.PORT }} >> .env
+    - name: Install dependencies
+      run: npm install
+    - name: Build project
+      run: npm run build
+
+  deploy:
+    if: github.ref == 'refs/heads/main' 
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Deploy app
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          cd /home/rahman/Digivise-FE
+          git reset --hard HEAD
+          git pull origin main --rebase
+          npm install
+          npm run build          
+          sudo systemctl restart digivise-fe.service
