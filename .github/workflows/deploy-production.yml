@@ -1,0 +1,29 @@
+name: Deploy to Production (Vercel)
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build Project
+        run: npm run build
+
+      - name: Deploy to Vercel (Production)
+        id: deploy
+        continue-on-error: true
+        run: npx vercel --token ${{ secrets.VERCEL_TOKEN }} --prod
+
+      - name: Rollback if Deployment Fails
+        if: failure()
+        run: npx vercel --token ${{ secrets.VERCEL_TOKEN }} --prod --revert

@@ -1,31 +1,48 @@
 {
-    "data": {
-      "code": 0,
-      "msg": "OK",
-      "debug_detail": "",
-      "validation_error_list": null,
-      "data": {
-        "entry_list": [
+  "code": 0,
+  "msg": "ok",
+  "result": {
+      "total": 4,
+      "items": [
           {
-            "campaign": {
-              "campaign_id": 121828260,
-              "daily_budget": 4000000000,
-              "end_time": 0,
-              "start_time" : 1740790800,
-              "total_budget": 0
-            }
+              "id": 24164190830,
+              "name": "AMK Kemeja Koko Pria Printing  Lengan Panjang KK NIZAM L/S NAVY BLUE",
+              "status": 1,
+              "bidding" : 5,
+              "uv": 112,
+              "start_time" : 1743094800,
+              "add_to_cart_units": 32,
+              "paid_sales": 1192431,
+              "confirmed_units": 4,
+              "placed_to_paid_buyers_rate": 3.5,
+              "uv_to_add_to_cart_rate": 0.2321
           },
           {
-            "campaign": {
-              "campaign_id": 315516327,
-              "daily_budget": 1000000000,
-              "end_time": 0,
-              "start_time" : 1740790800,
-              "total_budget": 0
-            }
+              "id": 24414087607,
+              "name": "AMK Baju Koko Lengan Panjang KK FATHAN L/s White",
+              "status": 1,
+              "bidding" : 5,
+              "uv": 34,
+              "start_time" : 1743094800,
+              "add_to_cart_units": 9,
+              "paid_sales": 971352,
+              "confirmed_units": 1,
+              "placed_to_paid_buyers_rate": 8,
+              "uv_to_add_to_cart_rate": 0.2059
+          },
+          {
+              "id": 24566965167,
+              "name": "AMK Kemeja Koko Pria Printing  Lengan Panjang KK ISKANDER L/S Brown",
+              "status": 1,
+              "bidding" : 5,
+              "uv": 43,
+              "start_time" : 1743094800,
+              "add_to_cart_units": 2,
+              "paid_sales": 117566.67,
+              "confirmed_units": 0,
+              "placed_to_paid_buyers_rate": 1,
+              "uv_to_add_to_cart_rate": 0.0465
           }
-        ],
-        "total": 2
-      }
-    }
+      ]
+  }
 }

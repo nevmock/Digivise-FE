@@ -19198,19 +19198,3 @@ html[data-bs-theme=dark] .auth-logo .logo-dark {
 html[data-bs-theme=dark] .auth-logo .logo-light {
   display: block;
 }
-
-.custom-font-color {
-  color: #F6881F;
-}
-
-.custom-border-select {
-  border: 1px solid #F6881F;
-}
-
-.custom-text-success {
-  color: #1da84d;
-}
-
-.custom-text-danger {
-  color: #9e2115;
-}

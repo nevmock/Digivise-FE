@@ -3,8 +3,8 @@ const Sidebar = () => {
         <>
             <div className="app-sidebar">
                 <div className="logo-box">
-                    <img src="/assets/images/logo.png" class="logo-lg" alt="" />
-                    <img src="/assets/images/logo-sm.png" class="logo-sm" alt="" />
+                    <img src="/assets/images/logo.png" className="logo-lg" alt="" />
+                    <img src="/assets/images/logo-sm.png" className="logo-sm" alt="" />
                 </div>
 
                 <div className="scrollbar" data-simplebar>

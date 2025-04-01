@@ -14,51 +14,55 @@ export default function PerformanceStockPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [filteredData, setFilteredData] = useState(stockJsonData.data.products);
-  const [activeFilter, setActiveFilter] = useState("all");
-  const [selectedTypes, setSelectedTypes] = useState([]);
-  const [showColumn, setShowColumn] = useState(false);
-  const [allRevenue, setAllRevenue] = useState(0);
-  const [expandedRows, setExpandedRows] = useState({});
+  const [statusProductFilter, setStatusProductFilter] = useState("all");
+  const [classificationFilter, setClassificationFilter] = useState([]);
+  const [showTableColumn, setShowTableColumn] = useState(false);
+  const [allRevenueStock, setAllRevenueStock] = useState(0);
+  const [expandedVariantProduct, setExpandedVariantProduct] = useState({});
   const [chartData, setChartData] = useState([]);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [sortOrder, setSortOrder] = useState(null);
-  const [date, setDate] = useState(null);
-  const [showCalender, setShowCalender] = useState(false);
   const chartRef = useRef(null);
+  const [sortOrderData, setSortOrderData] = useState(null);
+  const [showCalender, setShowCalender] = useState(false);
+  const [date, setDate] = useState(getAllDaysInLast7Days());
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
-  // Convert start_time to date format with epoch method
-  const convertEpochToDate = (epoch) => {
-    const date = new Date(epoch * 1000);
-    return date.toISOString().split("T")[0];
-  };
-
+  // CUSTOM CHART & PRODUCT CLICK FEATURE
   // Handle product click by clicking the product in name column
   const handleProductClick = (product) => {
+    // Jika produk yang diklik sama dengan yang sebelumnya dipilih, reset chart kembali ke semua produk
     if (selectedProduct?.id === product.id) {
       setSelectedProduct(null);
-      setChartData(generateChartData());
-      return;
+    // Jika produk yang diklik berbeda, set chart data sesuai produk yang dipilih
+    } else {
+      setSelectedProduct(product);
     }
-    setSelectedProduct(product);
-    setChartData([
-      {
-        date: convertEpochToDate(product.campaign.start_time),
-        totalStock: product.stock_detail?.total_available_stock || 0,
-      },
-    ]);
+  };  
+
+  // Convert start_time to date format with epoch method
+  const convertEpochToDate = (epoch, mode = "daily") => {
+    const date = new Date(epoch * 1000);
+    date.setMinutes(0, 0, 0);
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+
+    return mode === "hourly" ? `${year}-${month}-${day} ${hours}:${minutes}` : `${year}-${month}-${day}`;
   };
 
-  // Get last 7 days
-  const getAllDaysInLast7Days = () => {
+  // Get all days in last 7 days in a month
+  function getAllDaysInLast7Days() {
     return Array.from({ length: 7 }, (_, i) => {
       const d = new Date();
       d.setDate(d.getDate() - i);
       return d.toISOString().split("T")[0];
     }).reverse();
-  };
+  }
 
   // Get all days in a month
-  const getAllDaysInAMonth = () => {
+  function getAllDaysInAMonth() {
     const today = new Date();
     const year = today.getFullYear();
     const month = today.getMonth() + 1;
@@ -67,112 +71,82 @@ export default function PerformanceStockPage() {
       { length: days },
       (_, i) => `${year}-${String(month).padStart(2, "0")}-${String(i + 1).padStart(2, "0")}`
     );
-  };
+  }
+
+  // Get all hourly intervals for a specific date
+  function getHourlyIntervals(selectedDate) {
+    return Array.from({ length: 24 }, (_, i) => {
+      return `${selectedDate} ${String(i).padStart(2, "0")}:00`;
+    });
+  }
   
-  // Generate chart data for the selected date
-  const generateChartData = (selectedDate = null) => {
-    const stockMap = {};
-    const monthDays = getAllDaysInAMonth();
-
-    monthDays.forEach((day) => {
-      stockMap[day] = 0;
-    });
-
-    stockJsonData.data.products.forEach((product) => {
-      const date = convertEpochToDate(product.campaign.start_time);
-      if (stockMap[date] !== undefined) {
-        stockMap[date] += product.stock_detail?.total_available_stock || 0;
-      }
-    });
-
-    if (selectedDate) {
-      return [{
-        date: selectedDate,
-        totalStock: stockMap[selectedDate] || 0,
-      }];
+  // Generate chart data based on selected date and product
+  function generateChartData(selectedDate = null, product = null) { 
+    let stockMap = {};
+    let timeIntervals = [];
+    let mode = "daily";
+  
+    // Find a range of time by selected date/filter
+    if (selectedDate === null || Array.isArray(selectedDate)) {
+      timeIntervals = getAllDaysInLast7Days();
+    } else if (selectedDate === "Bulan Ini") {
+      timeIntervals = getAllDaysInAMonth();
+    } else {
+      timeIntervals = getHourlyIntervals(selectedDate);
+      mode = "hourly";
     }
-
-    return monthDays.map((date) => ({ date, totalStock: stockMap[date] }));
-  };
-
-  useEffect(() => {
-    const updateChartData = () => {
-      let selectedDates = [];
   
-      if (date === null) {
-        selectedDates = getAllDaysInAMonth();
-      } else if (Array.isArray(date)) {
-        selectedDates = date;
-      } else if (date instanceof Date) {
-        selectedDates = [date.toISOString().split("T")[0]];
+    // Initialize stockMap with time intervals
+    timeIntervals.forEach((time) => {
+      stockMap[time] = 0;
+    });
+  
+    // Filter products based on selected product
+    let filteredProducts = stockJsonData.data.products;
+    if (product) {
+      filteredProducts = stockJsonData.data.products.filter((p) => p.id === product.id);
+    }
+  
+    // Calculate total stock for each time interval
+    filteredProducts.forEach((product) => {
+      const productDateTime = convertEpochToDate(product.campaign.start_time, mode);
+      if (stockMap[productDateTime] !== undefined) {
+        stockMap[productDateTime] += product.stock_detail?.total_available_stock || 0;
       }
+    });
   
-      const stockMap = {};
-      selectedDates.forEach((day) => {
-        stockMap[day] = 0;
-      });
-  
-      stockJsonData.data.products.forEach((product) => {
-        const productDate = convertEpochToDate(product.campaign.start_time);
-        if (stockMap[productDate] !== undefined) {
-          stockMap[productDate] += product.stock_detail?.total_available_stock || 0;
-        }
-      });
-  
-      const formattedData = selectedDates.map((date) => ({
-        date,
-        totalStock: stockMap[date],
-      }));
-  
-      setChartData(formattedData);
-    };
-  
-    updateChartData();
-  }, [date]);
+    return timeIntervals.map((time) => ({ date: time, totalStock: stockMap[time] }));
+  }  
 
+  // Initialize chart data when the component mounts or when date or selectedProduct changes
+  useEffect(() => {
+    setChartData(generateChartData(date, selectedProduct));
+  }, [date, selectedProduct]);
+
+  // Initialize chart when the component mounts or when chartData changes
   useEffect(() => {
     if (chartRef.current) {
       const chartInstance = echarts.init(chartRef.current);
       const option = {
-        toolbox: {
-          feature: {
-            saveAsImage: {},
-          },
-        },
-        grid: {
-          left: 50,
-          right: 50,
-          bottom: 50,
-          containLabel: false,
-        },
+        toolbox: { feature: { saveAsImage: {} } },
+        grid: { left: 50, right: 50, bottom: 50, containLabel: false },
         tooltip: { trigger: "axis" },
-        xAxis: {
-          name: "Date",
-          type: "category",
-          data: chartData.map((item) => item.date),
-          boundaryGap: false,
-        },
+        xAxis: { name: "Date", type: "category", data: chartData.map((item) => item.date), boundaryGap: false },
         yAxis: { name: "Stock", type: "value", splitLine: { show: true } },
         series: [
           {
             type: "line",
             smooth: true,
-            symbolSize: 5,
+            showSymbol: false,
             emphasis: { focus: "series" },
             data: chartData.map((item) => item.totalStock),
           },
         ],
       };
       chartInstance.setOption(option);
+      return () => chartInstance.dispose();
     }
   }, [chartData]);
-
-  // Set chart data when selected product stock is null
-  // useEffect(() => {
-  //   if (!selectedProduct) {
-  //     setChartData(generateChartData());
-  //   }
-  // }, [stockJsonData.data.products]);
 
 
   // FILTER COLUMNS FEATURE
@@ -193,7 +167,7 @@ export default function PerformanceStockPage() {
 
   // Toggle row to show variant
   const toggleRow = useCallback((productId) => {
-    setExpandedRows((prev) => ({
+    setExpandedVariantProduct((prev) => ({
       ...prev,
       [productId]: !prev[productId],
     }));
@@ -218,24 +192,24 @@ export default function PerformanceStockPage() {
     }
 
     // Filter by status
-    if (activeFilter !== "all") {
-      filtered = filtered.filter((entry) => entry.state === activeFilter);
+    if (statusProductFilter !== "all") {
+      filtered = filtered.filter((entry) => entry.state === statusProductFilter);
     }
 
     // Filter by sales classification
-    if (selectedTypes.length > 0) {
+    if (classificationFilter.length > 0) {
       filtered = filtered.filter((entry) => {
         const classification = getClassification(entry);
-        return selectedTypes.some((type) => type.value === classification);
+        return classificationFilter.some((type) => type.value === classification);
       });
     }
 
     setFilteredData(filtered);
   }, [
     debouncedSearchTerm,
-    activeFilter,
-    selectedTypes,
-    allRevenue,
+    statusProductFilter,
+    classificationFilter,
+    allRevenueStock,
     stockJsonData.data.products,
   ]);
 
@@ -260,13 +234,13 @@ export default function PerformanceStockPage() {
   };
 
   // Get sales classification
-  const getClassification = (entry, allRevenue) => {
-    if (allRevenue === 0) return "";
+  const getClassification = (entry, allRevenueStock) => {
+    if (allRevenueStock === 0) return "";
 
     const revenue =
       parseFloat(entry.price_detail.selling_price_max) *
       entry.statistics.sold_count;
-    const contribution = (revenue / allRevenue) * 100;
+    const contribution = (revenue / allRevenueStock) * 100;
 
     if (contribution > 70) return "best_seller";
     if (contribution > 20) return "middle_moving";
@@ -276,24 +250,24 @@ export default function PerformanceStockPage() {
 
   // Handle type change by list of options sales classification
   const handleTypeChange = (selectedOptions) => {
-    setSelectedTypes(selectedOptions);
+    setClassificationFilter(selectedOptions);
   };
 
   useEffect(() => {
     const totalRevenue = calculateAllRevenue();
-    setAllRevenue(totalRevenue);
+    setAllRevenueStock(totalRevenue);
 
     let filtered = stockJsonData.data.products || [];
 
-    if (selectedTypes.length > 0) {
+    if (classificationFilter.length > 0) {
       filtered = filtered.filter((entry) => {
         const classification = getClassification(entry, totalRevenue);
-        return selectedTypes.some((type) => type.value === classification);
+        return classificationFilter.some((type) => type.value === classification);
       });
     }
 
     setFilteredData(filtered);
-  }, [selectedTypes, stockJsonData.data.products]);
+  }, [classificationFilter, stockJsonData.data.products]);
 
 
   // STOCK AVAILABILITY FEATURE
@@ -318,14 +292,14 @@ export default function PerformanceStockPage() {
   };
 
 
-  // SORTING FEATURE
+  // SORTING STOCK FEATURE
   // Handle sort stock by asc or desc
   const handleSortStock = (order) => {
-    if (sortOrder === order) {
-      setSortOrder(null);
+    if (sortOrderData === order) {
+      setSortOrderData(null);
       setFilteredData(data.products);
     } else {
-      setSortOrder(order);
+      setSortOrderData(order);
       const sortedData = [...filteredData].sort((a, b) => {
         return order === "asc"
           ? a.stock_detail.total_available_stock -
@@ -350,19 +324,13 @@ export default function PerformanceStockPage() {
               <div className="d-flex justify-content-between align-items-start pb-1">
                 <h5>{stockJsonData.data.page_info.total} total produk</h5>
                 <div style={{ position: "relative" }}>
-                <button
-                  onClick={() => setShowCalender(!showCalender)}
-                  className="btn btn-secondary"
-                  style={{ backgroundColor: "#8042D4", border: "none" }}
-                >
-                  {date === null
-                    ? "Pilih tanggal"
-                    : Array.isArray(date)
-                    ? "1 Minggu terakhir"
-                    : date instanceof Date
-                    ? date.toLocaleDateString("id-ID")
-                    : "Tanggal tidak valid"}
-                </button>
+                  <button
+                    onClick={() => setShowCalender(!showCalender)}
+                    className="btn btn-secondary"
+                    style={{ backgroundColor: "#8042D4", border: "none" }}
+                  >
+                    {date === null ? "Pilih tanggal" : Array.isArray(date) ? "1 Minggu terakhir" : date}
+                  </button>
                   {showCalender && (
                     <div
                       className="d-flex"
@@ -374,21 +342,41 @@ export default function PerformanceStockPage() {
                         background: "white",
                         boxShadow: "0px 4px 6px rgba(0,0,0,0.1)",
                         borderRadius: "8px",
-                        padding: "0px 10px",
+                        padding: "10px 10px",
                       }}
                     >
-                      <div className="d-flex flex-column py-2 px-1" style={{ width: "130px", listStyleType: "none" }}>
-                        <p style={{ cursor: "pointer" }} onClick={() => setDate(new Date())}> Hari ini</p>
-                        <p style={{ cursor: "pointer" }} onClick={() => setDate(new Date(Date.now() - 86400000))}> Kemarin </p>
+                      <div
+                        className="d-flex flex-column py-2 px-1"
+                        style={{ width: "130px", listStyleType: "none" }}
+                      >
+                        <p style={{ cursor: "pointer" }} onClick={() => setDate(new Date().toISOString().split("T")[0])}>Hari ini</p>
+                        <p
+                          style={{ cursor: "pointer" }}
+                          onClick={() => {
+                            const yesterday = new Date();
+                            yesterday.setDate(yesterday.getDate() - 1);
+                            setDate(yesterday.toISOString().split("T")[0]);
+                          }}
+                        >
+                          Kemarin
+                        </p>
                         <p style={{ cursor: "pointer" }} onClick={() => setDate(getAllDaysInLast7Days())}>1 Minggu terakhir</p>
-                        <p style={{ cursor: "pointer" }} onClick={() => setDate(null)}> Bulan ini </p>
-                      </div>                      
+                        <p style={{ cursor: "pointer" }} onClick={() => setDate("Bulan Ini")}>Bulan ini</p>
+                      </div>
+                      <div
+                        style={{
+                          width: "1px",
+                          height: "auto",
+                          backgroundColor: "#E3E3E3FF",
+                          margin: "10px 10px 0",
+                        }}
+                      ></div>
                       <Calendar
                         onChange={(selectedDate) => {
-                          setDate(selectedDate);
+                          setDate(selectedDate.toString().split("T")[0]);
                           setShowCalender(false);
                         }}
-                        value={date}
+                        value={date === "Bulan Ini" ? new Date() : date} 
                         maxDate={new Date()}
                       />
                     </div>
@@ -396,69 +384,68 @@ export default function PerformanceStockPage() {
                 </div>
               </div>
               {/* Chart */}
-              <div ref={chartRef} style={{ width: "100%", height: "400px" }}></div>
+              <div ref={chartRef} style={{ width: "100%", height: "300px" }} className="mb-2"></div>
               {/* Filter & Table */}
-              <div className="d-flex flex-column">
-                {/* Status filter*/}
+              <div className="d-flex flex-column gap-2">
+                {/* Status filter */}
                 <div
-                  className="d-flex flex-column gap-1 mb-3"
+                  className="d-flex align-items-center gap-2"
                   style={{ width: "fit-content", listStyleType: "none" }}
                 >
                   <span>Status Produk</span>
-                  {/* Filter buttons */}
                   <div className="d-flex gap-2">
                     <div
-                      className={`ads-button-filter px-2 py-1 rounded-pill bg-white ${
-                        activeFilter === "all"
+                      className={`status-button-filter rounded-pill bg-white d-flex align-items-center  ${
+                        statusProductFilter === "all"
                           ? "custom-font-color custom-border-select"
                           : "border border-secondary-subtle"
                       }`}
-                      onClick={() => setActiveFilter("all")}
-                      style={{ cursor: "pointer", fontSize: "13px" }}
+                      onClick={() => setStatusProductFilter("all")}
+                      style={{ cursor: "pointer", fontSize: "12px", padding: "6px 12px", }}
                     >
                       Semua
                     </div>
                     <div
-                      className={`ads-button-filter px-2 py-1 rounded-pill bg-white ${
-                        activeFilter === "scheduled"
+                      className={`status-button-filter rounded-pill bg-white d-flex align-items-center ${
+                        statusProductFilter === "scheduled"
                           ? "custom-font-color custom-border-select"
                           : "border border-secondary-subtle"
                       }`}
-                      onClick={() => setActiveFilter("scheduled")}
-                      style={{ cursor: "pointer", fontSize: "13px" }}
+                      onClick={() => setStatusProductFilter("scheduled")}
+                      style={{ cursor: "pointer", fontSize: "12px", padding: "6px 12px", }}
                     >
                       Terjadwal
                     </div>
                     <div
-                      className={`ads-button-filter px-2 py-1 rounded-pill bg-white ${
-                        activeFilter === "ongoing"
+                      className={`status-button-filter rounded-pill bg-white d-flex align-items-center  ${
+                        statusProductFilter === "ongoing"
                           ? "custom-font-color custom-border-select"
                           : "border border-secondary-subtle"
                       }`}
-                      onClick={() => setActiveFilter("ongoing")}
-                      style={{ cursor: "pointer", fontSize: "13px" }}
+                      onClick={() => setStatusProductFilter("ongoing")}
+                      style={{ cursor: "pointer", fontSize: "12px", padding: "6px 12px", }}
                     >
                       Berjalan
                     </div>
                     <div
-                      className={`ads-button-filter px-2 py-1 rounded-pill bg-white ${
-                        activeFilter === "paused"
+                      className={`status-button-filter rounded-pill bg-white d-flex align-items-center  ${
+                        statusProductFilter === "paused"
                           ? "custom-font-color custom-border-select"
                           : "border border-secondary-subtle"
                       }`}
-                      onClick={() => setActiveFilter("paused")}
-                      style={{ cursor: "pointer", fontSize: "13px" }}
+                      onClick={() => setStatusProductFilter("paused")}
+                      style={{ cursor: "pointer", fontSize: "12px", padding: "6px 12px", }}
                     >
                       Nonaktif
                     </div>
                     <div
-                      className={`ads-button-filter px-2 py-1 rounded-pill bg-white ${
-                        activeFilter === "ended"
+                      className={`status-button-filter rounded-pill bg-white d-flex align-items-center ${
+                        statusProductFilter === "ended"
                           ? "custom-font-color custom-border-select"
                           : "border border-secondary-subtle"
                       }`}
-                      onClick={() => setActiveFilter("ended")}
-                      style={{ cursor: "pointer", fontSize: "13px" }}
+                      onClick={() => setStatusProductFilter("ended")}
+                      style={{ cursor: "pointer", fontSize: "12px", padding: "1px 12px", }}
                     >
                       Berakhir
                     </div>
@@ -466,33 +453,49 @@ export default function PerformanceStockPage() {
                 </div>
                 {/* Other filter*/}
                 <div className="d-flex flex-column mb-3 gap-2">
-                  <div className="d-flex gap-2 w-full">
-                    {/* Search bar */}
-                    <div className="w-100">
-                      <input
-                        type="text"
-                        className="form-control"
-                        placeholder="Cari berdasarkan nama"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                      />
-                    </div>
-                    {/* Clasification filter */}
-                    <div className="w-100">
-                      <Select
-                        isMulti
-                        options={typeOptions}
-                        value={selectedTypes}
-                        onChange={handleTypeChange}
-                        placeholder="Filter Klasifikasi"
-                      />
+                  <div className="d-flex w-full justify-content-between align-items-center">
+                    <div className="d-flex gap-2">
+                      {/* Search bar */}
+                      <div className="custom-filter-search">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Cari berdasarkan nama"
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                      </div>
+                      {/* Clasification filter */}
+                      <div className="custom-filter-salesClassification">
+                        <Select
+                          isMulti
+                          options={typeOptions}
+                          value={classificationFilter}
+                          onChange={handleTypeChange}
+                          placeholder="Filter Klasifikasi"
+                          styles={{
+                            control: (base) => ({
+                              ...base,
+                              border: "2px solid #d8dfe7",
+                              "&:hover": {
+                                border: "2px solid #d8dfe7",
+                              },
+                              padding: "0.6px 4px",
+                            }),
+                            multiValue: (base) => ({
+                              ...base,
+                              backgroundColor: "#FFE7D0FF",
+                            }),
+                          }}
+                        />
+                      </div>
                     </div>
                     {/* Column filter */}
-                    <div className="w-100 h-full">
+                    <div className="w-full h-full">
                       <button
-                        class="btn btn-secondary dropdown-toggle"
+                        className="btn btn-secondary dropdown-toggle"
                         type="button"
-                        onClick={() => setShowColumn(!showColumn)}
+                        onClick={() => setShowTableColumn(!showTableColumn)}
                         style={{ backgroundColor: "#8042D4", border: "none" }}
                       >
                         Pilih kriteria
@@ -500,7 +503,7 @@ export default function PerformanceStockPage() {
                     </div>
                   </div>
                   {/* Option column filter */}
-                  {showColumn && (
+                  {showTableColumn && (
                     <div className="border px-2 py-2 rounded">
                       {allColumns.map((col) => (
                         <div
@@ -528,7 +531,7 @@ export default function PerformanceStockPage() {
                   )}
                 </div>
                 {/* Container table */}
-                <div className="table-responsive">
+                <div id="container-table" className="table-responsive">
                   <table className="table table-centered">
                     {/* Head table */}
                     <thead className="table-light">
@@ -549,7 +552,7 @@ export default function PerformanceStockPage() {
                                         width: "10px",
                                         height: "10px",
                                         cursor: "pointer",
-                                        opacity: sortOrder === "asc" ? 1 : 0.5,
+                                        opacity: sortOrderData === "asc" ? 1 : 0.5,
                                       }}
                                       onClick={() => handleSortStock("asc")}
                                     />
@@ -560,7 +563,7 @@ export default function PerformanceStockPage() {
                                         width: "10px",
                                         height: "10px",
                                         cursor: "pointer",
-                                        opacity: sortOrder === "desc" ? 1 : 0.5,
+                                        opacity: sortOrderData === "desc" ? 1 : 0.5,
                                       }}
                                       onClick={() => handleSortStock("desc")}
                                     />
@@ -574,11 +577,11 @@ export default function PerformanceStockPage() {
                     {/* Body Table */}
                     <tbody>
                       {filteredData.length !== 0 && filteredData !== null ? (
-                        filteredData?.map((entry, index) => (
+                        filteredData?.map((entry) => (
                           <>
                             <tr key={entry.id}>
                               <td onClick={() => toggleRow(entry.id)} style={{ cursor: "pointer"}}>
-                                {expandedRows[entry.id] ? (
+                                {expandedVariantProduct[entry.id] ? (
                                   <img
                                     src={iconArrowUp}
                                     alt="icon arrow up"
@@ -661,15 +664,15 @@ export default function PerformanceStockPage() {
                                   <div className="d-flex gap-1 align-items-center">
                                     <div
                                       className={`marker ${
-                                        getClassification(entry, allRevenue) !== "" ? "animated-circle" : ""
+                                        getClassification(entry, allRevenueStock) !== "" ? "animated-circle" : ""
                                       }`}
                                       style={{
                                         backgroundColor:
-                                          getClassification(entry, allRevenue) === "best_seller"
+                                          getClassification(entry, allRevenueStock) === "best_seller"
                                             ? "#00EB3FFF"
-                                            : getClassification(entry, allRevenue) === "middle_moving"
+                                            : getClassification(entry, allRevenueStock) === "middle_moving"
                                             ? "#007BFF"
-                                            : getClassification(entry, allRevenue) === "slow_moving"
+                                            : getClassification(entry, allRevenueStock) === "slow_moving"
                                             ? "#FFC107"
                                             : "#FFFFFF00",
                                       }}
@@ -678,12 +681,12 @@ export default function PerformanceStockPage() {
                                       style={{
                                         fontSize: "14px",
                                         color:
-                                          getClassification(entry, allRevenue) !== "" ? "inherit" : "#FFFFFF00",
+                                          getClassification(entry, allRevenueStock) !== "" ? "inherit" : "#FFFFFF00",
                                       }}
                                     >
                                       {
                                         typeOptions.find(
-                                          (type) => type.value === getClassification(entry, allRevenue)
+                                          (type) => type.value === getClassification(entry, allRevenueStock)
                                         )?.label || ""
                                       }
                                     </span>
@@ -691,11 +694,14 @@ export default function PerformanceStockPage() {
                                 </td>
                               )}
                             </tr>
-                            {expandedRows[entry.id] && (
+                            {expandedVariantProduct[entry.id] && (
                               <tr className="bg-light">
                                 <td
                                   colSpan={selectedColumns.length + 1}
-                                  className="p-1"
+                                  style={{
+                                    padding: "2px 4px",
+                                    border: "none",
+                                  }}
                                 >
                                   <ul className="list-group">
                                     {entry.model_list.map((variant, index) => (
@@ -703,7 +709,7 @@ export default function PerformanceStockPage() {
                                         key={variant.id}
                                         className="list-group-item d-flex justify-content-start gap-2"
                                       >
-                                        <span style={{ width: "20px" }}></span>
+                                        <span style={{ width: "4px" }}></span>
                                         <span style={{ width: "100px" }}>
                                           {variant.name}
                                         </span>

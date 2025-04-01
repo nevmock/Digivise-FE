@@ -345,6 +345,7 @@ const AdsTable = ({ data, dummy }) => {
                     Bulan ini{" "}
                   </p>
                 </div>
+                <div style={{ width: "1px", height: "auto", backgroundColor: "#E3E3E3FF", margin: "10px 0"}}></div>
                 {/* Kalender pertama (Start Date) */}
                 <div>
                   <p style={{ textAlign: "center" }}>Tanggal Mulai</p>
@@ -380,37 +381,37 @@ const AdsTable = ({ data, dummy }) => {
               <span>Matrix Produk</span>
               <div className="d-flex gap-2">
                 <div
-                  className="ads-button-filter px-2 py-1 rounded-pill bg-white custom-font-color custom-border-select"
+                  className="status-button-filter px-2 py-1 rounded-pill bg-white custom-font-color custom-border-select"
                   style={{ cursor: "pointer", fontSize: "13px" }}
                 >
                   <span>Biaya</span>
                 </div>
                 <div
-                  className="ads-button-filter px-2 py-1 rounded-pill bg-white border border-secondary-subtle"
+                  className="status-button-filter px-2 py-1 rounded-pill bg-white border border-secondary-subtle"
                   style={{ cursor: "pointer", fontSize: "13px" }}
                 >
                   <span>Iklan Dilihat</span>
                 </div>
                 <div
-                  className="ads-button-filter px-2 py-1 rounded-pill bg-white border border-secondary-subtle"
+                  className="status-button-filter px-2 py-1 rounded-pill bg-white border border-secondary-subtle"
                   style={{ cursor: "pointer", fontSize: "13px" }}
                 >
                   <span>Click</span>
                 </div>
                 <div
-                  className="ads-button-filter px-2 py-1 rounded-pill bg-white border border-secondary-subtle"
+                  className="status-button-filter px-2 py-1 rounded-pill bg-white border border-secondary-subtle"
                   style={{ cursor: "pointer", fontSize: "13px" }}
                 >
                   <span>CTR</span>
                 </div>
                 <div
-                  className="ads-button-filter px-2 py-1 rounded-pill bg-white border border-secondary-subtle"
+                  className="status-button-filter px-2 py-1 rounded-pill bg-white border border-secondary-subtle"
                   style={{ cursor: "pointer", fontSize: "13px" }}
                 >
                   <span>ACOS</span>
                 </div>
                 <div
-                  className="ads-button-filter px-2 py-1 rounded-pill bg-white border border-secondary-subtle"
+                  className="status-button-filter px-2 py-1 rounded-pill bg-white border border-secondary-subtle"
                   style={{ cursor: "pointer", fontSize: "13px" }}
                 >
                   <span>Convertion</span>
@@ -425,7 +426,7 @@ const AdsTable = ({ data, dummy }) => {
               <span>Status Produk</span>
               <div className="d-flex gap-2">
                 <div
-                  className={`ads-button-filter px-2 py-1 rounded-pill bg-white ${statusProductFilter === "all"
+                  className={`status-button-filter px-2 py-1 rounded-pill bg-white ${statusProductFilter === "all"
                       ? "custom-font-color custom-border-select"
                       : "border border-secondary-subtle"
                     }`}
@@ -435,7 +436,7 @@ const AdsTable = ({ data, dummy }) => {
                   Semua
                 </div>
                 <div
-                  className={`ads-button-filter px-2 py-1 rounded-pill bg-white ${statusProductFilter === "scheduled"
+                  className={`status-button-filter px-2 py-1 rounded-pill bg-white ${statusProductFilter === "scheduled"
                       ? "custom-font-color custom-border-select"
                       : "border border-secondary-subtle"
                     }`}
@@ -445,7 +446,7 @@ const AdsTable = ({ data, dummy }) => {
                   Terjadwal
                 </div>
                 <div
-                  className={`ads-button-filter px-2 py-1 rounded-pill bg-white ${statusProductFilter === "ongoing"
+                  className={`status-button-filter px-2 py-1 rounded-pill bg-white ${statusProductFilter === "ongoing"
                       ? "custom-font-color custom-border-select"
                       : "border border-secondary-subtle"
                     }`}
@@ -455,7 +456,7 @@ const AdsTable = ({ data, dummy }) => {
                   Berjalan
                 </div>
                 <div
-                  className={`ads-button-filter px-2 py-1 rounded-pill bg-white ${statusProductFilter === "paused"
+                  className={`status-button-filter px-2 py-1 rounded-pill bg-white ${statusProductFilter === "paused"
                       ? "custom-font-color custom-border-select"
                       : "border border-secondary-subtle"
                     }`}
@@ -465,7 +466,7 @@ const AdsTable = ({ data, dummy }) => {
                   Nonaktif
                 </div>
                 <div
-                  className={`ads-button-filter px-2 py-1 rounded-pill bg-white ${statusProductFilter === "ended"
+                  className={`status-button-filter px-2 py-1 rounded-pill bg-white ${statusProductFilter === "ended"
                       ? "custom-font-color custom-border-select"
                       : "border border-secondary-subtle"
                     }`}
@@ -522,7 +523,7 @@ const AdsTable = ({ data, dummy }) => {
                 {/* column filter */}
                 <div className="w-25 h-full">
                   <button
-                    class="btn btn-secondary dropdown-toggle"
+                    className="btn btn-secondary dropdown-toggle"
                     type="button"
                     onClick={() => setShowTableColumn(!showTableColumn)}
                     style={{ backgroundColor: "#8042D4", border: "none" }}

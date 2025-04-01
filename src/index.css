@@ -41,3 +41,50 @@
     opacity: 1;
   }
 }
+
+* .react-calendar {
+  padding: 2px;
+  border: none !important;
+}
+
+.custom-font-color {
+  color: #F6881F;
+}
+
+.custom-border-select {
+  border: 1px solid #F6881F;
+}
+
+.custom-text-success {
+  color: #1da84d;
+}
+
+.custom-text-danger {
+  color: #9e2115;
+}
+
+
+.custom-filter-search {
+  width: 300px !important;
+}
+
+.custom-filter-search .form-control {
+  padding-left: 14px !important;
+}
+
+.custom-filter-salesClassification  {
+  width: 250px !important;
+}
+
+@media screen and (max-width: 768px) {
+  .custom-filter-search {
+    width: 200px;
+  }
+  .custom-filter-salesClassification {
+    width: 100px;
+  }
+}
+
+#container-table .table {
+  width: max-content !important;
+} 
