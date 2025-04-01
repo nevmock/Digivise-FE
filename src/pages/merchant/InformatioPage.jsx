@@ -39,12 +39,12 @@ export default function MerchantInformationPage() {
 
         <div className="row row-cols-lg-2 gx-3">
           <div className="col">
-            <div class="card">
-              <div class="card-header">
-                <h5 class="card-title mb-0">Matrix Peforma Toko</h5>
+            <div className="card">
+              <div className="card-header">
+                <h5 className="card-title mb-0">Matrix Peforma Toko</h5>
               </div>
 
-              <div class="card-body">
+              <div className="card-body">
                 <div>
                   <div>
                     <div className="d-flex w-full gap-2">
@@ -74,12 +74,12 @@ export default function MerchantInformationPage() {
           </div>
 
           <div className="col">
-            <div class="card">
-              <div class="card-header">
-                <h5 class="card-title mb-0">Matrix Iklan</h5>
+            <div className="card">
+              <div className="card-header">
+                <h5 className="card-title mb-0">Matrix Iklan</h5>
               </div>
 
-              <div class="card-body">
+              <div className="card-body">
                 <div>
                   <div>
                     <div className="d-flex w-full gap-2">

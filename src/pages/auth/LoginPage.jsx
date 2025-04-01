@@ -17,29 +17,29 @@ export default function LoginPage() {
 
     return (
         <>
-            <div class="account-pages py-5 bg-white vh-100 d-flex justify-content-center align-items-center">
-                <div class="container">
-                    <div class="row justify-content-center">
-                        <div class="col-md-6 col-lg-5">
-                            <div class="card border-0 shadow-lg">
-                                <div class="card-body p-5">
-                                    <div class="text-center">
-                                        <h1 class="fw-bold text-dark mb-2">Login</h1>
-                                        <p class="text-muted">Sign in to continue to your account</p>
+            <div className="account-pages py-5 bg-white vh-100 d-flex justify-content-center align-items-center">
+                <div className="container">
+                    <div className="row justify-content-center">
+                        <div className="col-md-6 col-lg-5">
+                            <div className="card border-0 shadow-lg">
+                                <div className="card-body p-5">
+                                    <div className="text-center">
+                                        <h1 className="fw-bold text-dark mb-2">Login</h1>
+                                        <p className="text-muted">Sign in to continue to your account</p>
                                     </div>
-                                    <form class="mt-5" onSubmit={handleSubmit}>
-                                        <div class="mb-3">
-                                            <label for="email" class="form-label">Email</label>
-                                            <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email" />
+                                    <form className="mt-5" onSubmit={handleSubmit}>
+                                        <div className="mb-3">
+                                            <label for="email" className="form-label">Email</label>
+                                            <input type="email" className="form-control" id="email" name="email" placeholder="Enter your email" />
                                         </div>
-                                        <div class="mb-3">
-                                            <div class="d-flex justify-content-between align-items-center">
-                                                <label for="password" class="form-label">Password</label>
+                                        <div className="mb-3">
+                                            <div className="d-flex justify-content-between align-items-center">
+                                                <label for="password" className="form-label">Password</label>
                                             </div>
-                                            <input type="password" class="form-control" id="password" placeholder="Enter your password" />
+                                            <input type="password" className="form-control" id="password" placeholder="Enter your password" />
                                         </div>
-                                        <div class="d-grid mt-5">
-                                            <button class="btn btn-dark btn-lg fw-medium" type="submit">
+                                        <div className="d-grid mt-5">
+                                            <button className="btn btn-dark btn-lg fw-medium" type="submit">
                                             {isLoading ? (
                                                 <div className="spinner-border spinner-border-sm" role="status">
                                                     <span className="visually-hidden ">Loading...</span>

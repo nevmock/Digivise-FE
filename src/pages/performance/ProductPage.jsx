@@ -4,131 +4,378 @@ import Calendar from "react-calendar";
 import * as echarts from "echarts";
 
 import useDebounce from "../../hooks/useDebounce";
-// import productJsonData from "../../api/product.json";
 import productJsonData from "../../api/products.json";
 import BaseLayout from "../../components/organisms/BaseLayout";
 
-export default function PerformanceStockPage() {
+export default function PerformanceProductPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
-  const [filteredData, setFilteredData] = useState(
-    productJsonData.result.items
-  );
+  const [filteredData, setFilteredData] = useState(productJsonData.result.items);
   const [statusProductFilter, setStatusProductFilter] = useState("all");
-  const [selectedTypes, setSelectedTypes] = useState([]);
-  const [showColumn, setShowColumn] = useState(false);
-  const [allRevenue, setAllRevenue] = useState(0);
-  const [chartData, setChartData] = useState([]);
-  // const [selectedProduct, setSelectedProduct] = useState(null);
-  const [startDate, setStartDate] = useState(null);
-  const [endDate, setEndDate] = useState(null);
-  const [date, setDate] = useState(null);
+  const [classificationFilter, setClassificationFilter] = useState([]);
+  const [showTableColumn, setShowTableColumn] = useState(false);
+  const [allRevenueStock, setAllRevenueStock] = useState(0);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [comparatorDate, setComparatorDate] = useState(null);
+  const [comaparedDate, setComaparedDate] = useState(null);
+  const [date, setDate] = useState(getAllDaysInLast7Days());
   const [showCalendar, setShowCalendar] = useState(false);
+  const [chartData, setChartData] = useState([]);
   const chartRef = useRef(null);
+  const [selectedMetrics, setSelectedMetrics] = useState(["visitor"]);
+  const [showAlert, setShowAlert] = useState(false);
 
-  // Convert start_time to date format with epoch method
-  const convertEpochToDate = (epoch) => {
-    const date = new Date(epoch * 1000);
-    return date.toISOString().split("T")[0];
+  // CUSTOM CHART WITH FILTER DATE, CLICK PRODUCT FEATURE
+  // Define metrics with their display names and colors
+  const metrics = {
+    visitor: { 
+      label: "Pengunjung", 
+      color: "#0050C8",
+      dataKey: "uv" 
+    },
+    add_to_cart: { 
+      label: "Add To Cart", 
+      color: "#D50000", 
+      dataKey: "add_to_cart_units" 
+    },
+    add_to_cart_pr: { 
+      label: "Add To Cart (Percentage)", 
+      color: "#00B800",
+      dataKey: "uv_to_add_to_cart_rate" 
+    },
+    ready: { 
+      label: "Siap Dikirim", 
+      color: "#DFC100",
+      dataKey: "confirmed_units" 
+    },
+    convertion: { 
+      label: "Convertion", 
+      color: "#C400BA",
+      dataKey: "uv_to_paid_buyers_rate" 
+    },
+    sell: { 
+      label: "Penjualan", 
+      color: "#D77600",
+      dataKey: "paid_sales" 
+    },
+    sell_ratio: { 
+      label: "Ratio Penjualan", 
+      color: "#00A8C6FF",
+      dataKey: "placed_to_paid_buyers_rate" 
+    },
   };
 
-  // Get last 7 days
-  const getAllDaysInLast7Days = () => {
+  // Handle product click by clicking the product in name column
+  const handleProductClick = (product) => {
+    if (selectedProduct?.id === product.id) {
+      setSelectedProduct(null);
+    } else {
+      setSelectedProduct(product);
+    }
+  };  
+
+  // Convert start_time to date format with epoch method
+  const convertEpochToDate = (epoch, mode = "daily") => {
+    const date = new Date(epoch * 1000);
+    date.setMinutes(0, 0, 0);
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+
+    return mode === "hourly" ? `${year}-${month}-${day} ${hours}:${minutes}` : `${year}-${month}-${day}`;
+  };
+
+  // Get all days in last 7 days in a month
+  function getAllDaysInLast7Days() {
     return Array.from({ length: 7 }, (_, i) => {
       const d = new Date();
       d.setDate(d.getDate() - i);
       return d.toISOString().split("T")[0];
     }).reverse();
-  };
+  }
 
   // Get all days in a month
-  const getAllDaysInAMonth = () => {
+  function getAllDaysInAMonth() {
     const today = new Date();
     const year = today.getFullYear();
     const month = today.getMonth() + 1;
     const days = new Date(year, month, 0).getDate();
     return Array.from(
       { length: days },
-      (_, i) =>
-        `${year}-${String(month).padStart(2, "0")}-${String(i + 1).padStart(
-          2,
-          "0"
-        )}`
+      (_, i) => `${year}-${String(month).padStart(2, "0")}-${String(i + 1).padStart(2, "0")}`
     );
-  };
+  }
 
-  useEffect(() => {
-    const updateChartData = () => {
-      let selectedDates = [];
+  // Get all hourly intervals for a specific date
+  function getHourlyIntervals(selectedDate) {
+    return Array.from({ length: 24 }, (_, i) => {
+      return `${selectedDate} ${String(i).padStart(2, "0")}:00`;
+    });
+  }
 
-      if (date === null) {
-        selectedDates = getAllDaysInAMonth();
-      } else if (Array.isArray(date)) {
-        selectedDates = date;
-      } else if (date instanceof Date) {
-        selectedDates = [date.toISOString().split("T")[0]];
-      }
+  // Get all daily intervals between two dates
+  function getDateRangeIntervals(startDate, endDate) {
+    // Ensure we're working with Date objects
+    const start = startDate instanceof Date ? new Date(startDate) : new Date(startDate);
+    const end = endDate instanceof Date ? new Date(endDate) : new Date(endDate);
+    
+    // Set time to beginning and end of day to ensure full day coverage
+    start.setHours(0, 0, 0, 0);
+    end.setHours(23, 59, 59, 999);
+    
+    const dateArray = [];
+    
+    // Check if dates are the same or only one day apart
+    const diffTime = Math.abs(end - start);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    
+    if (diffDays <= 1) {
+      // If same day or only one day apart, return hourly intervals
+      return getHourlyIntervals(start.toISOString().split('T')[0]);
+    }
+    
+    // Otherwise return daily intervals
+    let currentDate = new Date(start);
+    while (currentDate <= end) {
+      dateArray.push(currentDate.toISOString().split('T')[0]);
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+    
+    return dateArray;
+  }
 
-      const matrixDataMap = {};
-      selectedDates.forEach((day) => {
-        matrixDataMap[day] = 0;
+  // // Generate chart data for multiple metrics
+  function generateMultipleMetricsChartData(selectedDate = null, product = null, selectedMetrics = ["visitor"]) {
+    let timeIntervals = [];
+    let mode = "daily";
+    let result = {};
+
+    // Generate time intervals based on selection
+    if (comparatorDate && comaparedDate) {
+      timeIntervals = getDateRangeIntervals(comparatorDate, comaparedDate);
+      mode = timeIntervals.length <= 24 ? "hourly" : "daily";
+    } else if (selectedDate === null || Array.isArray(selectedDate)) {
+      timeIntervals = getAllDaysInLast7Days();
+    } else if (selectedDate === "Bulan Ini") {
+      timeIntervals = getAllDaysInAMonth();
+    } else {
+      timeIntervals = getHourlyIntervals(selectedDate);
+      mode = "hourly";
+    }
+
+    // Initialize result object with time intervals
+    result.timeIntervals = timeIntervals;
+    result.series = [];
+
+    let filteredProducts = productJsonData.result.items;
+    if (product) {
+      filteredProducts = productJsonData.result.items.filter((p) => p.id === product.id);
+    }
+
+    // Generate data for each selected metric
+    selectedMetrics?.forEach(metricKey => {
+      const metric = metrics[metricKey];
+      if (!metric) return;
+
+      const dataKey = metric.dataKey;
+      let dataMap = {};
+      
+      // Initialize dataMap with zeros for all time intervals
+      timeIntervals.forEach((time) => {
+        dataMap[time] = 0;
       });
 
-      productJsonData.result.items.forEach((product) => {
-        const productDate = convertEpochToDate(product.start_time);
-        if (matrixDataMap[productDate] !== undefined) {
-          matrixDataMap[productDate] +=
-            product?.bounce_visitors || 0;
+      filteredProducts.forEach((product) => {
+        const productDateTime = convertEpochToDate(product.start_time, mode);
+        
+        // Check if this time exists in our range (for debug purposes)
+        if (dataMap[productDateTime] === undefined) {
+          
+          // If we're using a custom date range, force-add this time if it falls within range
+          if (comparatorDate && comaparedDate) {
+            const productDate = new Date(product.start_time * 1000);
+            const startDay = new Date(comparatorDate);
+            startDay.setHours(0, 0, 0, 0);
+            const endDay = new Date(comaparedDate);
+            endDay.setHours(23, 59, 59, 999);
+            
+            if (productDate >= startDay && productDate <= endDay) {
+              // Force add this date to our intervals
+              if (!timeIntervals.includes(productDateTime)) {
+                timeIntervals.push(productDateTime);
+                // Sort timeIntervals to maintain chronological order
+                timeIntervals.sort();
+                // Initialize with zero
+                dataMap[productDateTime] = 0;
+              }
+            }
+          }
+        }
+        
+        // Now add the data if the time exists in our map
+        if (dataMap[productDateTime] !== undefined) {
+          dataMap[productDateTime] += product[dataKey] || 0;
         }
       });
 
-      const formattedData = selectedDates.map((date) => ({
-        date,
-        totalMatrixData: matrixDataMap[date],
-      }));
+      // Create series data - ensure it's in the same order as timeIntervals
+      const seriesData = {
+        name: metric.label,
+        data: timeIntervals.map((time) => dataMap[time] || 0), // Use 0 as fallback
+        color: metric.color
+      };
 
-      setChartData(formattedData);
-    };
+      result.series.push(seriesData);
+    });
+    
+    return result;
+  }
 
-    updateChartData();
-  }, [date]);
+  // Handle metric toggle
+  function handleMetricFilter(metricKey) {
+    setSelectedMetrics(prev => {
+      // If already selected, remove it
+      if (prev.includes(metricKey)) {
+        return prev.filter(m => m !== metricKey);
+      } 
+      // If not selected and less than 3 selected, add it
+      else if (prev.length < 3) {
+        return [...prev, metricKey];
+      } 
+      // If not selected but already have 3, show alert and don't change
+      else {
+        setShowAlert(true);
+        setTimeout(() => setShowAlert(false), 2000); 
+        return prev;
+      }
+    });
+  }
+
+  // Handle date selection
+  function handleDateSelection(selectedDateOption) {
+    // Clear comparison dates when selecting a preset
+    setComparatorDate(null);
+    setComaparedDate(null);
+    setDate(selectedDateOption);
+  }
+
+  // Handle comparison dates confirmation
+  function handleComparisonDatesConfirm() {
+    if (comparatorDate && comaparedDate) {
+      // When comparison dates are selected, set date to null to indicate we're using comparison dates
+      setDate(null);
+      setShowCalendar(false);
+    }
+  }
+
+  useEffect(() => {
+    const chartData = generateMultipleMetricsChartData(date, selectedProduct, selectedMetrics);
+    setChartData(chartData);
+  }, [date, selectedProduct, selectedMetrics, comparatorDate, comaparedDate]);
 
   useEffect(() => {
     if (chartRef.current) {
       const chartInstance = echarts.init(chartRef.current);
+      
+      const series = chartData.series?.map(s => ({
+        name: s.name,
+        type: 'line',
+        smooth: true,
+        showSymbol: false,
+        emphasis: { focus: 'series' },
+        data: s.data,
+        lineStyle: {
+          color: s.color
+        },
+        itemStyle: {
+          color: s.color
+        }
+      })) || [];
+
+      // Check if we have any non-zero data
+      const hasData = series.some(s => s.data && s.data.some(value => value > 0));
+
+      // Set grid left position based on selected metrics
+      let leftGrid;
+      if (selectedMetrics.length == 1 && (selectedMetrics.includes("add_to_cart_pr") || selectedMetrics.includes("sell"))) {
+        leftGrid = 80;
+      } else if (selectedMetrics.length > 1 && selectedMetrics.includes("sell")) {
+        leftGrid = 80;
+      } else {
+        leftGrid = 50;
+      }
+
+      // Set x-axis data based on selected date and time intervals
+      let xAxisData = chartData?.timeIntervals;
+      const includesColon = xAxisData?.some((data) => data.includes(":"));
+      if (includesColon) {
+        xAxisData = xAxisData?.map((data) => data.split(" ")[1]);
+      } else {
+        xAxisData = xAxisData?.map((data) => data.split("-").slice(1).join("-"));
+      }
+
+
       const option = {
-        toolbox: {
-          feature: {
-            saveAsImage: {},
-          },
+        toolbox: { feature: { saveAsImage: {} } },
+        grid: { 
+          left: leftGrid,
+          right: 50, 
+          bottom: 50, 
+          containLabel: false 
         },
-        grid: {
-          left: 50,
-          right: 50,
-          bottom: 50,
-          containLabel: false,
+        tooltip: { 
+          trigger: "axis",
+          formatter: function(params) {
+            let result = params[0].axisValue + '<br/>';
+            params.forEach(param => {
+              result += `<span style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background-color:${param.color};"></span> ${param.seriesName}: ${param.value}<br/>`;
+            });
+            return result;
+          }
         },
-        tooltip: { trigger: "axis" },
-        xAxis: {
-          name: "Date",
-          type: "category",
-          data: chartData.map((item) => item.date),
-          boundaryGap: false,
+        legend: {
+          data: chartData.series?.map(s => s.name) || [],
+          bottom: 0
         },
-        yAxis: { name: "Pengunjung", type: "value", splitLine: { show: true } },
-        series: [
-          {
-            type: "line",
-            smooth: true,
-            symbolSize: 5,
-            emphasis: { focus: "series" },
-            data: chartData.map((item) => item.totalMatrixData),
-          },
-        ],
+        xAxis: { 
+          name: "Date", 
+          type: "category", 
+          data: xAxisData || [], 
+          boundaryGap: false 
+        },
+        yAxis: { 
+          name: selectedMetrics.length === 1 ? metrics[selectedMetrics[0]].label : "Total",
+          type: "value", 
+          splitLine: { show: true } 
+        },
+        series: series,
       };
+      
+      // Add a "no data" message if there's no data
+      if (!hasData && (comparatorDate && comaparedDate)) {
+        option.graphic = [
+          {
+            type: 'text',
+            left: 'center',
+            top: 'middle',
+            style: {
+              text: 'Tidak ada data untuk rentang waktu yang dipilih',
+              fontSize: 16,
+              fill: '#999',
+              fontWeight: 'bold'
+            }
+          }
+        ];
+      }
+      
       chartInstance.setOption(option);
+      return () => chartInstance.dispose();
     }
-  }, [chartData]);
+  }, [chartData, selectedMetrics]);
 
 
   // FILTER COLUMNS TABLE FEATURE
@@ -151,7 +398,7 @@ export default function PerformanceStockPage() {
     allColumns.map((col) => col.key)
   );
 
-  // Handle column change
+  // Handle column table change
   const handleColumnChange = (colKey) => {
     setSelectedColumns((prev) =>
       prev.includes(colKey)
@@ -177,10 +424,10 @@ export default function PerformanceStockPage() {
     }
 
     // Filter by sales classification
-    // if (selectedTypes.length > 0) {
+    // if (classificationFilter.length > 0) {
     //   filtered = filtered.filter((entry) => {
     //     const classification = getClassification(entry);
-    //     return selectedTypes.some((type) => type.value === classification);
+    //     return classificationFilter.some((type) => type.value === classification);
     //   });
     // }
 
@@ -188,9 +435,8 @@ export default function PerformanceStockPage() {
   }, [
     debouncedSearchTerm,
     statusProductFilter,
-    selectedTypes,
-    allRevenue,
-    productJsonData.result.items,
+    classificationFilter,
+    productJsonData.result.items
   ]);
 
 
@@ -202,52 +448,23 @@ export default function PerformanceStockPage() {
     { value: "slow_moving", label: "Slow Moving" },
   ];
 
-  // Calculate all revenue
-  // const calculateAllRevenue = () => {
-  //   return productJsonData.result.items.reduce((sum, product) => {
-  //     return (
-  //       sum +
-  //       parseFloat(product.price_detail.selling_price_max) *
-  //         product.statistics.sold_count
-  //     );
-  //   }, 0);
-  // };
-
-  // Get sales classification
-  // const getClassification = (entry, allRevenue) => {
-  //   if (allRevenue === 0) return "";
-
-  //   const revenue =
-  //     parseFloat(entry.price_detail.selling_price_max) *
-  //     entry.statistics.sold_count;
-  //   const contribution = (revenue / allRevenue) * 100;
-
-  //   if (contribution > 70) return "best_seller";
-  //   if (contribution > 20) return "middle_moving";
-  //   if (contribution > 10) return "slow_moving";
-  //   return "";
-  // };
-
-  // Handle type change by list of options sales classification
-  const handleTypeChange = (selectedOptions) => {
-    setSelectedTypes(selectedOptions);
+  // Handle style for matric filter button
+  const handleStyleMatricButton = (metricKey) => {
+    const isActive = selectedMetrics.includes(metricKey);
+    const metric = metrics[metricKey];
+    
+    return {
+      backgroundColor: "white",
+      border: `1px solid ${isActive ? metric.color : "rgb(179.4, 184.2, 189)"}`,
+      color: isActive ? metric.color : "#666666",
+      padding: "6px 12px",
+      borderRadius: "20px",
+      cursor: "pointer",
+      fontSize: "12px",
+      fontWeight: isActive ? "medium" : "normal",
+      transition: "all 0.3s ease"
+    };
   };
-
-  // useEffect(() => {
-  //   const totalRevenue = calculateAllRevenue();
-  //   setAllRevenue(totalRevenue);
-
-  //   let filtered = productJsonData.result.items || [];
-
-  //   if (selectedTypes.length > 0) {
-  //     filtered = filtered.filter((entry) => {
-  //       const classification = getClassification(entry, totalRevenue);
-  //       return selectedTypes.some((type) => type.value === classification);
-  //     });
-  //   }
-
-  //   setFilteredData(filtered);
-  // }, [selectedTypes, productJsonData.result.items]);
 
   return (
     <>
@@ -259,7 +476,7 @@ export default function PerformanceStockPage() {
           <div className="card">
             <div className="card-body">
               {/* Header & Date Filter */}
-              <div className="d-flex justify-content-between align-items-start pb-3">
+              <div className="d-flex justify-content-between align-items-start pb-1">
                 <h5>{productJsonData.result.total} total produk</h5>
                 <div style={{ position: "relative" }}>
                   <button
@@ -267,11 +484,9 @@ export default function PerformanceStockPage() {
                     className="btn btn-secondary"
                     style={{ backgroundColor: "#8042D4", border: "none" }}
                   >
-                    {startDate && endDate
-                      ? `${startDate.toLocaleDateString(
-                          "id-ID"
-                        )} - ${endDate.toLocaleDateString("id-ID")}`
-                      : "Pilih Tanggal"}
+                    {comparatorDate && comaparedDate
+                    ? `${comparatorDate.toLocaleDateString("id-ID")} - ${comaparedDate.toLocaleDateString("id-ID")}`
+                    : (typeof date === 'string' ? date : (Array.isArray(date) ? "1 Minggu terakhir" : "Pilih Tanggal"))}
                   </button>
                   {showCalendar && (
                     <div
@@ -291,177 +506,138 @@ export default function PerformanceStockPage() {
                         className="d-flex flex-column py-2 px-1"
                         style={{ width: "130px", listStyleType: "none" }}
                       >
-                        <p
-                          style={{ cursor: "pointer" }}
-                          onClick={() => setDate(new Date())}
-                        >
-                          {" "}
-                          Hari ini
-                        </p>
-                        <p
-                          style={{ cursor: "pointer" }}
-                          onClick={() =>
-                            setDate(new Date(Date.now() - 86400000))
-                          }
-                        >
-                          {" "}
-                          Kemarin{" "}
-                        </p>
-                        <p
-                          style={{ cursor: "pointer" }}
-                          onClick={() => setDate(getAllDaysInLast7Days())}
-                        >
-                          1 Minggu terakhir
-                        </p>
-                        <p
-                          style={{ cursor: "pointer" }}
-                          onClick={() => setDate(null)}
-                        >
-                          {" "}
-                          Bulan ini{" "}
-                        </p>
+                          <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection(new Date().toISOString().split("T")[0])}>Hari ini</p>
+                          <p style={{ cursor: "pointer" }}
+                            onClick={() => {
+                              const yesterday = new Date();
+                              yesterday.setDate(yesterday.getDate() - 1);
+                              handleDateSelection(yesterday.toISOString().split("T")[0]);
+                            }}
+                          >
+                            Kemarin
+                          </p>
+                          <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection(getAllDaysInLast7Days())}>1 Minggu terakhir</p>
+                          <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection("Bulan Ini")}>Bulan ini</p>
                       </div>
-                      {/* Kalender pertama (Start Date) */}
+                      <div style={{ width: "1px", height: "auto", backgroundColor: "#E3E3E3FF", margin: "10px 0"}}></div>
+                      {/* Kalender pembanding */}
                       <div>
-                        <p style={{ textAlign: "center" }}>Tanggal Mulai</p>
-                        <Calendar
-                          onChange={(date) => setStartDate(date)}
-                          value={startDate}
-                          maxDate={endDate || new Date(2100, 0, 1)}
-                        />
+                        <p className="pt-2" style={{ textAlign: "center" }}>Tanggal Pembanding</p>
+                        <Calendar onChange={(date) => setComparatorDate(date)} value={comparatorDate} maxDate={comaparedDate || new Date(2100, 0, 1)} />
                       </div>
-                      {/* Kalender kedua (End Date) */}
+                      {/* Kalender dibanding */}
                       <div>
-                        <p style={{ textAlign: "center" }}>Tanggal Selesai</p>
-                        <Calendar
-                          onChange={(date) => setEndDate(date)}
-                          value={endDate}
-                          minDate={startDate || new Date()}
-                        />
+                        <p className="pt-2" style={{ textAlign: "center" }}>Tanggal Dibanding</p>
+                        <Calendar onChange={(date) => setComaparedDate(date)} value={comaparedDate} minDate={comparatorDate || new Date()} />
+                      </div>
+                      {/* Confirm button for date range */}
+                      <div className="d-flex align-items-end mb-1">
+                        <button 
+                          className="btn btn-primary" 
+                          onClick={handleComparisonDatesConfirm}
+                          disabled={!comparatorDate || !comaparedDate}
+                        >
+                          Terapkan
+                        </button>
                       </div>
                     </div>
                   )}
                 </div>
               </div>
-              <div className="d-flex flex-column gap-2">
+              <div className="d-flex flex-column gap-3">
                 {/* Chart */}
-                <div
-                  ref={chartRef}
-                  style={{ width: "100%", height: "400px" }}
-                ></div>
+                <div ref={chartRef} style={{ width: "100%", height: "300px" }}></div>
                 {/* Filter & Table */}
-                <div className="d-flex flex-column">
-                  {/* Matrix filter */}
+                <div className="d-flex flex-column gap-2">
+                  {/* Alert validation */}
+                  {showAlert && (
+                    <div className="alert alert-warning alert-dismissible fade show" role="alert">
+                      Maksimal 3 metrik yang dapat dipilih
+                      <button type="button" className="btn-close" onClick={() => setShowAlert(false)}></button>
+                    </div>
+                  )}
+                  {selectedMetrics.length === 0 && (
+                    <div className="alert alert-warning alert-dismissible fade show">
+                      <span >Pilih minimal 1 metrik untuk menampilkan data</span>
+                    </div>
+                  )}
+                  {/* Matric filter */}
                   <div
-                    className="d-flex align-items-center gap-2 mb-3"
+                    className="d-flex align-items-center gap-2"
                     style={{ width: "fit-content", listStyleType: "none" }}
                   >
-                    <span>Matrix Produk</span>
-                    {/* Filter buttons */}
+                    <span>Matric Produk</span>
                     <div className="d-flex gap-2">
-                      <div
-                        className="ads-button-filter px-2 py-1 rounded-pill bg-white custom-font-color custom-border-select"
-                        style={{ cursor: "pointer", fontSize: "13px" }}
-                      >
-                        Pengunjung
-                      </div>
-                      <div
-                        className="ads-button-filter px-2 py-1 rounded-pill bg-white border border-secondary-subtle"
-                        style={{ cursor: "pointer", fontSize: "13px" }}
-                      >
-                        Add To Cart
-                      </div>
-                      <div
-                        className="ads-button-filter px-2 py-1 rounded-pill bg-white border border-secondary-subtle"
-                        style={{ cursor: "pointer", fontSize: "13px" }}
-                      >
-                        Add To Cart (Percentage)
-                      </div>
-                      <div
-                        className="ads-button-filter px-2 py-1 rounded-pill bg-white border border-secondary-subtle"
-                        style={{ cursor: "pointer", fontSize: "13px" }}
-                      >
-                        Siap Dikirim
-                      </div>
-                      <div
-                        className="ads-button-filter px-2 py-1 rounded-pill bg-white border border-secondary-subtle"
-                        style={{ cursor: "pointer", fontSize: "13px" }}
-                      >
-                        Convertion
-                      </div>
-                      <div
-                        className="ads-button-filter px-2 py-1 rounded-pill bg-white border border-secondary-subtle"
-                        style={{ cursor: "pointer", fontSize: "13px" }}
-                      >
-                        Penjualan
-                      </div>
-                      <div
-                        className="ads-button-filter px-2 py-1 rounded-pill bg-white border border-secondary-subtle"
-                        style={{ cursor: "pointer", fontSize: "13px" }}
-                      >
-                        Ratio Penjualan
-                      </div>
+                      {Object.keys(metrics).map((metricKey) => (
+                        <button 
+                          key={metricKey}
+                          style={handleStyleMatricButton(metricKey)}
+                          onClick={() => handleMetricFilter(metricKey)}
+                        >
+                          {metrics[metricKey].label}
+                        </button>
+                      ))}
                     </div>
                   </div>
                   {/* Status filter */}
                   <div
-                    className="d-flex align-items-center gap-2 mb-3"
+                    className="d-flex align-items-center gap-2"
                     style={{ width: "fit-content", listStyleType: "none" }}
                   >
                     <span>Status Produk</span>
                     <div className="d-flex gap-2">
                       <div
-                        className={`ads-button-filter px-2 py-1 rounded-pill bg-white ${
+                        className={`status-button-filter rounded-pill bg-white d-flex align-items-center  ${
                           statusProductFilter === "all"
                             ? "custom-font-color custom-border-select"
                             : "border border-secondary-subtle"
                         }`}
                         onClick={() => setStatusProductFilter("all")}
-                        style={{ cursor: "pointer", fontSize: "13px" }}
+                        style={{ cursor: "pointer", fontSize: "12px", padding: "6px 12px", }}
                       >
                         Semua
                       </div>
                       <div
-                        className={`ads-button-filter px-2 py-1 rounded-pill bg-white ${
+                        className={`status-button-filter rounded-pill bg-white d-flex align-items-center ${
                           statusProductFilter === "scheduled"
                             ? "custom-font-color custom-border-select"
                             : "border border-secondary-subtle"
                         }`}
                         onClick={() => setStatusProductFilter("scheduled")}
-                        style={{ cursor: "pointer", fontSize: "13px" }}
+                        style={{ cursor: "pointer", fontSize: "12px", padding: "6px 12px", }}
                       >
                         Terjadwal
                       </div>
                       <div
-                        className={`ads-button-filter px-2 py-1 rounded-pill bg-white ${
+                        className={`status-button-filter rounded-pill bg-white d-flex align-items-center  ${
                           statusProductFilter === "ongoing"
                             ? "custom-font-color custom-border-select"
                             : "border border-secondary-subtle"
                         }`}
                         onClick={() => setStatusProductFilter("ongoing")}
-                        style={{ cursor: "pointer", fontSize: "13px" }}
+                        style={{ cursor: "pointer", fontSize: "12px", padding: "6px 12px", }}
                       >
                         Berjalan
                       </div>
                       <div
-                        className={`ads-button-filter px-2 py-1 rounded-pill bg-white ${
+                        className={`status-button-filter rounded-pill bg-white d-flex align-items-center  ${
                           statusProductFilter === "paused"
                             ? "custom-font-color custom-border-select"
                             : "border border-secondary-subtle"
                         }`}
                         onClick={() => setStatusProductFilter("paused")}
-                        style={{ cursor: "pointer", fontSize: "13px" }}
+                        style={{ cursor: "pointer", fontSize: "12px", padding: "6px 12px", }}
                       >
                         Nonaktif
                       </div>
                       <div
-                        className={`ads-button-filter px-2 py-1 rounded-pill bg-white ${
+                        className={`status-button-filter rounded-pill bg-white d-flex align-items-center ${
                           statusProductFilter === "ended"
                             ? "custom-font-color custom-border-select"
                             : "border border-secondary-subtle"
                         }`}
                         onClick={() => setStatusProductFilter("ended")}
-                        style={{ cursor: "pointer", fontSize: "13px" }}
+                        style={{ cursor: "pointer", fontSize: "12px", padding: "1px 12px", }}
                       >
                         Berakhir
                       </div>
@@ -469,69 +645,87 @@ export default function PerformanceStockPage() {
                   </div>
                   {/* Other filter */}
                   <div className="d-flex flex-column mb-3 gap-2">
-                    <div className="d-flex gap-2 w-full">
-                      {/* search bar */}
-                      <div className="w-100">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Cari berdasarkan nama"
-                          value={searchTerm}
-                          onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                      </div>
-                      {/* clasification filter */}
-                      <div className="w-100">
-                        <Select
-                          isMulti
-                          options={typeOptions}
-                          value={selectedTypes}
-                          onChange={handleTypeChange}
-                          placeholder="Filter Klasifikasi"
-                        />
+                    <div className="d-flex w-full justify-content-between align-items-center">
+                      {/* Search & classification Filter */}
+                      <div className="d-flex gap-2">
+                        {/* search bar */}
+                        <div className="custom-filter-search">
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Cari berdasarkan nama"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                          />
+                        </div>
+                        {/*  classification */}
+                        <div className="custom-filter-salesClassification">
+                          <Select
+                            isMulti
+                            options={typeOptions}
+                            value={classificationFilter}
+                            // onChange={handleTypeChange}
+                            placeholder="Filter Klasifikasi"
+                            styles={{
+                              control: (base) => ({
+                                ...base,
+                                border: "2px solid #d8dfe7",
+                                "&:hover": {
+                                  border: "2px solid #d8dfe7",
+                                },
+                                padding: "0.6px 4px",
+                              }),
+                              multiValue: (base) => ({
+                                ...base,
+                                backgroundColor: "#8042D4",
+                              }),
+                            }}
+                          />
+                        </div>
                       </div>
                       {/* column filter */}
-                      <div className="w-100 h-full">
+                      <div className="h-full w-full">
                         <button
-                          class="btn btn-secondary dropdown-toggle"
+                          className="btn btn-secondary dropdown-toggle"
                           type="button"
-                          onClick={() => setShowColumn(!showColumn)}
+                          onClick={() => setShowTableColumn(!showTableColumn)}
                           style={{ backgroundColor: "#8042D4", border: "none" }}
                         >
                           Pilih kriteria
                         </button>
                       </div>
                     </div>
-                    {showColumn && (
+                    {showTableColumn && (
                       <div className="border px-2 py-2 rounded">
-                        {allColumns.map((col) => (
-                          <div
-                            key={col.key}
-                            className="form-check form-check-inline"
-                          >
-                            <input
-                              style={{
-                                border: "1px solid #8042D4",
-                                width: "18px",
-                                height: "18px",
-                                borderRadius: "10%",
-                              }}
-                              className="form-check-input "
-                              type="checkbox"
-                              checked={selectedColumns.includes(col.key)}
-                              onChange={() => handleColumnChange(col.key)}
-                            />
-                            <label className="form-check-label fs-5 ms-1">
-                              {col.label}
-                            </label>
-                          </div>
-                        ))}
+                        {allColumns.filter((column) => column.key !== "name")
+                          .map((col) => (
+                            <div
+                              key={col.key}
+                              className="form-check form-check-inline"
+                            >
+                              <input
+                                style={{
+                                  border: "1px solid #8042D4",
+                                  width: "18px",
+                                  height: "18px",
+                                  borderRadius: "10%",
+                                }}
+                                className="form-check-input "
+                                type="checkbox"
+                                checked={selectedColumns.includes(col.key)}
+                                onChange={() => handleColumnChange(col.key)}
+                              />
+                              <label className="form-check-label fs-5 ms-1">
+                                {col.label}
+                              </label>
+                            </div>
+                          ))}
                       </div>
                     )}
                   </div>
                   {/* Table container */}
-                  <div className="table-responsive">
-                    <table className="table table-centered">
+                  <div id="container-table" className="table-responsive">
+                    <table className="table">
                       {/* Table head */}
                       <thead className="table-light">
                         <tr>
@@ -555,7 +749,14 @@ export default function PerformanceStockPage() {
                               <tr key={entry.id}>
                                 <td>{index + 1}</td>
                                 {selectedColumns.includes("name") && (
-                                  <td style={{ width: "500px" }}>
+                                  <td style={{
+                                    maxWidth: "400px",
+                                    cursor: "pointer",
+                                    color:
+                                      selectedProduct?.id === entry.id
+                                        ? "#F6881F"
+                                        : "",
+                                  }} onClick={() => handleProductClick(entry)}>
                                     <div className="d-flex flex-column">
                                       <span>{entry.name}</span>
                                     </div>

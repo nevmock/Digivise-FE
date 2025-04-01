@@ -303,7 +303,7 @@ const ProductTable = ({ data }) => {
             {/* Filter buttons */}
             <div className="d-flex gap-2">
               <div
-                className={`ads-button-filter px-3 py-1 rounded-pill bg-white ${
+                className={`status-button-filter px-3 py-1 rounded-pill bg-white ${
                   activeFilter === "all"
                     ? "custom-font-color custom-border-select"
                     : "border border-secondary-subtle"
@@ -314,7 +314,7 @@ const ProductTable = ({ data }) => {
                 Semua
               </div>
               <div
-                className={`ads-button-filter px-3 py-1 rounded-pill bg-white ${
+                className={`status-button-filter px-3 py-1 rounded-pill bg-white ${
                   activeFilter === "ongoing"
                     ? "custom-font-color custom-border-select"
                     : "border border-secondary-subtle"
@@ -325,7 +325,7 @@ const ProductTable = ({ data }) => {
                 Ongoing
               </div>
               <div
-                className={`ads-button-filter px-3 py-1 rounded-pill bg-white ${
+                className={`status-button-filter px-3 py-1 rounded-pill bg-white ${
                   activeFilter === undefined
                     ? "custom-font-color custom-border-select"
                     : "border border-secondary-subtle"
@@ -363,7 +363,7 @@ const ProductTable = ({ data }) => {
               {/* column filter */}
               <div className="w-100 h-full">
                 <button
-                  class="btn btn-secondary dropdown-toggle"
+                  className="btn btn-secondary dropdown-toggle"
                   type="button"
                   onClick={() => setShowColumn(!showColumn)}
                   style={{ backgroundColor: "#8042D4", border: "none" }}

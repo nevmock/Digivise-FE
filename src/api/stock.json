@@ -11,7 +11,7 @@
         "products": [
             {
                 "campaign" : {
-                    "start_time" : "1740790800"
+                    "start_time" : "1743033600"
                 },
                 "state": "ongoing",
                 "id": 26360011113,
@@ -202,7 +202,7 @@
             },
             {
                 "campaign" : {
-                    "start_time" : "1740877200"
+                    "start_time" : "1743206400"
                 },
                 "state": "paused",
                 "id": 24785707560,
@@ -624,7 +624,7 @@
             },
             {
                 "campaign" : {
-                    "start_time" : "1740963600"
+                    "start_time" : "1743033600"
                 },
                 "state": "paused",
                 "id": 25685707370,
@@ -1307,7 +1307,7 @@
             },
             {
                 "campaign" : {
-                    "start_time" : "1741050000"
+                    "start_time" : "1742688000"
                 },
                 "state": "paused",
                 "id": 26910219677,
@@ -1325,7 +1325,7 @@
                     "selling_price_max": "98000.00"
                 },
                 "stock_detail": {
-                    "total_available_stock": 0,
+                    "total_available_stock": 20,
                     "total_seller_stock": 0,
                     "total_shopee_stock": 0,
                     "low_stock_status": 0,
@@ -1585,7 +1585,7 @@
             },
             {
                 "campaign" : {
-                    "start_time" : "1741136400"
+                    "start_time" : "1742688000"
                 },
                 "condition" : "tidak ada informasi",
                 "id": 29611481745,
@@ -1604,7 +1604,7 @@
                     "selling_price_max": "129000.00"
                 },
                 "stock_detail": {
-                    "total_available_stock": 0,
+                    "total_available_stock": 90,
                     "total_seller_stock": 0,
                     "total_shopee_stock": 0,
                     "low_stock_status": 0,
