@@ -12,9 +12,7 @@ export default function PerformanceProductPage() {
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [filteredData, setFilteredData] = useState(productJsonData.result.items);
   const [statusProductFilter, setStatusProductFilter] = useState("all");
-  const [classificationFilter, setClassificationFilter] = useState([]);
   const [showTableColumn, setShowTableColumn] = useState(false);
-  const [allRevenueStock, setAllRevenueStock] = useState(0);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [comparatorDate, setComparatorDate] = useState(null);
   const [comaparedDate, setComaparedDate] = useState(null);
@@ -107,38 +105,31 @@ export default function PerformanceProductPage() {
       { length: days },
       (_, i) => `${year}-${String(month).padStart(2, "0")}-${String(i + 1).padStart(2, "0")}`
     );
-  }
+  };
 
-  // Get all hourly intervals for a specific date
   function getHourlyIntervals(selectedDate) {
     return Array.from({ length: 24 }, (_, i) => {
-      return `${selectedDate} ${String(i).padStart(2, "0")}:00`;
+      const hour = String(i).padStart(2, "0");
+      return `${selectedDate} ${hour}:00`;
     });
-  }
+  };
 
-  // Get all daily intervals between two dates
   function getDateRangeIntervals(startDate, endDate) {
-    // Ensure we're working with Date objects
     const start = startDate instanceof Date ? new Date(startDate) : new Date(startDate);
     const end = endDate instanceof Date ? new Date(endDate) : new Date(endDate);
     
-    // Set time to beginning and end of day to ensure full day coverage
     start.setHours(0, 0, 0, 0);
     end.setHours(23, 59, 59, 999);
     
     const dateArray = [];
     
-    // Check if dates are the same or only one day apart
     const diffTime = Math.abs(end - start);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     
-    
     if (diffDays <= 1) {
-      // If same day or only one day apart, return hourly intervals
       return getHourlyIntervals(start.toISOString().split('T')[0]);
     }
     
-    // Otherwise return daily intervals
     let currentDate = new Date(start);
     while (currentDate <= end) {
       dateArray.push(currentDate.toISOString().split('T')[0]);
@@ -146,29 +137,47 @@ export default function PerformanceProductPage() {
     }
     
     return dateArray;
-  }
+  };
 
-  // // Generate chart data for multiple metrics
+  // Generate chart data for multiple metrics
   function generateMultipleMetricsChartData(selectedDate = null, product = null, selectedMetrics = ["visitor"]) {
     let timeIntervals = [];
     let mode = "daily";
     let result = {};
+    let isSingleDay = false;
 
     // Generate time intervals based on selection
     if (comparatorDate && comaparedDate) {
-      timeIntervals = getDateRangeIntervals(comparatorDate, comaparedDate);
-      mode = timeIntervals.length <= 24 ? "hourly" : "daily";
+      // Check if both dates are the same day
+      const sameDay = comparatorDate.toDateString() === comaparedDate.toDateString();
+      
+      if (sameDay) {
+        // For same day, use hourly intervals
+        const dateStr = comparatorDate.toISOString().split('T')[0];
+        timeIntervals = getHourlyIntervals(dateStr);
+        mode = "hourly";
+        isSingleDay = true;
+      } else {
+        timeIntervals = getDateRangeIntervals(comparatorDate, comaparedDate);
+        mode = timeIntervals.length <= 24 ? "hourly" : "daily";
+      }
     } else if (selectedDate === null || Array.isArray(selectedDate)) {
       timeIntervals = getAllDaysInLast7Days();
     } else if (selectedDate === "Bulan Ini") {
       timeIntervals = getAllDaysInAMonth();
     } else {
+      // This is a single day selection (today or yesterday)
       timeIntervals = getHourlyIntervals(selectedDate);
       mode = "hourly";
+      isSingleDay = true;
     }
 
-    // Initialize result object with time intervals
+    if (!timeIntervals || timeIntervals.length === 0) {
+      timeIntervals = [new Date().toISOString().split('T')[0]];
+    }
+  
     result.timeIntervals = timeIntervals;
+    result.isSingleDay = isSingleDay;
     result.series = [];
 
     let filteredProducts = productJsonData.result.items;
@@ -176,7 +185,6 @@ export default function PerformanceProductPage() {
       filteredProducts = productJsonData.result.items.filter((p) => p.id === product.id);
     }
 
-    // Generate data for each selected metric
     selectedMetrics?.forEach(metricKey => {
       const metric = metrics[metricKey];
       if (!metric) return;
@@ -184,18 +192,20 @@ export default function PerformanceProductPage() {
       const dataKey = metric.dataKey;
       let dataMap = {};
       
-      // Initialize dataMap with zeros for all time intervals
       timeIntervals.forEach((time) => {
+        console.log("time", time);
         dataMap[time] = 0;
       });
 
       filteredProducts.forEach((product) => {
         const productDateTime = convertEpochToDate(product.start_time, mode);
+
+        // Extract just the date part for comparison
+        const productDateOnly = productDateTime.includes(" ") ? 
+        productDateTime.split(" ")[0] : productDateTime;
         
-        // Check if this time exists in our range (for debug purposes)
-        if (dataMap[productDateTime] === undefined) {
+        if (dataMap[productDateOnly] === undefined) {
           
-          // If we're using a custom date range, force-add this time if it falls within range
           if (comparatorDate && comaparedDate) {
             const productDate = new Date(product.start_time * 1000);
             const startDay = new Date(comparatorDate);
@@ -204,25 +214,20 @@ export default function PerformanceProductPage() {
             endDay.setHours(23, 59, 59, 999);
             
             if (productDate >= startDay && productDate <= endDay) {
-              // Force add this date to our intervals
-              if (!timeIntervals.includes(productDateTime)) {
-                timeIntervals.push(productDateTime);
-                // Sort timeIntervals to maintain chronological order
+              if (!timeIntervals.includes(productDateOnly)) {
+                timeIntervals.push(productDateOnly);
                 timeIntervals.sort();
-                // Initialize with zero
-                dataMap[productDateTime] = 0;
+                dataMap[productDateOnly] = 0;
               }
             }
           }
         }
         
-        // Now add the data if the time exists in our map
-        if (dataMap[productDateTime] !== undefined) {
-          dataMap[productDateTime] += product[dataKey] || 0;
+        if (dataMap[productDateOnly] !== undefined) {
+          dataMap[productDateOnly] += product[dataKey] || 0;
         }
       });
 
-      // Create series data - ensure it's in the same order as timeIntervals
       const seriesData = {
         name: metric.label,
         data: timeIntervals.map((time) => dataMap[time] || 0), // Use 0 as fallback
@@ -233,7 +238,7 @@ export default function PerformanceProductPage() {
     });
     
     return result;
-  }
+  };
 
   // Handle metric toggle
   function handleMetricFilter(metricKey) {
@@ -253,7 +258,7 @@ export default function PerformanceProductPage() {
         return prev;
       }
     });
-  }
+  };
 
   // Handle date selection
   function handleDateSelection(selectedDateOption) {
@@ -261,7 +266,7 @@ export default function PerformanceProductPage() {
     setComparatorDate(null);
     setComaparedDate(null);
     setDate(selectedDateOption);
-  }
+  };
 
   // Handle comparison dates confirmation
   function handleComparisonDatesConfirm() {
@@ -270,7 +275,7 @@ export default function PerformanceProductPage() {
       setDate(null);
       setShowCalendar(false);
     }
-  }
+  };
 
   useEffect(() => {
     const chartData = generateMultipleMetricsChartData(date, selectedProduct, selectedMetrics);
@@ -296,10 +301,8 @@ export default function PerformanceProductPage() {
         }
       })) || [];
 
-      // Check if we have any non-zero data
       const hasData = series.some(s => s.data && s.data.some(value => value > 0));
 
-      // Set grid left position based on selected metrics
       let leftGrid;
       if (selectedMetrics.length == 1 && (selectedMetrics.includes("add_to_cart_pr") || selectedMetrics.includes("sell"))) {
         leftGrid = 80;
@@ -309,24 +312,48 @@ export default function PerformanceProductPage() {
         leftGrid = 50;
       }
 
-      // Set x-axis data based on selected date and time intervals
-      let xAxisData = chartData?.timeIntervals;
-      const includesColon = xAxisData?.some((data) => data.includes(":"));
-      if (includesColon) {
-        xAxisData = xAxisData?.map((data) => data.split(" ")[1]);
+      let xAxisData = chartData?.timeIntervals || [];
+      const isSingleDay = chartData?.isSingleDay || false;
+      
+      if (isSingleDay) {
+        // Extract only the time portion (HH:00) for hourly view
+        xAxisData = xAxisData.map(interval => {
+          if (!interval) return "";
+          if (interval.includes(" ")) {
+            return interval.split(" ")[1]; // Return only the time part
+          }
+          return interval;
+        });
       } else {
-        xAxisData = xAxisData?.map((data) => data.split("-").slice(1).join("-"));
+        // For multi-day view, normalize date formats first
+        xAxisData = xAxisData.map(date => {
+          if (!date) return "";
+          // If it contains a space (has time component), take only the date part
+          if (date.includes(" ")) {
+            return date.split(" ")[0];
+          }
+          return date;
+        });
+        
+        // Format multi-day dates to show just month-day
+        xAxisData = xAxisData.map(data => {
+          if (!data) return "";
+          const parts = data.split("-");
+          if (parts.length >= 3) {
+            return `${parts[1]}-${parts[2]}`;  // month-day format
+          }
+          return data;
+        });
       }
       
       let rotateAxisLabel = 0;
-      if (!includesColon) {
+      if (!isSingleDay) {
         if (xAxisData?.length > 7 && xAxisData?.length <= 20) {
           rotateAxisLabel = 30;
         } else if (xAxisData?.length > 20) {
           rotateAxisLabel = 40;
         }
-      };
-      
+      }
 
       const option = {
         toolbox: { feature: { saveAsImage: {} } },
@@ -351,11 +378,11 @@ export default function PerformanceProductPage() {
           bottom: 0
         },
         xAxis: { 
-          name: "Date", 
+          name: isSingleDay ? "Time" : "Date", 
           type: "category", 
           data: xAxisData || [], 
-          boundaryGap: false ,
-          axisLabel: {
+          boundaryGap: false,
+          axisLabel: { 
             rotate: rotateAxisLabel,
             interval: 0,
           },
@@ -368,7 +395,6 @@ export default function PerformanceProductPage() {
         series: series,
       };
       
-      // Add a "no data" message if there's no data
       if (!hasData && (comparatorDate && comaparedDate)) {
         option.graphic = [
           {
@@ -436,19 +462,10 @@ export default function PerformanceProductPage() {
       );
     }
 
-    // Filter by sales classification
-    // if (classificationFilter.length > 0) {
-    //   filtered = filtered.filter((entry) => {
-    //     const classification = getClassification(entry);
-    //     return classificationFilter.some((type) => type.value === classification);
-    //   });
-    // }
-
     setFilteredData(filtered);
   }, [
     debouncedSearchTerm,
     statusProductFilter,
-    classificationFilter,
     productJsonData.result.items
   ]);
 
@@ -676,8 +693,6 @@ export default function PerformanceProductPage() {
                           <Select
                             isMulti
                             options={typeOptions}
-                            value={classificationFilter}
-                            // onChange={handleTypeChange}
                             placeholder="Filter Klasifikasi"
                             styles={{
                               control: (base) => ({

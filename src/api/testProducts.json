@@ -1,0 +1,23 @@
+{
+    "code": 0,
+    "msg": "ok",
+    "result": {
+        "total": 258,
+        "items": [
+            {
+                "id": 24164190830,
+                "name": "CCCC",
+                "image": "id-11134207-7rbk9-m760ooqrnpd668",
+                "status": 1,
+                "start_time" : 1743094800
+            },
+            {
+                "id": 24042522199,
+                "name": "AAA",
+                "image": "sg-dwddwdwd-7rd5w-wddwdwddwdd",
+                "status": 1,
+                "start_time" : 1743094800
+            }
+        ]
+    }
+}

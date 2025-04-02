@@ -1,211 +1,429 @@
-export default function PerformanceStockPage() {
-  const [filteredData, setFilteredData] = useState(stockJsonData.data.products);
-  const [chartData, setChartData] = useState([]);
-  const chartRef = useRef(null);
-  const [showCalender, setShowCalender] = useState(false);
-  const [date, setDate] = useState(getAllDaysInLast7Days());
-  const [selectedProduct, setSelectedProduct] = useState(null);
+export default function PerformanceProductPage() {
+const [filteredData, setFilteredData] = useState(productJsonData.result.items);
+const [selectedProduct, setSelectedProduct] = useState(null);
+const [comparatorDate, setComparatorDate] = useState(null);
+const [comaparedDate, setComaparedDate] = useState(null);
+const [date, setDate] = useState(getAllDaysInLast7Days());
+const [showCalendar, setShowCalendar] = useState(false);
+const [chartData, setChartData] = useState([]);
+const chartRef = useRef(null);
+const [selectedMetrics, setSelectedMetrics] = useState(["visitor"]);
 
-  // CUSTOM CHART & PRODUCT CLICK FEATURE
-  // Handle product click by clicking the product in name column
-  const handleProductClick = (product) => {
-    // Jika produk yang diklik sama dengan yang sebelumnya dipilih, reset chart kembali ke semua produk
-    if (selectedProduct?.id === product.id) {
-      setSelectedProduct(null);
-    // Jika produk yang diklik berbeda, set chart data sesuai produk yang dipilih
-    } else {
-      setSelectedProduct(product);
-    }
-  };  
+const metrics = {
+  visitor: { 
+    label: "Pengunjung", 
+    color: "#0050C8",
+    dataKey: "uv" 
+  },
+  add_to_cart: { 
+    label: "Add To Cart", 
+    color: "#D50000", 
+    dataKey: "add_to_cart_units" 
+  },
+};
 
-  // Convert start_time to date format with epoch method
-  const convertEpochToDate = (epoch, mode = "daily") => {
-    const date = new Date(epoch * 1000);
-    date.setMinutes(0, 0, 0);
-
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    const hours = String(date.getHours()).padStart(2, "0");
-    const minutes = String(date.getMinutes()).padStart(2, "0");
-
-    return mode === "hourly" ? `${year}-${month}-${day} ${hours}:${minutes}` : `${year}-${month}-${day}`;
-  };
-
-  // Get all days in last 7 days in a month
-  function getAllDaysInLast7Days() {
-    return Array.from({ length: 7 }, (_, i) => {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      return d.toISOString().split("T")[0];
-    }).reverse();
+const handleProductClick = (product) => {
+  if (selectedProduct?.id === product.id) {
+    setSelectedProduct(null);
+  } else {
+    setSelectedProduct(product);
   }
+};  
 
-  // Get all days in a month
-  function getAllDaysInAMonth() {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = today.getMonth() + 1;
-    const days = new Date(year, month, 0).getDate();
-    return Array.from(
-      { length: days },
-      (_, i) => `${year}-${String(month).padStart(2, "0")}-${String(i + 1).padStart(2, "0")}`
-    );
-  }
+const convertEpochToDate = (epoch, mode = "daily") => {
+  const date = new Date(epoch * 1000);
+  date.setMinutes(0, 0, 0);
 
-  // Get all hourly intervals for a specific date
-  function getHourlyIntervals(selectedDate) {
-    return Array.from({ length: 24 }, (_, i) => {
-      return `${selectedDate} ${String(i).padStart(2, "0")}:00`;
-    });
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+
+  return mode === "hourly" ? `${year}-${month}-${day} ${hours}:${minutes}` : `${year}-${month}-${day}`;
+};
+
+function getAllDaysInLast7Days() {
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    return d.toISOString().split("T")[0];
+  }).reverse();
+}
+
+function getAllDaysInAMonth() {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth() + 1;
+  const days = new Date(year, month, 0).getDate();
+  return Array.from(
+    { length: days },
+    (_, i) => `${year}-${String(month).padStart(2, "0")}-${String(i + 1).padStart(2, "0")}`
+  );
+}
+
+function getHourlyIntervals(selectedDate) {
+  return Array.from({ length: 24 }, (_, i) => {
+    const hour = String(i).padStart(2, "0");
+    return `${selectedDate} ${hour}:00`;
+  });
+}
+
+function getDateRangeIntervals(startDate, endDate) {
+  const start = startDate instanceof Date ? new Date(startDate) : new Date(startDate);
+  const end = endDate instanceof Date ? new Date(endDate) : new Date(endDate);
+  
+  start.setHours(0, 0, 0, 0);
+  end.setHours(23, 59, 59, 999);
+  
+  const dateArray = [];
+  
+  const diffTime = Math.abs(end - start);
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  
+  if (diffDays <= 1) {
+    return getHourlyIntervals(start.toISOString().split('T')[0]);
   }
   
-  // Generate chart data based on selected date and product
-  function generateChartData(selectedDate = null, product = null) { 
-    let stockMap = {};
-    let timeIntervals = [];
-    let mode = "daily";
+  let currentDate = new Date(start);
+  while (currentDate <= end) {
+    dateArray.push(currentDate.toISOString().split('T')[0]);
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
   
-    // Find a range of time by selected date/filter
-    if (selectedDate === null || Array.isArray(selectedDate)) {
+  return dateArray;
+}
+
+function generateMultipleMetricsChartData(selectedDate = null, product = null, selectedMetrics = ["visitor"]) {
+  let timeIntervals = [];
+  let mode = "daily";
+  let result = {};
+
+  // Generate time intervals based on selection
+  if (comparatorDate && comaparedDate) {
+    timeIntervals = getDateRangeIntervals(comparatorDate, comaparedDate);
+    mode = timeIntervals.length <= 24 ? "hourly" : "daily";
+  } else if (selectedDate === null || Array.isArray(selectedDate)) {
       timeIntervals = getAllDaysInLast7Days();
-    } else if (selectedDate === "Bulan Ini") {
+  } else if (selectedDate === "Bulan Ini") {
       timeIntervals = getAllDaysInAMonth();
-    } else {
+  } else {
       timeIntervals = getHourlyIntervals(selectedDate);
       mode = "hourly";
-    }
-  
-    // Initialize stockMap with time intervals
+  }
+
+  if (!timeIntervals || timeIntervals.length === 0) {
+    timeIntervals = [new Date().toISOString().split('T')[0]];
+  }
+
+  result.timeIntervals = timeIntervals;
+  result.series = [];
+
+  console.log(result.timeIntervals, "result.timeIntervals");
+
+  let filteredProducts = productJsonData.result.items;
+  if (product) {
+    filteredProducts = productJsonData.result.items.filter((p) => p.id === product.id);
+  }
+
+  selectedMetrics?.forEach(metricKey => {
+    const metric = metrics[metricKey];
+    if (!metric) return;
+
+    const dataKey = metric.dataKey;
+    let dataMap = {};
+    
     timeIntervals.forEach((time) => {
-      stockMap[time] = 0;
+      console.log("time", time);
+      dataMap[time] = 0;
     });
-  
-    // Filter products based on selected product
-    let filteredProducts = stockJsonData.data.products;
-    if (product) {
-      filteredProducts = stockJsonData.data.products.filter((p) => p.id === product.id);
-    }
-  
-    // Calculate total stock for each time interval
+
     filteredProducts.forEach((product) => {
-      const productDateTime = convertEpochToDate(product.campaign.start_time, mode);
-      if (stockMap[productDateTime] !== undefined) {
-        stockMap[productDateTime] += product.stock_detail?.total_available_stock || 0;
+      const productDateTime = convertEpochToDate(product.start_time, mode);
+
+      // Extract just the date part for comparison
+      const productDateOnly = productDateTime.includes(" ") ? 
+      productDateTime.split(" ")[0] : productDateTime;
+      
+      if (dataMap[productDateOnly] === undefined) {
+        
+        if (comparatorDate && comaparedDate) {
+          const productDate = new Date(product.start_time * 1000);
+          const startDay = new Date(comparatorDate);
+          startDay.setHours(0, 0, 0, 0);
+          const endDay = new Date(comaparedDate);
+          endDay.setHours(23, 59, 59, 999);
+          
+          if (productDate >= startDay && productDate <= endDay) {
+            if (!timeIntervals.includes(productDateOnly)) {
+              timeIntervals.push(productDateOnly);
+              timeIntervals.sort();
+              dataMap[productDateOnly] = 0;
+            }
+          }
+        }
+      }
+      
+      if (dataMap[productDateOnly] !== undefined) {
+        dataMap[productDateOnly] += product[dataKey] || 0;
       }
     });
+
+    console.log("dataMap", timeIntervals.map((time) => dataMap[time] || 0));
+    const seriesData = {
+      name: metric.label,
+      data: timeIntervals.map((time) => dataMap[time] || 0), // Use 0 as fallback
+      color: metric.color
+    };
+
+    result.series.push(seriesData);
+  });
   
-    return timeIntervals.map((time) => ({ date: time, totalStock: stockMap[time] }));
-  }  
+  return result;
+}
 
-  // Initialize chart data when the component mounts or when date or selectedProduct changes
-  useEffect(() => {
-    setChartData(generateChartData(date, selectedProduct));
-  }, [date, selectedProduct]);
-
-  // Initialize chart when the component mounts or when chartData changes
-  useEffect(() => {
-    let xAxisData = chartData?.map((item) => item.date);
-    const includesColon = xAxisData?.some((item) => item.includes(":"));
-    if (includesColon) {
-      xAxisData = xAxisData.map((item) => item.split(" ")[1]);
-    } else {
-      xAxisData = xAxisData.map((item) => item.split("-").slice(1).join("-"));
+function handleMetricFilter(metricKey) {
+  setSelectedMetrics(prev => {
+    // If already selected, remove it
+    if (prev.includes(metricKey)) {
+      return prev.filter(m => m !== metricKey);
+    } 
+    // If not selected and less than 3 selected, add it
+    else if (prev.length < 3) {
+      return [...prev, metricKey];
+    } 
+    // If not selected but already have 3, show alert and don't change
+    else {
+      setShowAlert(true);
+      setTimeout(() => setShowAlert(false), 2000); 
+      return prev;
     }
+  });
+}
 
+function handleDateSelection(selectedDateOption) {
+  setComparatorDate(null);
+  setComaparedDate(null);
+  setDate(selectedDateOption);
+}
+
+function handleComparisonDatesConfirm() {
+  if (comparatorDate && comaparedDate) {
+    setDate(null);
+    setShowCalendar(false);
+  }
+}
+
+useEffect(() => {
+  const chartData = generateMultipleMetricsChartData(date, selectedProduct, selectedMetrics);
+  setChartData(chartData);
+}, [date, selectedProduct, selectedMetrics, comparatorDate, comaparedDate]);
+
+useEffect(() => {
     if (chartRef.current) {
       const chartInstance = echarts.init(chartRef.current);
+      
+      const series = chartData.series?.map(s => ({
+        name: s.name,
+        type: 'line',
+        smooth: true,
+        showSymbol: false,
+        emphasis: { focus: 'series' },
+        data: s.data,
+        lineStyle: {
+          color: s.color
+        },
+        itemStyle: {
+          color: s.color
+        }
+      })) || [];
+
+      const hasData = series.some(s => s.data && s.data.some(value => value > 0));
+
+      let leftGrid;
+      if (selectedMetrics.length == 1 && (selectedMetrics.includes("add_to_cart_pr") || selectedMetrics.includes("sell"))) {
+        leftGrid = 80;
+      } else if (selectedMetrics.length > 1 && selectedMetrics.includes("sell")) {
+        leftGrid = 80;
+      } else {
+        leftGrid = 50;
+      }
+
+      // Fix for the inconsistent date formats
+      let xAxisData = chartData?.timeIntervals || [];
+      
+      // Normalize date formats first - extract just the date part from any format
+      xAxisData = xAxisData.map(date => {
+        if (!date) return "";
+        // If it contains a space (has time component), take only the date part
+        if (date.includes(" ")) {
+          return date.split(" ")[0];
+        }
+        return date;
+      });
+      
+      const includesColon = xAxisData.some(data => data && data.includes(":"));
+      
+      // Format for display
+      if (includesColon) {
+        xAxisData = xAxisData.map(data => data ? data.split(" ")[1] || "" : "");
+      } else {
+        // Only take month-day from the normalized dates
+        xAxisData = xAxisData.map(data => {
+          if (!data) return "";
+          const parts = data.split("-");
+          if (parts.length >= 3) {
+            return `${parts[1]}-${parts[2]}`;  // month-day format
+          }
+          return data;
+        });
+      }
+      
+      let rotateAxisLabel = 0;
+      if (!includesColon) {
+        if (xAxisData?.length > 7 && xAxisData?.length <= 20) {
+          rotateAxisLabel = 30;
+        } else if (xAxisData?.length > 20) {
+          rotateAxisLabel = 40;
+        }
+      };
+      
+
       const option = {
         toolbox: { feature: { saveAsImage: {} } },
-        grid: { left: 50, right: 50, bottom: 50, containLabel: false },
-        tooltip: { trigger: "axis" },
-        xAxis: { name: "Date", type: "category", data: xAxisData, boundaryGap: false },
-        yAxis: { name: "Stock", type: "value", splitLine: { show: true } },
-        series: [
-          {
-            type: "line",
-            smooth: true,
-            showSymbol: false,
-            emphasis: { focus: "series" },
-            data: chartData.map((item) => item.totalStock),
+        grid: { 
+          left: leftGrid,
+          right: 50, 
+          bottom: 50, 
+          containLabel: false 
+        },
+        tooltip: { 
+          trigger: "axis",
+          formatter: function(params) {
+            let result = params[0].axisValue + '<br/>';
+            params.forEach(param => {
+              result += `<span style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background-color:${param.color};"></span> ${param.seriesName}: ${param.value}<br/>`;
+            });
+            return result;
+          }
+        },
+        legend: {
+          data: chartData.series?.map(s => s.name) || [],
+          bottom: 0
+        },
+        xAxis: { 
+          name: "Date", 
+          type: "category", 
+          data: xAxisData || [], 
+          boundaryGap: false,
+          axisLabel: { 
+            rotate: rotateAxisLabel,
+            interval: 0,
           },
-        ],
+        },
+        yAxis: { 
+          name: selectedMetrics.length === 1 ? metrics[selectedMetrics[0]].label : "Total",
+          type: "value", 
+          splitLine: { show: true } 
+        },
+        series: series,
       };
+      
+      if (!hasData && (comparatorDate && comaparedDate)) {
+        option.graphic = [
+          {
+            type: 'text',
+            left: 'center',
+            top: 'middle',
+            style: {
+              text: 'Tidak ada data untuk rentang waktu yang dipilih',
+              fontSize: 16,
+              fill: '#999',
+              fontWeight: 'bold'
+            }
+          }
+        ];
+      }
+      
       chartInstance.setOption(option);
       return () => chartInstance.dispose();
     }
-  }, [chartData]);
+  }, [chartData, selectedMetrics]);
 
+const allColumns = [
+  { key: "name", label: "Nama" },
+  { key: "visitor", label: "Pengunjung" },
+];
 
-  // FILTER COLUMNS FEATURE
-  // Define all columns
-  const allColumns = [
-    { key: "name", label: "Nama" },
-    { key: "code", label: "Kode" },
-    { key: "stock", label: "Stok" },
-    { key: "availability", label: "Availability" }
-  ];
-
-  return (
-    <>
-      <BaseLayout>
-        {/* Date filter */}
+return (
+  <>
+    <BaseLayout>
+      <div className="card">
+        {/* Date Filter */}
         <div style={{ position: "relative" }}>
           <button
-            onClick={() => setShowCalender(!showCalender)}
-            className="btn btn-secondary"
+            onClick={() => setShowCalendar(!showCalendar)}
             style={{ backgroundColor: "#8042D4", border: "none" }}
           >
-            {date === null ? "Pilih tanggal" : Array.isArray(date) ? "1 Minggu terakhir" : date}
+            {comparatorDate && comaparedDate
+            ? `${comparatorDate.toLocaleDateString("id-ID")} - ${comaparedDate.toLocaleDateString("id-ID")}`
+            : (typeof date === 'string' ? date : (Array.isArray(date) ? "1 Minggu terakhir" : "Pilih Tanggal"))}
           </button>
-          {showCalender && (
+          {showCalendar && (
             <div
-              className="d-flex"
               style={{
                 position: "absolute",
-                top: "40px",
-                right: "0",
-                zIndex: 1000,
-                background: "white",
-                boxShadow: "0px 4px 6px rgba(0,0,0,0.1)",
-                borderRadius: "8px",
-                padding: "10px 10px",
               }}
             >
-              <div
-                className="d-flex flex-column py-2 px-1"
-                style={{ width: "130px", listStyleType: "none" }}
-              >
-                <p style={{ cursor: "pointer" }} onClick={() => setDate(new Date().toISOString().split("T")[0])}>Hari ini</p>
-                <p
-                  style={{ cursor: "pointer" }}
-                  onClick={() => {
-                    const yesterday = new Date();
-                    yesterday.setDate(yesterday.getDate() - 1);
-                    setDate(yesterday.toISOString().split("T")[0]);
-                  }}
-                >
-                  Kemarin
-                </p>
-                <p style={{ cursor: "pointer" }} onClick={() => setDate(getAllDaysInLast7Days())}>1 Minggu terakhir</p>
-                <p style={{ cursor: "pointer" }} onClick={() => setDate("Bulan Ini")}>Bulan ini</p>
+              <div>
+                  <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection(new Date().toISOString().split("T")[0])}>Hari ini</p>
+                  <p style={{ cursor: "pointer" }}
+                    onClick={() => {
+                      const yesterday = new Date();
+                      yesterday.setDate(yesterday.getDate() - 1);
+                      handleDateSelection(yesterday.toISOString().split("T")[0]);
+                    }}
+                  >
+                    Kemarin
+                  </p>
+                  <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection(getAllDaysInLast7Days())}>1 Minggu terakhir</p>
+                  <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection("Bulan Ini")}>Bulan ini</p>
               </div>
-              <Calendar
-                onChange={(selectedDate) => {
-                  setDate(selectedDate.toISOString().split("T")[0]);
-                  setShowCalender(false);
-                }}
-                value={date === "Bulan Ini" ? new Date() : date} 
-                maxDate={new Date()}
-              />
+              {/* Kalender pembanding */}
+              <div>
+                <p className="pt-2" style={{ textAlign: "center" }}>Tanggal Pembanding</p>
+                <Calendar onChange={(date) => setComparatorDate(date)} value={comparatorDate} maxDate={comaparedDate || new Date(2100, 0, 1)} />
+              </div>
+              {/* Kalender dibanding */}
+              <div>
+                <p className="pt-2" style={{ textAlign: "center" }}>Tanggal Dibanding</p>
+                <Calendar onChange={(date) => setComaparedDate(date)} value={comaparedDate} minDate={comparatorDate || new Date()} />
+              </div>
+                <button 
+                  className="btn btn-primary" 
+                  onClick={handleComparisonDatesConfirm}
+                  disabled={!comparatorDate || !comaparedDate}
+                >
+                  Terapkan
+                </button>
             </div>
           )}
         </div>
-        {/* Chart */}
-        <div ref={chartRef} style={{ width: "100%", height: "300px" }} className="mb-2"></div>
-        {/* Table */}
-        <table className="table table-centered">
-          {/* Head table */}
+        <div ref={chartRef} style={{ width: "100%", height: "300px" }}></div>
+        <span>Matric Produk</span>
+        <div className="d-flex gap-2">
+          {Object.keys(metrics).map((metricKey) => (
+            <button 
+              key={metricKey}
+              style={handleStyleMatricButton(metricKey)}
+              onClick={() => handleMetricFilter(metricKey)}
+            >
+              {metrics[metricKey].label}
+            </button>
+          ))}
+        </div>
+        <table className="table">
           <thead className="table-light">
             <tr>
               <th scope="col"></th>
@@ -220,27 +438,30 @@ export default function PerformanceStockPage() {
                 ))}
             </tr>
           </thead>
-          {/* Body Table */}
           <tbody>
-            {filteredData?.map((entry) => (
+            {filteredData?.map((entry, index) => (
                 <>
                   <tr key={entry.id}>
                     {selectedColumns.includes("name") && (
-                      <td
-                        style={{
-                          cursor: "pointer",
-                          color:
-                            selectedProduct?.id === entry.id
-                              ? "#F6881F"
-                              : "",
-                        }}
-                        onClick={() => handleProductClick(entry)}
-                      >
-                        {entry.name}
+                      <td style={{
+                        maxWidth: "400px",
+                        cursor: "pointer",
+                        color:
+                          selectedProduct?.id === entry.id
+                            ? "#F6881F"
+                            : "",
+                      }} onClick={() => handleProductClick(entry)}>
+                        <div className="d-flex flex-column">
+                          <span>{entry.name}</span>
+                        </div>
                       </td>
                     )}
-                    {selectedColumns.includes("code") && (
-                      <td>{entry.id || "-"}</td>
+                    {selectedColumns.includes("visitor") && (
+                      <td>
+                        <div className="d-flex flex-column">
+                          <span>{entry.uv}</span>
+                        </div>
+                      </td>
                     )}
                   </tr>
                 </>
@@ -248,7 +469,8 @@ export default function PerformanceStockPage() {
             }
           </tbody>
         </table>
-      </BaseLayout>
-    </>
-  );
+      </div>
+    </BaseLayout>
+  </>
+);
 };
