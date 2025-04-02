@@ -65,7 +65,7 @@
 
 
 .custom-filter-search {
-  width: 300px !important;
+  width: 270px !important;
 }
 
 .custom-filter-search .form-control {
@@ -73,7 +73,7 @@
 }
 
 .custom-filter-salesClassification  {
-  width: 250px !important;
+  width: 220px !important;
 }
 
 @media screen and (max-width: 768px) {

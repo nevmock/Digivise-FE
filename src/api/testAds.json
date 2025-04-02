@@ -1,0 +1,47 @@
+{
+    "code": 0,
+    "msg": "OK",
+    "debug_detail": "",
+    "validation_error_list": null,
+    "data": {
+      "entry_list": [
+        {
+          "campaign": {
+            "campaign_id": 121828260,
+            "daily_budget": 4000000000,
+            "start_time" : 1743094800
+          },
+          "type": "product_manual",
+          "report": {
+            "broad_cir": 0,
+            "broad_gmv": 0
+          }
+        },
+        {
+          "campaign": {
+            "campaign_id": 315516327,
+            "daily_budget": 0,
+            "start_time" : 1743094800
+          },
+          "type": "product_manual",
+          "report": {
+            "broad_cir": 0,
+            "broad_gmv": 0
+          }
+        },
+        {
+          "campaign": {
+            "campaign_id": 315514891,
+            "daily_budget": 0,
+            "start_time" : 1743094800
+          },
+          "type": "shop_auto",
+          "report": {
+            "broad_cir": 0,
+            "broad_gmv": 0
+          }
+        }
+      ],
+      "total": 1685
+    }
+}
