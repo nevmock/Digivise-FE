@@ -11,7 +11,7 @@ export default function PerformanceProductPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [filteredData, setFilteredData] = useState(productJsonData.result.items);
-  const [statusProductFilter, setStatusProductFilter] = useState("all");
+  const [statusProduct, setStatusProduct] = useState("all");
   const [showTableColumn, setShowTableColumn] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [comparatorDate, setComparatorDate] = useState(null);
@@ -93,7 +93,7 @@ export default function PerformanceProductPage() {
       d.setDate(d.getDate() - i);
       return d.toISOString().split("T")[0];
     }).reverse();
-  }
+  };
 
   // Get all days in a month
   function getAllDaysInAMonth() {
@@ -193,7 +193,6 @@ export default function PerformanceProductPage() {
       let dataMap = {};
       
       timeIntervals.forEach((time) => {
-        console.log("time", time);
         dataMap[time] = 0;
       });
 
@@ -456,16 +455,16 @@ export default function PerformanceProductPage() {
     }
 
     // Filter by status
-    if (statusProductFilter !== "all") {
+    if (statusProduct !== "all") {
       filtered = filtered.filter(
-        (entry) => entry.state === statusProductFilter
+        (entry) => entry.state === statusProduct
       );
     }
 
     setFilteredData(filtered);
   }, [
     debouncedSearchTerm,
-    statusProductFilter,
+    statusProduct,
     productJsonData.result.items
   ]);
 
@@ -618,55 +617,55 @@ export default function PerformanceProductPage() {
                     <div className="d-flex gap-2">
                       <div
                         className={`status-button-filter rounded-pill bg-white d-flex align-items-center  ${
-                          statusProductFilter === "all"
+                          statusProduct === "all"
                             ? "custom-font-color custom-border-select"
                             : "border border-secondary-subtle"
                         }`}
-                        onClick={() => setStatusProductFilter("all")}
+                        onClick={() => setStatusProduct("all")}
                         style={{ cursor: "pointer", fontSize: "12px", padding: "6px 12px", }}
                       >
                         Semua
                       </div>
                       <div
                         className={`status-button-filter rounded-pill bg-white d-flex align-items-center ${
-                          statusProductFilter === "scheduled"
+                          statusProduct === "scheduled"
                             ? "custom-font-color custom-border-select"
                             : "border border-secondary-subtle"
                         }`}
-                        onClick={() => setStatusProductFilter("scheduled")}
+                        onClick={() => setStatusProduct("scheduled")}
                         style={{ cursor: "pointer", fontSize: "12px", padding: "6px 12px", }}
                       >
                         Terjadwal
                       </div>
                       <div
                         className={`status-button-filter rounded-pill bg-white d-flex align-items-center  ${
-                          statusProductFilter === "ongoing"
+                          statusProduct === "ongoing"
                             ? "custom-font-color custom-border-select"
                             : "border border-secondary-subtle"
                         }`}
-                        onClick={() => setStatusProductFilter("ongoing")}
+                        onClick={() => setStatusProduct("ongoing")}
                         style={{ cursor: "pointer", fontSize: "12px", padding: "6px 12px", }}
                       >
                         Berjalan
                       </div>
                       <div
                         className={`status-button-filter rounded-pill bg-white d-flex align-items-center  ${
-                          statusProductFilter === "paused"
+                          statusProduct === "paused"
                             ? "custom-font-color custom-border-select"
                             : "border border-secondary-subtle"
                         }`}
-                        onClick={() => setStatusProductFilter("paused")}
+                        onClick={() => setStatusProduct("paused")}
                         style={{ cursor: "pointer", fontSize: "12px", padding: "6px 12px", }}
                       >
                         Nonaktif
                       </div>
                       <div
                         className={`status-button-filter rounded-pill bg-white d-flex align-items-center ${
-                          statusProductFilter === "ended"
+                          statusProduct === "ended"
                             ? "custom-font-color custom-border-select"
                             : "border border-secondary-subtle"
                         }`}
-                        onClick={() => setStatusProductFilter("ended")}
+                        onClick={() => setStatusProduct("ended")}
                         style={{ cursor: "pointer", fontSize: "12px", padding: "1px 12px", }}
                       >
                         Berakhir
@@ -697,15 +696,25 @@ export default function PerformanceProductPage() {
                             styles={{
                               control: (base) => ({
                                 ...base,
-                                border: "2px solid #d8dfe7",
+                                border: "2px solid #d8dfe7 !important",
+                                boxShadow: "none",
                                 "&:hover": {
-                                  border: "2px solid #d8dfe7",
+                                  border: "2px solid #d8dfe7 !important",
+                                  boxShadow: "none",
+                                },
+                                "&:focus": {
+                                  border: "2px solid #d8dfe7 !important",
+                                  boxShadow: "none",
+                                },
+                                "&:active": {
+                                  border: "2px solid #d8dfe7 !important",
+                                  boxShadow: "none",
                                 },
                                 padding: "0.6px 4px",
                               }),
                               multiValue: (base) => ({
                                 ...base,
-                                backgroundColor: "#8042D4",
+                                backgroundColor: "#F9DBBF",
                               }),
                             }}
                           />
@@ -781,9 +790,9 @@ export default function PerformanceProductPage() {
                                     maxWidth: "400px",
                                     cursor: "pointer",
                                     color:
-                                      selectedProduct?.id === entry.id
-                                        ? "#F6881F"
-                                        : "",
+                                    selectedProduct?.id === entry.id
+                                      ? "#F6881F"
+                                      : "",
                                   }} onClick={() => handleProductClick(entry)}>
                                     <div className="d-flex flex-column">
                                       <span>{entry.name}</span>

@@ -2,22 +2,47 @@
     "code": 0,
     "msg": "ok",
     "result": {
-        "total": 258,
+        "total": 4,
         "items": [
             {
                 "id": 24164190830,
-                "name": "CCCC",
-                "image": "id-11134207-7rbk9-m760ooqrnpd668",
+                "name": "dd",
                 "status": 1,
-                "start_time" : 1743094800
+                "bidding" : 5,
+                "uv": 112,
+                "start_time" : 1743094800,
+                "add_to_cart_units": 32,
+                "paid_sales": 1192431,
+                "confirmed_units": 4,
+                "placed_to_paid_buyers_rate": 3.5,
+                "uv_to_add_to_cart_rate": 0.2321
             },
             {
-                "id": 24042522199,
-                "name": "AAA",
-                "image": "sg-dwddwdwd-7rd5w-wddwdwddwdd",
+                "id": 24414087607,
+                "name": "dd",
                 "status": 1,
-                "start_time" : 1743094800
+                "bidding" : 5,
+                "uv": 34,
+                "start_time" : 1743094800,
+                "add_to_cart_units": 9,
+                "paid_sales": 971352,
+                "confirmed_units": 1,
+                "placed_to_paid_buyers_rate": 8,
+                "uv_to_add_to_cart_rate": 0.2059
+            },
+            {
+                "id": 24566965167,
+                "name": "dd",
+                "status": 1,
+                "bidding" : 5,
+                "uv": 43,
+                "start_time" : 1743094800,
+                "add_to_cart_units": 2,
+                "paid_sales": 117566.67,
+                "confirmed_units": 0,
+                "placed_to_paid_buyers_rate": 1,
+                "uv_to_add_to_cart_rate": 0.0465
             }
         ]
     }
-}
+  }
