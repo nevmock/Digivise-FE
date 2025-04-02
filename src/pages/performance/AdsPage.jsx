@@ -1,4 +1,3 @@
-import React from "react";
 import BaseLayout from "../../components/organisms/BaseLayout";
 import jsonData from "../../api/ads.json";
 import AdsTable from "../../components/organisms/adsTable";

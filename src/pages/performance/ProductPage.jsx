@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import Select from "react-select";
 import Calendar from "react-calendar";
 import * as echarts from "echarts";
@@ -317,7 +317,16 @@ export default function PerformanceProductPage() {
       } else {
         xAxisData = xAxisData?.map((data) => data.split("-").slice(1).join("-"));
       }
-
+      
+      let rotateAxisLabel = 0;
+      if (!includesColon) {
+        if (xAxisData?.length > 7 && xAxisData?.length <= 20) {
+          rotateAxisLabel = 30;
+        } else if (xAxisData?.length > 20) {
+          rotateAxisLabel = 40;
+        }
+      };
+      
 
       const option = {
         toolbox: { feature: { saveAsImage: {} } },
@@ -345,7 +354,11 @@ export default function PerformanceProductPage() {
           name: "Date", 
           type: "category", 
           data: xAxisData || [], 
-          boundaryGap: false 
+          boundaryGap: false ,
+          axisLabel: {
+            rotate: rotateAxisLabel,
+            interval: 0,
+          },
         },
         yAxis: { 
           name: selectedMetrics.length === 1 ? metrics[selectedMetrics[0]].label : "Total",

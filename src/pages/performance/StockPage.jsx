@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import * as echarts from "echarts";
 import Calendar from "react-calendar";
 import Select from "react-select";
@@ -25,17 +25,12 @@ export default function PerformanceStockPage() {
   const [showCalender, setShowCalender] = useState(false);
   const [date, setDate] = useState(getAllDaysInLast7Days());
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   // CUSTOM CHART & PRODUCT CLICK FEATURE
   // Handle product click by clicking the product in name column
   const handleProductClick = (product) => {
-    // Jika produk yang diklik sama dengan yang sebelumnya dipilih, reset chart kembali ke semua produk
-    if (selectedProduct?.id === product.id) {
-      setSelectedProduct(null);
-    // Jika produk yang diklik berbeda, set chart data sesuai produk yang dipilih
-    } else {
-      setSelectedProduct(product);
-    }
+    setSelectedProduct((prev) => (prev?.id === product.id ? null : product));
   };  
 
   // Convert start_time to date format with epoch method
@@ -59,7 +54,7 @@ export default function PerformanceStockPage() {
       d.setDate(d.getDate() - i);
       return d.toISOString().split("T")[0];
     }).reverse();
-  }
+  };
 
   // Get all days in a month
   function getAllDaysInAMonth() {
@@ -71,22 +66,21 @@ export default function PerformanceStockPage() {
       { length: days },
       (_, i) => `${year}-${String(month).padStart(2, "0")}-${String(i + 1).padStart(2, "0")}`
     );
-  }
+  };
 
   // Get all hourly intervals for a specific date
   function getHourlyIntervals(selectedDate) {
     return Array.from({ length: 24 }, (_, i) => {
       return `${selectedDate} ${String(i).padStart(2, "0")}:00`;
     });
-  }
-  
-  // Generate chart data based on selected date and product
-  function generateChartData(selectedDate = null, product = null) { 
+  };
+
+  function generateChartData(selectedDate = null, product = null) {
+    setIsLoading(true);
     let stockMap = {};
     let timeIntervals = [];
     let mode = "daily";
-  
-    // Find a range of time by selected date/filter
+
     if (selectedDate === null || Array.isArray(selectedDate)) {
       timeIntervals = getAllDaysInLast7Days();
     } else if (selectedDate === "Bulan Ini") {
@@ -95,58 +89,134 @@ export default function PerformanceStockPage() {
       timeIntervals = getHourlyIntervals(selectedDate);
       mode = "hourly";
     }
-  
-    // Initialize stockMap with time intervals
+
     timeIntervals.forEach((time) => {
       stockMap[time] = 0;
     });
-  
-    // Filter products based on selected product
+
     let filteredProducts = stockJsonData.data.products;
     if (product) {
       filteredProducts = stockJsonData.data.products.filter((p) => p.id === product.id);
     }
-  
-    // Calculate total stock for each time interval
+
     filteredProducts.forEach((product) => {
       const productDateTime = convertEpochToDate(product.campaign.start_time, mode);
       if (stockMap[productDateTime] !== undefined) {
         stockMap[productDateTime] += product.stock_detail?.total_available_stock || 0;
       }
     });
-  
-    return timeIntervals.map((time) => ({ date: time, totalStock: stockMap[time] }));
-  }  
 
-  // Initialize chart data when the component mounts or when date or selectedProduct changes
+    setIsLoading(false);
+    return timeIntervals.map((time) => ({ date: time, totalStock: stockMap[time] }));
+  }
+
   useEffect(() => {
     setChartData(generateChartData(date, selectedProduct));
   }, [date, selectedProduct]);
 
-  // Initialize chart when the component mounts or when chartData changes
   useEffect(() => {
+    let xAxisData = chartData?.map((item) => item.date);
+    let rotateAaxisLabel = 0;
+    const includesColon = xAxisData?.some((item) => item.includes(":"));
+    if (includesColon) {
+      xAxisData = xAxisData?.map((item) => item.split(" ")[1]);
+    } else {
+      xAxisData = xAxisData?.map((item) => item.split("-").slice(1).join("-"));
+    };
+
+    if (xAxisData?.length > 7 && !includesColon) {
+      rotateAaxisLabel = 45;
+    };
+
     if (chartRef.current) {
       const chartInstance = echarts.init(chartRef.current);
-      const option = {
+      chartInstance.setOption({
         toolbox: { feature: { saveAsImage: {} } },
         grid: { left: 50, right: 50, bottom: 50, containLabel: false },
         tooltip: { trigger: "axis" },
-        xAxis: { name: "Date", type: "category", data: chartData.map((item) => item.date), boundaryGap: false },
-        yAxis: { name: "Stock", type: "value", splitLine: { show: true } },
-        series: [
-          {
-            type: "line",
-            smooth: true,
-            showSymbol: false,
-            emphasis: { focus: "series" },
-            data: chartData.map((item) => item.totalStock),
-          },
-        ],
-      };
-      chartInstance.setOption(option);
+        xAxis: { type: "category", data: xAxisData, boundaryGap: false, axisLabel: { interval: 0, rotate: rotateAaxisLabel }},
+        yAxis: { type: "value", splitLine: { show: true } },
+        series: [{ type: "line", smooth: true, showSymbol: false, data: chartData.map((item) => item.totalStock) }],
+      });
       return () => chartInstance.dispose();
     }
   }, [chartData]);
+  
+  // Generate chart data based on selected date and product
+  // function generateChartData(selectedDate = null, product = null) { 
+  //   let stockMap = {};
+  //   let timeIntervals = [];
+  //   let mode = "daily";
+  
+  //   // Find a range of time by selected date/filter
+  //   if (selectedDate === null || Array.isArray(selectedDate)) {
+  //     timeIntervals = getAllDaysInLast7Days();
+  //   } else if (selectedDate === "Bulan Ini") {
+  //     timeIntervals = getAllDaysInAMonth();
+  //   } else {
+  //     timeIntervals = getHourlyIntervals(selectedDate);
+  //     mode = "hourly";
+  //   }
+  
+  //   // Initialize stockMap with time intervals
+  //   timeIntervals.forEach((time) => {
+  //     stockMap[time] = 0;
+  //   });
+  
+  //   // Filter products based on selected product
+  //   let filteredProducts = stockJsonData.data.products;
+  //   if (product) {
+  //     filteredProducts = stockJsonData.data.products.filter((p) => p.id === product.id);
+  //   }
+  
+  //   // Calculate total stock for each time interval
+  //   filteredProducts.forEach((product) => {
+  //     const productDateTime = convertEpochToDate(product.campaign.start_time, mode);
+  //     if (stockMap[productDateTime] !== undefined) {
+  //       stockMap[productDateTime] += product.stock_detail?.total_available_stock || 0;
+  //     }
+  //   });
+  
+  //   return timeIntervals.map((time) => ({ date: time, totalStock: stockMap[time] }));
+  // }  
+
+  // // Initialize chart data when the component mounts or when date or selectedProduct changes
+  // useEffect(() => {
+  //   setChartData(generateChartData(date, selectedProduct));
+  // }, [date, selectedProduct]);
+
+  // // Initialize chart when the component mounts or when chartData changes
+  // useEffect(() => {
+  //   let xAxisData = chartData?.map((item) => item.date);
+  //   const includesColon = xAxisData?.some((item) => item.includes(":"));
+  //   if (includesColon) {
+  //     xAxisData = xAxisData.map((item) => item.split(" ")[1]);
+  //   } else {
+  //     xAxisData = xAxisData.map((item) => item.split("-").slice(1).join("-"));
+  //   }
+
+  //   if (chartRef.current) {
+  //     const chartInstance = echarts.init(chartRef.current);
+  //     const option = {
+  //       toolbox: { feature: { saveAsImage: {} } },
+  //       grid: { left: 50, right: 50, bottom: 50, containLabel: false },
+  //       tooltip: { trigger: "axis" },
+  //       xAxis: { name: "Date", type: "category", data: xAxisData, boundaryGap: false },
+  //       yAxis: { name: "Stock", type: "value", splitLine: { show: true } },
+  //       series: [
+  //         {
+  //           type: "line",
+  //           smooth: true,
+  //           showSymbol: false,
+  //           emphasis: { focus: "series" },
+  //           data: chartData.map((item) => item.totalStock),
+  //         },
+  //       ],
+  //     };
+  //     chartInstance.setOption(option);
+  //     return () => chartInstance.dispose();
+  //   }
+  // }, [chartData]);
 
 
   // FILTER COLUMNS FEATURE
@@ -373,10 +443,12 @@ export default function PerformanceStockPage() {
                       ></div>
                       <Calendar
                         onChange={(selectedDate) => {
-                          setDate(selectedDate.toString().split("T")[0]);
+                          if (selectedDate instanceof Date) {
+                            setDate(selectedDate.toISOString().split("T")[0]);
+                          }
                           setShowCalender(false);
                         }}
-                        value={date === "Bulan Ini" ? new Date() : date} 
+                        value={date === "Bulan Ini" ? new Date() : date}
                         maxDate={new Date()}
                       />
                     </div>
