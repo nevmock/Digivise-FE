@@ -72,7 +72,7 @@
   padding-left: 14px !important;
 }
 
-.custom-filter-salesClassification  {
+.custom-filter-salesClassification, .custom-filter-typePlacement, .custom-filter-typeAds  {
   width: 220px !important;
 }
 
@@ -80,11 +80,7 @@
   .custom-filter-search {
     width: 200px;
   }
-  .custom-filter-salesClassification {
+  .custom-filter-salesClassification, .custom-filter-typePlacement, .custom-filter-typeAds {
     width: 100px;
   }
 }
-
-#container-table .table {
-  width: max-content !important;
-} 
