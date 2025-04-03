@@ -472,15 +472,25 @@ export default function PerformanceStockPage() {
                           styles={{
                             control: (base) => ({
                               ...base,
-                              border: "2px solid #d8dfe7",
+                              border: "2px solid #d8dfe7 !important",
+                              boxShadow: "none",
                               "&:hover": {
-                                border: "2px solid #d8dfe7",
+                                border: "2px solid #d8dfe7 !important",
+                                boxShadow: "none",
+                              },
+                              "&:focus": {
+                                border: "2px solid #d8dfe7 !important",
+                                boxShadow: "none",
+                              },
+                              "&:active": {
+                                border: "2px solid #d8dfe7 !important",
+                                boxShadow: "none",
                               },
                               padding: "0.6px 4px",
                             }),
                             multiValue: (base) => ({
                               ...base,
-                              backgroundColor: "#FFE7D0FF",
+                              backgroundColor: "#F9DBBF",
                             }),
                           }}
                         />
@@ -527,12 +537,17 @@ export default function PerformanceStockPage() {
                   )}
                 </div>
                 {/* Container table */}
-                <div id="container-table" className="table-responsive">
+                <div className="table-responsive"
+                  style={{
+                    width: "max-content",
+                    minWidth: "100%",
+                  }}
+                >
                   <table className="table table-centered">
                     {/* Head table */}
                     <thead className="table-light">
                       <tr>
-                        <th scope="col"></th>
+                        {filteredData.length > 0 && <th scope="col"></th>}
                         {allColumns
                           .filter((col) => selectedColumns.includes(col.key))
                           .map((col) => (
@@ -576,7 +591,24 @@ export default function PerformanceStockPage() {
                         filteredData?.map((entry) => (
                           <>
                             <tr key={entry.id}>
-                              <td onClick={() => toggleRow(entry.id)} style={{ cursor: "pointer"}}>
+                              {filteredData.length > 0 && (
+                                <td onClick={() => toggleRow(entry.id)} style={{ cursor: "pointer"}}>
+                                  {expandedVariantProduct[entry.id] ? (
+                                    <img
+                                      src={iconArrowUp}
+                                      alt="icon arrow up"
+                                      style={{ width: "8px", height: "8px" }}
+                                    />
+                                  ) : (
+                                    <img
+                                      src={iconArrowDown}
+                                      alt="icon arrow down"
+                                      style={{ width: "8px", height: "8px" }}
+                                    />
+                                  )}
+                                </td>
+                              )}
+                              {/* <td onClick={() => toggleRow(entry.id)} style={{ cursor: "pointer"}}>
                                 {expandedVariantProduct[entry.id] ? (
                                   <img
                                     src={iconArrowUp}
@@ -590,7 +622,7 @@ export default function PerformanceStockPage() {
                                     style={{ width: "8px", height: "8px" }}
                                   />
                                 )}
-                              </td>
+                              </td> */}
                               {selectedColumns.includes("name") && (
                                 <td
                                   style={{
@@ -726,7 +758,7 @@ export default function PerformanceStockPage() {
                           </>
                         ))
                       ) : (
-                        <div className="w-100 d-flex justify-content-center">
+                        <div className="w-100 d-flex justify-content-center" style={{ width: "max-content" }}>
                           <span>Data tidak tersedia</span>
                         </div>
                       )}

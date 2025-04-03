@@ -1,7 +1,7 @@
 import Menu from "../../components/organisms/Menu";
 import Footer from "../../components/organisms/Footer";
 
-export default function BaseLayout({children}) {
+export default function BaseLayout({ children }) {
     return (
         <>
             <html lang="en">
