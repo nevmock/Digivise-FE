@@ -761,12 +761,17 @@ export default function PerformanceProductPage() {
                     )}
                   </div>
                   {/* Table container */}
-                  <div id="container-table" className="table-responsive">
+                  <div className="table-responsive"
+                    style={{
+                    width: "max-content",
+                    minWidth: "100%",
+                  }}
+                  >
                     <table className="table">
                       {/* Table head */}
                       <thead className="table-light">
                         <tr>
-                          <th scope="col"></th>
+                        {filteredData.length > 0 && filteredData !== null && <th scope="col"></th>}
                           {allColumns
                             .filter((col) => selectedColumns.includes(col.key))
                             .map((col) => (
@@ -784,7 +789,9 @@ export default function PerformanceProductPage() {
                           filteredData?.map((entry, index) => (
                             <>
                               <tr key={entry.id}>
-                                <td>{index + 1}</td>
+                                {filteredData.length > 0 && filteredData !== null && (
+                                  <td>{index + 1}</td>
+                                )}
                                 {selectedColumns.includes("name") && (
                                   <td style={{
                                     maxWidth: "400px",

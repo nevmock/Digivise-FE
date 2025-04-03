@@ -790,7 +790,7 @@ const AdsTable = ({ data }) => {
                   </div>
                   {/* type placement filter */}
                   {isTypeManualProductSelected && (
-                    <div className="custom-filter-salesClassification">
+                    <div className="custom-filter-typePlacement">
                       <Select
                         options={placementOptions}
                         value={selectedOptionPlacement}
@@ -820,7 +820,7 @@ const AdsTable = ({ data }) => {
                     </div>
                   )}
                   {/* ads filter */}
-                  <div className="custom-filter-salesClassification">
+                  <div className="custom-filter-typeAds">
                     <Select
                       isMulti
                       options={typeAdsOptions}
@@ -923,11 +923,16 @@ const AdsTable = ({ data }) => {
               )}
             </div>
             {/* Table container */}
-            <div id="container-table" className="table-responsive">
+            <div className="table-responsive"
+              style={{
+                width: "max-content",
+                minWidth: "100%",
+              }}k
+            >
               <table className="table table-centered">
                 <thead className="table-light">
                   <tr>
-                    <th scope="col">No</th>
+                    {filteredData.length !== 0 && filteredData !== null && <th scope="col">No</th>}
                     {allColumns
                       .filter((col) => selectedColumns.includes(col.key))
                       .map((col) => (
@@ -970,7 +975,9 @@ const AdsTable = ({ data }) => {
                     filteredData?.map((entry, index) => (
                       <>
                         <tr key={entry.campaign.campaign_id}>
-                          <td>{index + 1}</td>
+                          {filteredData.length > 0 && filteredData !== null && (
+                            <td>{index + 1}</td>
+                          )}
                           {selectedColumns.includes("info_iklan") && (
                             <td
                               className="d-flex gap-2"
