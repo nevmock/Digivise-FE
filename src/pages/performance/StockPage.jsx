@@ -20,6 +20,7 @@ export default function PerformanceStockPage() {
   const [allRevenueStock, setAllRevenueStock] = useState(0);
   const [expandedVariantProduct, setExpandedVariantProduct] = useState({});
   const [chartData, setChartData] = useState([]);
+  const [variantsChartData, setVariantsChartData] = useState([]);
   const chartRef = useRef(null);
   const [sortOrderData, setSortOrderData] = useState(null);
   const [showCalender, setShowCalender] = useState(false);
@@ -108,10 +109,67 @@ export default function PerformanceStockPage() {
 
     setIsLoading(false);
     return timeIntervals.map((time) => ({ date: time, totalStock: stockMap[time] }));
-  }
+  };
+
+  // Generate chart data for variants
+  function generateVariantsChartData(selectedDate = null, product = null) {
+    if (!product) return [];
+    
+    setIsLoading(true);
+    let timeIntervals = [];
+    let mode = "daily";
+    let variantsData = [];
+
+    if (selectedDate === null || Array.isArray(selectedDate)) {
+      timeIntervals = getAllDaysInLast7Days();
+    } else if (selectedDate === "Bulan Ini") {
+      timeIntervals = getAllDaysInAMonth();
+    } else {
+      timeIntervals = getHourlyIntervals(selectedDate);
+      mode = "hourly";
+    }
+
+    // Find the selected product
+    const selectedProductData = stockJsonData.data.products.find(p => p.id === product.id);
+    
+    if (selectedProductData && selectedProductData.model_list) {
+      // Create chart data for each variant
+      selectedProductData.model_list.forEach(variant => {
+        let variantStockMap = {};
+        
+        timeIntervals.forEach(time => {
+          variantStockMap[time] = 0;
+        });
+        
+        const productDateTime = convertEpochToDate(selectedProductData.campaign.start_time, mode);
+        if (variantStockMap[productDateTime] !== undefined) {
+          variantStockMap[productDateTime] = variant.stock_detail?.total_available_stock || 0;
+        }
+        
+        const variantData = {
+          name: variant.name,
+          id: variant.id,
+          data: timeIntervals.map(time => ({ 
+            date: time, 
+            totalStock: variantStockMap[time] 
+          }))
+        };
+        
+        variantsData.push(variantData);
+      });
+    }
+    
+    setIsLoading(false);
+    return variantsData;
+  };
 
   useEffect(() => {
     setChartData(generateChartData(date, selectedProduct));
+    if (selectedProduct) {
+      setVariantsChartData(generateVariantsChartData(date, selectedProduct));
+    } else {
+      setVariantsChartData([]);
+    }
   }, [date, selectedProduct]);
 
   useEffect(() => {
@@ -128,19 +186,75 @@ export default function PerformanceStockPage() {
       rotateAaxisLabel = 45;
     };
 
-    if (chartRef.current) {
-      const chartInstance = echarts.init(chartRef.current);
-      chartInstance.setOption({
-        toolbox: { feature: { saveAsImage: {} } },
-        grid: { left: 50, right: 50, bottom: 50, containLabel: false },
-        tooltip: { trigger: "axis" },
-        xAxis: { type: "category", data: xAxisData, boundaryGap: false, axisLabel: { interval: 0, rotate: rotateAaxisLabel }},
-        yAxis: { type: "value", splitLine: { show: true } },
-        series: [{ type: "line", smooth: true, showSymbol: false, data: chartData.map((item) => item.totalStock) }],
+    const chartInstance = echarts.init(chartRef.current);
+    
+    const series = [
+      { 
+        name: selectedProduct ? selectedProduct.name : 'Total Stock',
+        type: "line", 
+        smooth: true, 
+        showSymbol: false, 
+        data: chartData.map((item) => item.totalStock),
+        lineStyle: {
+          color: '#5470C6'
+        }
+      }
+    ];
+    
+    // Add variant series if we have a selected product
+    if (selectedProduct && variantsChartData.length > 0) {
+      variantsChartData.forEach(variant => {
+        series.push({
+          name: variant.name,
+          type: "line",
+          smooth: true,
+          showSymbol: false,
+          data: variant.data.map(item => item.totalStock),
+          lineStyle: {
+            color: '#B2B6BE'
+          }
+        });
       });
-      return () => chartInstance.dispose();
     }
-  }, [chartData]);
+    
+    // Set chart options
+    chartInstance.setOption({
+      toolbox: { feature: { saveAsImage: {} } },
+      grid: { left: 50, right: 50, bottom: 50, containLabel: false },
+      tooltip: { 
+        trigger: "axis",
+        formatter: function(params) {
+          let result = params[0].axisValue + '<br/>';
+          
+          params.forEach(param => {
+            result += param.seriesName + ': ' + param.value + ' Stok<br/>';
+          });
+          
+          return result;
+        }
+      },
+      // legend: {
+      //   show: true,
+      //   data: series.map(item => item.name)
+      // },
+      xAxis: { 
+        type: "category", 
+        data: xAxisData, 
+        boundaryGap: false, 
+        axisLabel: { 
+          interval: 0, 
+          rotate: rotateAaxisLabel 
+        }
+      },
+      yAxis: { 
+        type: "value", 
+        splitLine: { show: true } 
+      },
+      series: series
+    });
+    
+    return () => chartInstance.dispose();
+  }, [chartData, variantsChartData, selectedProduct]);
 
 
   // FILTER COLUMNS FEATURE
@@ -538,10 +652,10 @@ export default function PerformanceStockPage() {
                 </div>
                 {/* Container table */}
                 <div className="table-responsive"
-                  style={{
-                    width: "max-content",
-                    minWidth: "100%",
-                  }}
+                  // style={{
+                  //   width: "max-content",
+                  //   minWidth: "100%",
+                  // }}
                 >
                   <table className="table table-centered">
                     {/* Head table */}
@@ -608,21 +722,6 @@ export default function PerformanceStockPage() {
                                   )}
                                 </td>
                               )}
-                              {/* <td onClick={() => toggleRow(entry.id)} style={{ cursor: "pointer"}}>
-                                {expandedVariantProduct[entry.id] ? (
-                                  <img
-                                    src={iconArrowUp}
-                                    alt="icon arrow up"
-                                    style={{ width: "8px", height: "8px" }}
-                                  />
-                                ) : (
-                                  <img
-                                    src={iconArrowDown}
-                                    alt="icon arrow down"
-                                    style={{ width: "8px", height: "8px" }}
-                                  />
-                                )}
-                              </td> */}
                               {selectedColumns.includes("name") && (
                                 <td
                                   style={{

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 import Select from "react-select";
 import Calendar from "react-calendar";
 import * as echarts from "echarts";
@@ -276,7 +277,7 @@ const AdsTable = ({ data }) => {
   useEffect(() => {
     const chartData = generateMultipleMetricsChartData(date, selectedProduct, selectedMetrics);
     setChartData(chartData);
-  }, [date, selectedProduct, selectedMetrics, comparatorDate, comaparedDate]);
+  }, [date, selectedProduct, selectedMetrics, comparatorDate, comaparedDate, data.data.entry_list]);
 
   useEffect(() => {
       if (chartRef.current) {
@@ -467,13 +468,12 @@ const AdsTable = ({ data }) => {
       filtered = filtered.filter((entry) => entry.state === statusProduct);
     }
 
-     // Filter by ads type (exclude "all" from filtering logic)
-     const selectedAdValues = selectedTypeAds.map((ad) => ad.value);
-     // Hanya filter jika "all" tidak dipilih
-     if (!selectedAdValues.includes("all")) {
-       filtered = filtered.filter((entry) => selectedAdValues.includes(entry.type));
-     }
-     
+    // Filter by ads type (exclude "all" from filtering logic)
+    const selectedAdValues = selectedTypeAds.map((ad) => ad.value);
+    // Only filter if "all" is not selected
+    if (!selectedAdValues.includes("all")) {
+      filtered = filtered.filter((entry) => selectedAdValues.includes(entry.type));
+    }
 
     // Filter by placement (if a placement is selected and not "all")
     if (selectedOptionPlacement && selectedOptionPlacement.value !== "all") {
@@ -924,10 +924,10 @@ const AdsTable = ({ data }) => {
             </div>
             {/* Table container */}
             <div className="table-responsive"
-              style={{
-                width: "max-content",
-                minWidth: "100%",
-              }}k
+              // style={{
+              //   width: "max-content",
+              //   minWidth: "100%",
+              // }}
             >
               <table className="table table-centered">
                 <thead className="table-light">
@@ -1004,15 +1004,15 @@ const AdsTable = ({ data }) => {
                                 />
                                 {
                                   entry.type === "product_manual" && (
-                                    <a style={{ fontSize: "10px"}} href="#"> 
-                                      Details
-                                    </a>
+                                    <Link to={"/performance/ads/detail"}>
+                                      <span style={{ fontSize: "10px"}}>Cek detail</span>
+                                    </Link>
                                   )
                                 }
                               </div>
                               <div className="d-flex flex-column">
                                 <span>{entry.title}</span>
-                                <span className="text-secondary">
+                                <span className="text-secondary" style={{ fontSize: "12px" }}>
                                   {checkTypeAds(entry.type)}
                                 </span>
                                 <span style={{ fontSize: "10px" }}>

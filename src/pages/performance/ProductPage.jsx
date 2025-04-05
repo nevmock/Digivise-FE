@@ -762,10 +762,10 @@ export default function PerformanceProductPage() {
                   </div>
                   {/* Table container */}
                   <div className="table-responsive"
-                    style={{
-                    width: "max-content",
-                    minWidth: "100%",
-                  }}
+                    // style={{
+                    //   width: "max-content",
+                    //   minWidth: "100%",
+                    // }}
                   >
                     <table className="table">
                       {/* Table head */}
