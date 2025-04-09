@@ -9,6 +9,7 @@ import BaseLayout from "../../components/organisms/BaseLayout";
 import detailAdsJson from "../../api/detail-ads.json";
 
 export default function DetailAds() {
+    const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState("");
     const debouncedSearchTerm = useDebounce(searchTerm, 300);
     const [filteredData, setFilteredData] = useState(detailAdsJson.data);
@@ -21,40 +22,50 @@ export default function DetailAds() {
     const chartRef = useRef(null);
     const [showAlert, setShowAlert] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
-    const [selectedMetrics, setSelectedMetrics] = useState(["daily_budget"]);
+    const [selectedMetrics, setSelectedMetrics] = useState(["cost_per_click"]);
 
     // CUSTOM CHART WITH FILTER DATE, CLICK PRODUCT FEATURE
     // Define metrics with their display names and colors
     const metrics = {
-        daily_budget: { 
-        label: "Biaya", 
-        color: "#00B69A", 
-        dataKey: "daily_budget" 
+        cost_per_click: { 
+            label: "Per click", 
+            color: "#00A088FF", 
+            dataKey: "cost_per_click" 
         },
         impression: { 
-        label: "Iklan Dilihat", 
-        color: "#D50000", 
-        dataKey: "impression" 
+            label: "Jumlah Klik", 
+            color: "#A50000FF", 
+            dataKey: "impression" 
         },
-        click: { 
-        label: "Click", 
-        color: "#00B800",
-        dataKey: "click" 
+        cost: { 
+            label: "Biaya Iklan", 
+            color: "#009200FF",
+            dataKey: "cost" 
         },
-        ctr: { 
-        label: "CTR", 
-        color: "#DFC100",
-        dataKey: "ctr" 
-        },
-        acos: { 
-        label: "ACOS", 
-        color: "#C400BA",
-        dataKey: "acos" 
+        selled_ads: { 
+            label: "Penjualan dari Iklan", 
+            color: "#D3B700FF",
+            dataKey: "selled_ads" 
         },
         convertion: { 
-        label: "Convertion", 
-        color: "#D77600",
-        dataKey: "convertion" 
+            label: "Konversi", 
+            color: "#990091FF",
+            dataKey: "convertion" 
+        },
+        roas: { 
+            label: "ROAS", 
+            color: "#AA5E00FF",
+            dataKey: "roas" 
+        },
+        convertion_rate: { 
+            label: "Tingkat Konversi", 
+            color: "#4100B9FF",
+            dataKey: "convertion_rate" 
+        },
+        average_rank: { 
+            label: "Peringkat rata-rata", 
+            color: "#85AA00FF",
+            dataKey: "average_rank" 
         }
     };
     
@@ -128,7 +139,7 @@ export default function DetailAds() {
     };
 
     // Generate chart data for multiple metrics
-    function generateSingleCampaignChartData(selectedDate = null, filteredData = null, selectedMetrics = ["daily_budget"]) {
+    function generateSingleCampaignChartData(selectedDate = null, filteredData = null, selectedMetrics = ["cost_per_click"]) {
         if (!filteredData) return { timeIntervals: [], series: [], isSingleDay: false };
         
         let timeIntervals = [];
@@ -189,7 +200,7 @@ export default function DetailAds() {
             // Check if the campaign's date is within our time intervals
             if (timeIntervals.includes(campaignDateOnly)) {
                 // Set the value for the campaign's date
-                if (dataKey === "daily_budget") {
+                if (dataKey === "cost_per_click") {
                     dataMap[campaignDateOnly] = filteredData.campaign[dataKey] || 0;
                 } else {
                     dataMap[campaignDateOnly] = filteredData.report[dataKey] || 0;
@@ -211,7 +222,7 @@ export default function DetailAds() {
                     }
                     
                     // Set the value for the campaign's date
-                    if (dataKey === "daily_budget") {
+                    if (dataKey === "cost_per_click") {
                         dataMap[campaignDateOnly] = filteredData.campaign[dataKey] || 0;
                     } else {
                         dataMap[campaignDateOnly] = filteredData.report[dataKey] || 0;
@@ -246,8 +257,8 @@ export default function DetailAds() {
             // If not selected but already have 3, show alert and don't change
             else {
                 // Implement your alert logic here
-                // setShowAlert(true);
-                // setTimeout(() => setShowAlert(false), 2000); 
+                setShowAlert(true);
+                setTimeout(() => setShowAlert(false), 2000); 
                 return prev;
             }
         });
@@ -384,16 +395,16 @@ export default function DetailAds() {
     // FILTER COLUMNS FEATURE
     // Define all columns
     const allColumns = [
-    { key: "info_iklan", label: "Info iklan" },
-    { key: "biaya", label: " Biaya" },
-    { key: "iklan_dilihat", label: "Iklan Dilihat" },
-    { key: "click", label: "Click" },
-    { key: "ctr", label: "CTR" },
-    { key: "acos", label: "ACOS" },
-    { key: "convertion", label: "Convertion" },
-    { key: "classification", label: "Sales Clasification" },
-    { key: "insight", label: "Insight" },
-    { key: "custom_roas", label: "Custom Roas" },
+        { key: "keywords", label: "Kata Pencarian" },
+        { key: "mathcing_type", label: "Tipe Pencocokan" },
+        { key: "cost_per_click", label: "Per Klik" },
+        { key: "impression", label: "Jumlah Klik" },
+        { key: "cost", label: "Biaya Iklan" },
+        { key: "selled_ads", label: "Penjualan dari Iklan" },
+        { key: "convertion", label: "Konversi" },
+        { key: "roas", label: "ROAS" },
+        { key: "convertion_rate", label: "Tingkat Konversi" },
+        { key: "average_rank", label: "Peringkat rata-rata" },
     ];
 
     // Initialize selected columns state
@@ -459,271 +470,297 @@ export default function DetailAds() {
     return (
         <>
             <BaseLayout>
-            <div className="rounded gap-3 d-flex flex-column">
-                <div className="card d-flex flex-column align-items-center gap-3 p-2">
-                    {/* Info iklan */}
-                    <div className="w-100 d-flex align-items-center">
-                        <img src={"https://down-id.img.susercontent.com/file/" + filteredData?.image} alt={filteredData.title} className="rounded" style={{ width: "100px", height: "100px", objectFit: "cover", aspectRatio: "1/1" }} />
-                        <div>
-                            <h5 className="mb-1">
-                                {filteredData?.title}
-                            </h5>
-                            <div>
-                                <span className="text-secondary">Mode Bidding : </span> <span style={{ borderRadius: "3px" }} className="text-primary fw-bold bg-info-subtle px-2 py-1">{
-                                    filteredData?.type == "product_manual" ? "Manual" : "Otomatis"
-                                }</span>
+                <button
+                    className="btn btn-secondary mb-3"
+                    onClick={() => navigate(-1)}
+                    style={{ backgroundColor: "#8042D4", border: "none" }}
+                >
+                    Kembali
+                </button>
+                <div className="gap-3 d-flex flex-column">
+                    <div className="d-flex flex-column gap-1">
+                        <h4 className="fw-bold">Detail Iklan</h4>
+                        <div className="card d-flex flex-column align-items-center gap-3 p-2">
+                            {/* Info iklan */}
+                            <div className="w-100 d-flex align-items-center">
+                                <img src={"https://down-id.img.susercontent.com/file/" + filteredData?.image} alt={filteredData.title} className="rounded" style={{ width: "100px", height: "100px", objectFit: "cover", aspectRatio: "1/1" }} />
+                                <div>
+                                    <h5 className="mb-1">
+                                        {filteredData?.title}
+                                    </h5>
+                                    <div>
+                                    <span className="text-secondary">Mode Bidding : </span> <span style={{ borderRadius: "3px", color: "#1ab0f8"}} className="fw-bold bg-info-subtle px-2 py-1">{
+                                            filteredData?.type == "product_manual" ? "Manual" : "Otomatis"
+                                        }</span>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
 
-                    {/* Details */}
-                    <div className="w-100 border rounded p-3" style={{ marginBottom: "0" }} >
-                        <div className="d-flex justify-content-between align-items-center gap-3">
-                            <div className="d-flex flex-column align-items-center">
-                                <div className="d-flex flex-column">
-                                    <span>Modal</span>
-                                    <span className="fw-bold">
-                                        Rp.{filteredData?.campaign.daily_budget.toLocaleString('id-ID')}
-                                    </span>
+                            {/* Details */}
+                            <div className="w-100 border rounded p-3" style={{ marginBottom: "0" }} >
+                                <div className="d-flex justify-content-between align-items-center gap-3">
+                                    <div className="d-flex flex-column align-items-center">
+                                        <div className="d-flex flex-column">
+                                            <span>Modal</span>
+                                            <span className="fw-bold">
+                                                Rp.{filteredData?.campaign?.daily_budget.toLocaleString('id-ID')}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div style={{ width: "1.6px", height: "40px", backgroundColor: "#CECECE"}}></div>
+                                    <div className="d-flex flex-column">
+                                        <div className="d-flex justify-content-between flex-column align-items-center">
+                                            <span>Periode Iklan</span>
+                                            <span className="fw-bold">
+                                                {filteredData?.campaign.end_time == 0 ? "Tidak Terbatas" : new Date(filteredData?.campaign.end_time * 1000).toISOString().split('T')[0]}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div style={{ width: "1.6px", height: "40px", backgroundColor: "#CECECE"}}></div>
+                                    <div className="d-flex flex-column">
+                                        <div className="d-flex flex-column align-items-end">
+                                            <span>Penempatan Iklan</span>
+                                            <span className="fw-bold">
+                                                {filteredData?.manual_product_ads.product_placement == "search_product" ? "Halaman Pencarian" : "Rekomendasi"}
+                                            </span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div style={{ width: "1.6px", height: "40px", backgroundColor: "#CECECE"}}></div>
-                            <div className="d-flex flex-column">
-                                <div className="d-flex justify-content-between flex-column align-items-center">
-                                    <span>Periode Iklan</span>
-                                    <span className="fw-bold">
-                                        {filteredData?.campaign.end_time == 0 ? "Tidak Terbatas" : new Date(filteredData?.campaign.end_time * 1000).toISOString().split('T')[0]}
-                                    </span>
-                                </div>
-                            </div>
-                            <div style={{ width: "1.6px", height: "40px", backgroundColor: "#CECECE"}}></div>
-                            <div className="d-flex flex-column">
-                                <div className="d-flex flex-column align-items-end">
-                                    <span>Penempatan Iklan</span>
-                                    <span className="fw-bold">
-                                        {filteredData?.manual_product_ads.product_placement == "search_product" ? "Halaman Pencarian" : "Rekomendasi"}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
-                    {/* Analysis Section */}
-                    <div className="w-100 rounded d-flex flex-column gap-1">
-                        <span>Analisis</span>
-                        <div className="row g-2">
-                            <div className="col-6 col-lg-3">
-                                <div className="p-3 border rounded text-center">
-                                    <p className="mb-1">Bidding</p>
-                                    <span className="text-success fw-bold">Baik</span>
-                                </div>
-                            </div>
-                            <div className="col-6 col-lg-3">
-                                <div className="p-3 border rounded text-center">
-                                    <p className="mb-1">Modal</p>
-                                    <span className="text-success fw-bold">Baik</span>
-                                </div>
-                            </div>
-                            <div className="col-6 col-lg-3">
-                                <div className="p-3 border rounded text-center">
-                                    <p className="mb-1">Saldo Iklan</p>
-                                    <span className="text-danger fw-bold">Perlu Ditingkatkan</span>
-                                </div>
-                            </div>
-                            <div className="col-6 col-lg-3">
-                                <div className="p-3 border rounded text-center">
-                                    <p className="mb-1">Stabilitas Iklan</p>
-                                    <span className="text-muted fw-bold">Tidak Tersedia</span>
+                            {/* Analysis Section */}
+                            <div className="w-100 rounded d-flex flex-column gap-1">
+                                <span>Analisis</span>
+                                <div className="row g-2">
+                                    <div className="col-6 col-lg-3">
+                                        <div className="p-3 border rounded text-center">
+                                            <p className="mb-1">Bidding</p>
+                                            <span className="text-success fw-bold">Baik</span>
+                                        </div>
+                                    </div>
+                                    <div className="col-6 col-lg-3">
+                                        <div className="p-3 border rounded text-center">
+                                            <p className="mb-1">Modal</p>
+                                            <span className="text-success fw-bold">Baik</span>
+                                        </div>
+                                    </div>
+                                    <div className="col-6 col-lg-3">
+                                        <div className="p-3 border rounded text-center">
+                                            <p className="mb-1">Saldo Iklan</p>
+                                            <span className="text-danger fw-bold">Perlu Ditingkatkan</span>
+                                        </div>
+                                    </div>
+                                    <div className="col-6 col-lg-3">
+                                        <div className="p-3 border rounded text-center">
+                                            <p className="mb-1">Stabilitas Iklan</p>
+                                            <span className="text-muted fw-bold">Tidak Tersedia</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                
-                {/* Ads Performance */}
-                <div className="d-flex flex-column gap-1">
-                    <h4 className="fw-bold">Peforma</h4>
-                    <div className="d-flex gap-3 flex-column bg-white p-3 rounded">
-                        {/* Header & Date filter */}
-                        <div className="d-flex justify-content-between">
-                            <h5 className="fw-bold">Performa Iklan</h5>
-                            <div style={{ position: "relative" }}>
-                                <button
-                                    onClick={() => setShowCalendar(!showCalendar)}
-                                    className="btn btn-secondary"
-                                    style={{ backgroundColor: "#8042D4", border: "none" }}
-                                >
-                                    {comparatorDate && comaparedDate
-                                    ? `${comparatorDate.toLocaleDateString("id-ID")} - ${comaparedDate.toLocaleDateString("id-ID")}`
-                                    : (typeof date === 'string' ? date : (Array.isArray(date) ? "1 Minggu terakhir" : "Pilih Tanggal"))}
-                                </button>
-                                {showCalendar && (
-                                    <div
-                                        className="d-flex"
-                                        style={{
-                                        position: "absolute",
-                                        top: "40px",
-                                        right: "0",
-                                        zIndex: 1000,
-                                        background: "white",
-                                        boxShadow: "0px 4px 6px rgba(0,0,0,0.1)",
-                                        borderRadius: "8px",
-                                        padding: "0px 10px",
-                                        }}
-                                    >
-                                        <div
-                                            className="d-flex flex-column py-2 px-1"
-                                            style={{ width: "130px", listStyleType: "none" }}
-                                        >
-                                            <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection(new Date().toISOString().split("T")[0])}>Hari ini</p>
-                                            <p style={{ cursor: "pointer" }}
-                                            onClick={() => {
-                                                const yesterday = new Date();
-                                                yesterday.setDate(yesterday.getDate() - 1);
-                                                handleDateSelection(yesterday.toISOString().split("T")[0]);
-                                            }}
+                    
+                    <div className="d-flex gap-1 flex-column">
+                        <h4 className="fw-bold">Peforma</h4>
+                        <div className="card d-flex flex-column p-2">
+                            {/* Ads Performance */}
+                            <div className="d-flex flex-column gap-1">
+                                <div className="d-flex gap-3 flex-column bg-white rounded p-2">
+                                    {/* Header & Date filter */}
+                                    <div className="d-flex justify-content-between">
+                                        <h5 className="fw-bold">Performa Iklan</h5>
+                                        <div style={{ position: "relative" }}>
+                                            <button
+                                                onClick={() => setShowCalendar(!showCalendar)}
+                                                className="btn btn-secondary"
+                                                style={{ backgroundColor: "#8042D4", border: "none" }}
                                             >
-                                            Kemarin
-                                            </p>
-                                            <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection(getAllDaysInLast7Days())}>1 Minggu terakhir</p>
-                                            <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection("Bulan Ini")}>Bulan ini</p>
-                                        </div>
-                                        <div style={{ width: "1px", height: "auto", backgroundColor: "#E3E3E3FF", margin: "10px 0"}}></div>
-                                        {/* Kalender pembanding */}
-                                        <div>
-                                            <p className="pt-2" style={{ textAlign: "center" }}>Tanggal Pembanding</p>
-                                            <Calendar onChange={(date) => setComparatorDate(date)} value={comparatorDate} maxDate={comaparedDate || new Date(2100, 0, 1)} />
-                                        </div>
-                                        {/* Kalender dibanding */}
-                                        <div>
-                                            <p className="pt-2" style={{ textAlign: "center" }}>Tanggal Dibanding</p>
-                                            <Calendar onChange={(date) => setComaparedDate(date)} value={comaparedDate} minDate={comparatorDate || new Date()} />
-                                        </div>
-                                        {/* Confirm button for date range */}
-                                        <div className="d-flex align-items-end mb-1">
-                                            <button 
-                                                className="btn btn-primary" 
-                                                onClick={handleComparisonDatesConfirm}
-                                                disabled={!comparatorDate || !comaparedDate}
-                                            >
-                                                Terapkan
+                                                {comparatorDate && comaparedDate
+                                                ? `${comparatorDate.toLocaleDateString("id-ID")} - ${comaparedDate.toLocaleDateString("id-ID")}`
+                                                : (typeof date === 'string' ? date : (Array.isArray(date) ? "1 Minggu terakhir" : "Pilih Tanggal"))}
                                             </button>
+                                            {showCalendar && (
+                                                <div
+                                                    className="d-flex"
+                                                    style={{
+                                                    position: "absolute",
+                                                    top: "40px",
+                                                    right: "0",
+                                                    zIndex: 1000,
+                                                    background: "white",
+                                                    boxShadow: "0px 4px 6px rgba(0,0,0,0.1)",
+                                                    borderRadius: "8px",
+                                                    padding: "0px 10px",
+                                                    }}
+                                                >
+                                                    <div
+                                                        className="d-flex flex-column py-2 px-1"
+                                                        style={{ width: "130px", listStyleType: "none" }}
+                                                    >
+                                                        <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection(new Date().toISOString().split("T")[0])}>Hari ini</p>
+                                                        <p style={{ cursor: "pointer" }}
+                                                        onClick={() => {
+                                                            const yesterday = new Date();
+                                                            yesterday.setDate(yesterday.getDate() - 1);
+                                                            handleDateSelection(yesterday.toISOString().split("T")[0]);
+                                                        }}
+                                                        >
+                                                        Kemarin
+                                                        </p>
+                                                        <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection(getAllDaysInLast7Days())}>1 Minggu terakhir</p>
+                                                        <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection("Bulan Ini")}>Bulan ini</p>
+                                                    </div>
+                                                    <div style={{ width: "1px", height: "auto", backgroundColor: "#E3E3E3FF", margin: "10px 0"}}></div>
+                                                    {/* Kalender pembanding */}
+                                                    <div>
+                                                        <p className="pt-2" style={{ textAlign: "center" }}>Tanggal Pembanding</p>
+                                                        <Calendar onChange={(date) => setComparatorDate(date)} value={comparatorDate} maxDate={comaparedDate || new Date(2100, 0, 1)} />
+                                                    </div>
+                                                    {/* Kalender dibanding */}
+                                                    <div>
+                                                        <p className="pt-2" style={{ textAlign: "center" }}>Tanggal Dibanding</p>
+                                                        <Calendar onChange={(date) => setComaparedDate(date)} value={comaparedDate} minDate={comparatorDate || new Date()} />
+                                                    </div>
+                                                    {/* Confirm button for date range */}
+                                                    <div className="d-flex align-items-end mb-1">
+                                                        <button 
+                                                            className="btn btn-primary" 
+                                                            onClick={handleComparisonDatesConfirm}
+                                                            disabled={!comparatorDate || !comaparedDate}
+                                                        >
+                                                            Terapkan
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
-                                )}
-                            </div>
-                        </div>
-                        {/* Matric filter */}
-                        <div className="row g-3 justify-content-center">
-                            {Object.keys(metrics).map((metricKey) => (
-                                <div className="col-12 col-md-6 col-lg-2">
-                                    <div
-                                        className="card border-light shadow-sm h-100 p-2"
-                                        onClick={() => handleMetricFilter(metricKey)}
-                                        style={handleStyleMatricButton(metricKey)}
-                                        key={metricKey}
-                                    >
-                                            <h6 className="card-title">
-                                                {metrics[metricKey].label}
-                                            </h6>
-                                            <span className="card-text fs-4 fw-bold">
-                                                {filteredData.report.impression}
-                                            </span>
+                                    {/* Alert validation */}
+                                    {showAlert && (
+                                    <div className="alert alert-warning alert-dismissible fade show" role="alert">
+                                        Maksimal 3 metrik yang dapat dipilih
+                                        <button type="button" className="btn-close" onClick={() => setShowAlert(false)}></button>
+                                    </div>
+                                    )}
+                                    {selectedMetrics.length === 0 && (
+                                    <div className="alert alert-warning alert-dismissible fade show">
+                                        <span >Pilih minimal 1 metrik untuk menampilkan data</span>
+                                    </div>
+                                    )}
+                                    {/* Matric filter */}
+                                    <div className="row g-3 justify-content-center">
+                                        {Object.keys(metrics).map((metricKey) => (
+                                            <div className="col-12 col-md-6 col-lg-2">
+                                                <div
+                                                    className="card border-light shadow-sm h-100 p-2"
+                                                    onClick={() => handleMetricFilter(metricKey)}
+                                                    style={handleStyleMatricButton(metricKey)}
+                                                    key={metricKey}
+                                                >
+                                                        <h6 className="card-title">
+                                                            {metrics[metricKey].label}
+                                                        </h6>
+                                                        <span className="card-text fs-4 fw-bold">
+                                                            {filteredData.keyword_ads[metricKey]}
+                                                        </span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    {/* Chart */}
+                                    <div>
+                                        <span className="text-muted">*Klik pada kotak untuk menampilkan data lebih detail</span>
                                     </div>
                                 </div>
-                            ))}
-                        </div>
-                        {/* Chart */}
-                        <div>
-                            <span className="text-muted">*Klik pada kotak untuk menampilkan data lebih detail</span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Keyword Performance */}
-                <div className="d-flex flex-column gap-1">
-                    <h4>Keywords</h4>
-                    {/* Table container */}
-                    <div className="table-responsive"
-                    style={{
-                        width: "max-content",
-                        minWidth: "100%",
-                    }}
-                    >
-                    <table className="table table-centered">
-                        <thead className="table-light">
-                            <tr>
-                                {filteredData.keyword_ads.length !== 0 && filteredData.keyword_ads !== null && <th scope="col">No</th>}
-                                {allColumns
-                                .filter((col) => selectedColumns.includes(col.key))
-                                .map((col) => (
-                                    <th key={col.key}>
-                                    <div className="d-flex justify-content-start align-items-center">
-                                        {col.label}
-                                        {col.key === "stock" && (
-                                        <div className="d-flex flex-column">
-                                            <img
-                                            src={iconArrowUp}
-                                            alt="Sort Asc"
-                                            style={{
-                                                width: "12px",
-                                                height: "12px",
-                                                cursor: "pointer",
-                                                opacity: sortOrder === "asc" ? 1 : 0.5,
-                                            }}
-                                            onClick={() => handleSortStock("asc")}
-                                            />
-                                            <img
-                                            src={iconArrowDown}
-                                            alt="Sort Desc"
-                                            style={{
-                                                width: "12px",
-                                                height: "12px",
-                                                cursor: "pointer",
-                                                opacity: sortOrder === "desc" ? 1 : 0.5,
-                                            }}
-                                            onClick={() => handleSortStock("desc")}
-                                            />
-                                        </div>
-                                        )}
-                                    </div>
-                                    </th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody>
-                        {filteredData?.keyword_ads.length !== 0 && filteredData?.keyword_ads !== null ? (
-                            filteredData?.keyword_ads.map((entry, index) => (
-                            <>
-                                <tr key={index}>
-                                    {filteredData.keyword_ads.length > 0 && filteredData.keyword_ads !== null && (
-                                        <td>{index + 1}</td>
-                                    )}
-                                    {selectedColumns.includes("biaya") && (
-                                        <td style={{ width: "200px" }}>
-                                        <div className="d-flex flex-column">
-                                            <span>
-                                                {entry.keyword}
-                                            </span>
-                                            <span className="text-success" style={{ fontSize: "10px" }}>
-                                            +12.7%
-                                            </span>
-                                        </div>
-                                        </td>
-                                    )}
-                                </tr>
-                            </>
-                            ))
-                        ) : (
-                            <div className="w-100 d-flex justify-content-center">
-                            <span>Data tidak tersedia</span>
                             </div>
-                        )}
-                        </tbody>
-                    </table>
+
+                            {/* Keyword Performance */}
+                            <div className="p-2 d-flex flex-column gap-1">
+                                <h5>Keywords</h5>
+                                {/* Table container */}
+                                <div className="table-responsive"
+                                // style={{
+                                //     width: "max-content",
+                                //     minWidth: "100%",
+                                // }}
+                                >
+                                    <table className="table table-centered">
+                                        <thead className="table-light">
+                                            <tr>
+                                                {filteredData.keyword_ads.length !== 0 && filteredData.keyword_ads !== null && <th scope="col">No</th>}
+                                                {allColumns
+                                                .filter((col) => selectedColumns.includes(col.key))
+                                                .map((col) => (
+                                                    <th key={col.key}>
+                                                    <div className="d-flex justify-content-start align-items-center">
+                                                        {col.label}
+                                                        {col.key === "stock" && (
+                                                        <div className="d-flex flex-column">
+                                                            <img
+                                                            src={iconArrowUp}
+                                                            alt="Sort Asc"
+                                                            style={{
+                                                                width: "12px",
+                                                                height: "12px",
+                                                                cursor: "pointer",
+                                                                opacity: sortOrder === "asc" ? 1 : 0.5,
+                                                            }}
+                                                            onClick={() => handleSortStock("asc")}
+                                                            />
+                                                            <img
+                                                            src={iconArrowDown}
+                                                            alt="Sort Desc"
+                                                            style={{
+                                                                width: "12px",
+                                                                height: "12px",
+                                                                cursor: "pointer",
+                                                                opacity: sortOrder === "desc" ? 1 : 0.5,
+                                                            }}
+                                                            onClick={() => handleSortStock("desc")}
+                                                            />
+                                                        </div>
+                                                        )}
+                                                    </div>
+                                                    </th>
+                                                ))}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                        {filteredData?.keyword_ads.length !== 0 && filteredData?.keyword_ads !== null ? (
+                                            filteredData?.keyword_ads.map((entry, index) => (
+                                            <>
+                                                <tr key={index}>
+                                                    {filteredData.keyword_ads.length > 0 && filteredData.keyword_ads !== null && (
+                                                        <td>{index + 1}</td>
+                                                    )}
+                                                    {selectedColumns.includes("biaya") && (
+                                                        <td style={{ width: "200px" }}>
+                                                        <div className="d-flex flex-column">
+                                                            <span>
+                                                                {entry.keyword}
+                                                            </span>
+                                                            <span className="text-success" style={{ fontSize: "10px" }}>
+                                                            +12.7%
+                                                            </span>
+                                                        </div>
+                                                        </td>
+                                                    )}
+                                                </tr>
+                                            </>
+                                            ))
+                                        ) : (
+                                            <div className="w-100 d-flex justify-content-center">
+                                            <span>Data tidak tersedia</span>
+                                            </div>
+                                        )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
             </BaseLayout>
         </>
     )
