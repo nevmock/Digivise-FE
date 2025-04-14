@@ -1,78 +1,50 @@
 {
-    "code": 0,
-    "message": "success",
-    "user_message": "success",
-    "data": {
-        "page_info": {
-            "total": 16,
-            "page_number": 1,
-            "page_size": 12
-        },
-        "products": [
-            {
-                "campaign" : {
-                    "start_time" : "1743033600"
-                },
-                "state": "ongoing",
-                "id": 26360011113,
-                "name": "Ikan Merah Putih",
-                "status": 1,
-                "parent_sku": "UMP",
-                "stock_detail": {
-                    "total_available_stock": 50
-                },
-                "model_list": [
-                    {
-                        "id": 138034277452,
-                        "name": "Merah Putih",
-                        "code": "1021",
-                        "stock_detail": {
-                            "total_available_stock": 10
-                        }
-                    },
-                    {
-                        "id": 138034277453,
-                        "name": "Hitam",
-                        "stock_detail": {
-                            "total_available_stock": 10
-                        }
-                    }
-                ]
-            },
-            {
-                "campaign" : {
-                    "start_time" : "1743206400"
-                },
-                "id": 24785707560,
-                "name": "Palsu Palestina",
-                "status": 1,
-                "stock_detail": {
-                    "total_available_stock": 20
-                },
-                "model_list": [
-                    {
-                        "id": 256704217361,
-                        "name": "Timnas",
-                        "stock_detail": {
-                            "total_available_stock": 2
-                        }
-                    },
-                    {
-                        "id": 256704217358,
-                        "name": "Arema",
-                        "stock_detail": {
-                            "total_available_stock": 18
-                        }
-                    },
-                    {
-                        "id": 256704217365,
-                        "name": "Palestine Polos",
-                        "stock_detail": {
-                            "total_available_stock": 0
-                        }
-                    }
-                ]
-            }
-        ]
-    }
+  "code": 0,
+  "msg": "OK",
+  "debug_detail": "",
+  "validation_error_list": null,
+  "data": {
+    "campaign": {
+      "campaign_id": 315516327,
+      "end_time": 0,
+      "start_time": 1744177600
+    },
+    "image": "id-ssss-ssss-ssss",
+    "keyword_ads": [
+      {
+        "keyword_id": 3,
+        "keyword": "baju pria",
+        "matching_type": "wide",
+        "cost_per_click": 23100000000,
+        "impression": 1231,
+        "clicks": 1231,
+        "cost": 313000000000,
+        "selled": 46,
+        "roas": 12.32
+      },
+      {
+        "keyword_id": 3,
+        "keyword": "baju koko",
+        "matching_type": "wide",
+        "cost_per_click": 23100000000,
+        "impression": 1231,
+        "clicks": 1231,
+        "cost": 313000000000,
+        "selled": 46,
+        "roas": 12.32
+      },
+      {
+        "keyword_id": 3,
+        "keyword": "baju koko hitam",
+        "matching_type": "wide",
+        "cost_per_click": 23100000000,
+        "impression": 1231,
+        "clicks": 1231,
+        "cost": 313000000000,
+        "selled": 46,
+        "roas": 12.32
+      }
+    ],
+    "title": "Baju Koko"
+  }
 }

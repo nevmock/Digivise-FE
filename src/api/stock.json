@@ -11,7 +11,7 @@
         "products": [
             {
                 "campaign" : {
-                    "start_time" : "1743465600"
+                    "start_time" : "1744177600"
                 },
                 "state": "ongoing",
                 "id": 26360011113,
@@ -202,7 +202,7 @@
             },
             {
                 "campaign" : {
-                    "start_time" : "1743465600"
+                    "start_time" : "1744177600"
                 },
                 "state": "paused",
                 "id": 24785707560,
@@ -624,7 +624,7 @@
             },
             {
                 "campaign" : {
-                    "start_time" : "1743465600"
+                    "start_time" : "1744177600"
                 },
                 "state": "paused",
                 "id": 25685707370,
@@ -1307,7 +1307,7 @@
             },
             {
                 "campaign" : {
-                    "start_time" : "1743465600"
+                    "start_time" : "1744177600"
                 },
                 "state": "paused",
                 "id": 26910219677,
@@ -1585,7 +1585,7 @@
             },
             {
                 "campaign" : {
-                    "start_time" : "1743465600"
+                    "start_time" : "1744177600"
                 },
                 "condition" : "tidak ada informasi",
                 "id": 29611481745,

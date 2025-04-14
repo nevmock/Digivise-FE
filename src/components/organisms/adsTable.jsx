@@ -74,8 +74,8 @@ const AdsTable = ({ data }) => {
   // Convert start_time to date format with epoch method
   const convertEpochToDate = (epoch, mode = "daily") => {
     const date = new Date(epoch * 1000);
-    date.setMinutes(0, 0, 0);
-
+    // date.setMinutes(0, 0, 0);
+    
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
@@ -108,10 +108,18 @@ const AdsTable = ({ data }) => {
 
   // Get all hours in a day
   function getHourlyIntervals(selectedDate) {
+    const datePart = selectedDate.includes(" ") 
+    ? selectedDate.split(" ")[0] 
+    : selectedDate;
+    
     return Array.from({ length: 24 }, (_, i) => {
       const hour = String(i).padStart(2, "0");
-      return `${selectedDate} ${hour}:00`;
+      return `${datePart} ${hour}:00`;
     });
+    // return Array.from({ length: 24 }, (_, i) => {
+    //   const hour = String(i).padStart(2, "0");
+    //   return `${selectedDate} ${hour}:00`;
+    // });
   };
 
   // Get all dates in a range of input manual dates
@@ -164,6 +172,7 @@ const AdsTable = ({ data }) => {
     } else if (selectedDate === "Bulan Ini") {
       timeIntervals = getAllDaysInAMonth();
     } else {
+      // This is a single day selection (today or yesterday)
       timeIntervals = getHourlyIntervals(selectedDate);
       mode = "hourly";
       isSingleDay = true;
@@ -194,36 +203,75 @@ const AdsTable = ({ data }) => {
       });
 
       filteredProducts?.forEach((product) => {
-        const productDateTime = convertEpochToDate(product.campaign.start_time, mode);
-        const productDateOnly = productDateTime.includes(" ") ? 
-        productDateTime.split(" ")[0] : productDateTime;
+        // Get the exact date and time from epoch for proper mapping
+        const productDate = new Date(product.campaign.start_time * 1000);
         
-        if (dataMap[productDateOnly] === undefined) {
-          if (comparatorDate && comaparedDate) {
-            const productDate = new Date(product.campaign.start_time * 1000);
-            const startDay = new Date(comparatorDate);
-            startDay.setHours(0, 0, 0, 0);
-            const endDay = new Date(comaparedDate);
-            endDay.setHours(23, 59, 59, 999);
-            
-            if (productDate >= startDay && productDate <= endDay) {
-              if (!timeIntervals.includes(productDateOnly)) {
-                timeIntervals.push(productDateOnly);
-                timeIntervals.sort();
-                dataMap[productDateOnly] = 0;
-              }
+        if (isSingleDay) {
+          // For hourly view, we need the specific hour
+          const hourKey = String(productDate.getHours()).padStart(2, "0");
+          
+          // Format to match timeIntervals format: "YYYY-MM-DD HH:00"
+          const productYear = productDate.getFullYear();
+          const productMonth = String(productDate.getMonth() + 1).padStart(2, "0");
+          const productDay = String(productDate.getDate()).padStart(2, "0");
+          const dateHourKey = `${productYear}-${productMonth}-${productDay} ${hourKey}:00`;
+          
+          // Check if this date/hour matches our currently displayed day
+          if (timeIntervals.includes(dateHourKey)) {
+            if (dataKey === "daily_budget") {
+              dataMap[dateHourKey] += product.campaign[dataKey] || 0;
+            } else {
+              dataMap[dateHourKey] += product.report[dataKey] || 0;
+            }
+          }
+        } else {
+          // For daily view, just need the date part
+          const productYear = productDate.getFullYear();
+          const productMonth = String(productDate.getMonth() + 1).padStart(2, "0");
+          const productDay = String(productDate.getDate()).padStart(2, "0");
+          const dateDayKey = `${productYear}-${productMonth}-${productDay}`;
+          
+          if (timeIntervals.includes(dateDayKey)) {
+            if (dataKey === "daily_budget") {
+              dataMap[dateDayKey] += product.campaign[dataKey] || 0;
+            } else {
+              dataMap[dateDayKey] += product.report[dataKey] || 0;
             }
           }
         }
-        
-        if (dataMap[productDateOnly] !== undefined) {
-          if (dataKey === "daily_budget") {
-            dataMap[productDateOnly] += product.campaign[dataKey] || 0;
-          } else {
-            dataMap[productDateOnly] += product.report[dataKey] || 0;
-          }
-        }
       });
+
+      // filteredProducts?.forEach((product) => {
+      //   const productDateTime = convertEpochToDate(product.campaign.start_time, mode);
+      //   const productDateOnly = productDateTime.includes(" ") ? 
+      //   productDateTime.split(" ")[0] : productDateTime;
+        
+      //   if (dataMap[productDateOnly] === undefined) {
+      //     if (comparatorDate && comaparedDate) {
+      //       const productDate = new Date(product.campaign.start_time * 1000);
+      //       const startDay = new Date(comparatorDate);
+      //       startDay.setHours(0, 0, 0, 0);
+      //       const endDay = new Date(comaparedDate);
+      //       endDay.setHours(23, 59, 59, 999);
+            
+      //       if (productDate >= startDay && productDate <= endDay) {
+      //         if (!timeIntervals.includes(productDateOnly)) {
+      //           timeIntervals.push(productDateOnly);
+      //           timeIntervals.sort();
+      //           dataMap[productDateOnly] = 0;
+      //         }
+      //       }
+      //     }
+      //   }
+        
+      //   if (dataMap[productDateOnly] !== undefined) {
+      //     if (dataKey === "daily_budget") {
+      //       dataMap[productDateOnly] += product.campaign[dataKey] || 0;
+      //     } else {
+      //       dataMap[productDateOnly] += product.report[dataKey] || 0;
+      //     }
+      //   }
+      // });
 
       const seriesData = {
         name: metric.label,
@@ -341,7 +389,7 @@ const AdsTable = ({ data }) => {
             }
             return data;
           });
-        }
+        };
         
         let rotateAxisLabel = 0;
         if (!isSingleDay) {
@@ -350,7 +398,7 @@ const AdsTable = ({ data }) => {
           } else if (xAxisData?.length > 20) {
             rotateAxisLabel = 40;
           }
-        }
+        };
 
         for (let i = 0; i < series.length; i++) {
           if (series[i].name == "Biaya") {
@@ -361,7 +409,7 @@ const AdsTable = ({ data }) => {
               return 0;
             });
           }
-        }
+        };
   
         const option = {
           toolbox: { feature: { saveAsImage: {} } },
@@ -477,7 +525,6 @@ const AdsTable = ({ data }) => {
 
     // Filter by placement (if a placement is selected and not "all")
     if (selectedOptionPlacement && selectedOptionPlacement.value !== "all") {
-      console.log("selectedOptionPlacement", selectedOptionPlacement.value);
       filtered = filtered.filter((entry) => entry?.manual_product_ads?.product_placement === selectedOptionPlacement.value);
     }
 
@@ -939,32 +986,6 @@ const AdsTable = ({ data }) => {
                         <th key={col.key}>
                           <div className="d-flex justify-content-start align-items-center">
                             {col.label}
-                            {col.key === "stock" && (
-                              <div className="d-flex flex-column">
-                                <img
-                                  src={iconArrowUp}
-                                  alt="Sort Asc"
-                                  style={{
-                                    width: "12px",
-                                    height: "12px",
-                                    cursor: "pointer",
-                                    opacity: sortOrder === "asc" ? 1 : 0.5,
-                                  }}
-                                  onClick={() => handleSortStock("asc")}
-                                />
-                                <img
-                                  src={iconArrowDown}
-                                  alt="Sort Desc"
-                                  style={{
-                                    width: "12px",
-                                    height: "12px",
-                                    cursor: "pointer",
-                                    opacity: sortOrder === "desc" ? 1 : 0.5,
-                                  }}
-                                  onClick={() => handleSortStock("desc")}
-                                />
-                              </div>
-                            )}
                           </div>
                         </th>
                       ))}

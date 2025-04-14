@@ -75,7 +75,7 @@ export default function PerformanceProductPage() {
   // Convert start_time to date format with epoch method
   const convertEpochToDate = (epoch, mode = "daily") => {
     const date = new Date(epoch * 1000);
-    date.setMinutes(0, 0, 0);
+    // date.setMinutes(0, 0, 0);
 
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -108,10 +108,18 @@ export default function PerformanceProductPage() {
   };
 
   function getHourlyIntervals(selectedDate) {
+    const datePart = selectedDate.includes(" ") 
+    ? selectedDate.split(" ")[0] 
+    : selectedDate;
+    
     return Array.from({ length: 24 }, (_, i) => {
       const hour = String(i).padStart(2, "0");
-      return `${selectedDate} ${hour}:00`;
+      return `${datePart} ${hour}:00`;
     });
+    // return Array.from({ length: 24 }, (_, i) => {
+    //   const hour = String(i).padStart(2, "0");
+    //   return `${selectedDate} ${hour}:00`;
+    // });
   };
 
   function getDateRangeIntervals(startDate, endDate) {
@@ -196,36 +204,74 @@ export default function PerformanceProductPage() {
         dataMap[time] = 0;
       });
 
-      filteredProducts.forEach((product) => {
-        const productDateTime = convertEpochToDate(product.start_time, mode);
-
-        // Extract just the date part for comparison
-        const productDateOnly = productDateTime.includes(" ") ? 
-        productDateTime.split(" ")[0] : productDateTime;
+      filteredProducts?.forEach((product) => {
+        // Get the exact date and time from epoch for proper mapping
+        const productDate = new Date(product.start_time * 1000);
         
-        if (dataMap[productDateOnly] === undefined) {
+        if (isSingleDay) {
+          // For hourly view, we need the specific hour
+          const hourKey = String(productDate.getHours()).padStart(2, "0");
+          const minutesKey = String(productDate.getMinutes()).padStart(2, "0");
           
-          if (comparatorDate && comaparedDate) {
-            const productDate = new Date(product.start_time * 1000);
-            const startDay = new Date(comparatorDate);
-            startDay.setHours(0, 0, 0, 0);
-            const endDay = new Date(comaparedDate);
-            endDay.setHours(23, 59, 59, 999);
-            
-            if (productDate >= startDay && productDate <= endDay) {
-              if (!timeIntervals.includes(productDateOnly)) {
-                timeIntervals.push(productDateOnly);
-                timeIntervals.sort();
-                dataMap[productDateOnly] = 0;
-              }
-            }
+          // Format to match timeIntervals format: "YYYY-MM-DD HH:00"
+          const productYear = productDate.getFullYear();
+          const productMonth = String(productDate.getMonth() + 1).padStart(2, "0");
+          const productDay = String(productDate.getDate()).padStart(2, "0");
+          const dateHourKey = `${productYear}-${productMonth}-${productDay} ${hourKey}:00`;
+          
+          // Check if this date/hour matches our currently displayed day
+          if (timeIntervals.includes(dateHourKey)) {
+            dataMap[dateHourKey] += product[dataKey] || 0;
+          } else {
+            // If the hour is not in the time intervals, we can ignore it
+            return;
+          }
+        } else {
+          // For daily view, just need the date part
+          const productYear = productDate.getFullYear();
+          const productMonth = String(productDate.getMonth() + 1).padStart(2, "0");
+          const productDay = String(productDate.getDate()).padStart(2, "0");
+          const dateDayKey = `${productYear}-${productMonth}-${productDay}`;
+          
+          if (timeIntervals.includes(dateDayKey)) {
+            dataMap[dateDayKey] += product[dataKey] || 0;
+          } else {
+            // If the date is not in the time intervals, we can ignore it
+            return;
           }
         }
-        
-        if (dataMap[productDateOnly] !== undefined) {
-          dataMap[productDateOnly] += product[dataKey] || 0;
-        }
       });
+
+      // filteredProducts.forEach((product) => {
+      //   const productDateTime = convertEpochToDate(product.start_time, mode);
+
+      //   // Extract just the date part for comparison
+      //   const productDateOnly = productDateTime.includes(" ") ? 
+      //   productDateTime.split(" ")[0] : productDateTime;
+        
+      //   if (dataMap[productDateOnly] === undefined) {
+          
+      //     if (comparatorDate && comaparedDate) {
+      //       const productDate = new Date(product.start_time * 1000);
+      //       const startDay = new Date(comparatorDate);
+      //       startDay.setHours(0, 0, 0, 0);
+      //       const endDay = new Date(comaparedDate);
+      //       endDay.setHours(23, 59, 59, 999);
+            
+      //       if (productDate >= startDay && productDate <= endDay) {
+      //         if (!timeIntervals.includes(productDateOnly)) {
+      //           timeIntervals.push(productDateOnly);
+      //           timeIntervals.sort();
+      //           dataMap[productDateOnly] = 0;
+      //         }
+      //       }
+      //     }
+      //   }
+        
+      //   if (dataMap[productDateOnly] !== undefined) {
+      //     dataMap[productDateOnly] += product[dataKey] || 0;
+      //   }
+      // });
 
       const seriesData = {
         name: metric.label,
