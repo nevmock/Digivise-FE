@@ -5,8 +5,6 @@ import Calendar from "react-calendar";
 import * as echarts from "echarts";
 
 import useDebounce from "../../hooks/useDebounce";
-import iconArrowUp from "../../assets/icon/arrow-up.png";
-import iconArrowDown from "../../assets/icon/arrow-down.png";
 
 const AdsTable = ({ data }) => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -26,6 +24,10 @@ const AdsTable = ({ data }) => {
   const [showAlert, setShowAlert] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedMetrics, setSelectedMetrics] = useState(["daily_budget"]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
+  const [paginatedData, setPaginatedData] = useState([]);
+  const [totalPages, setTotalPages] = useState(1);
 
   // CUSTOM CHART WITH FILTER DATE, CLICK PRODUCT FEATURE
   // Define metrics with their display names and colors
@@ -116,13 +118,8 @@ const AdsTable = ({ data }) => {
       const hour = String(i).padStart(2, "0");
       return `${datePart} ${hour}:00`;
     });
-    // return Array.from({ length: 24 }, (_, i) => {
-    //   const hour = String(i).padStart(2, "0");
-    //   return `${selectedDate} ${hour}:00`;
-    // });
   };
 
-  // Get all dates in a range of input manual dates
   function getDateRangeIntervals(startDate, endDate) {
     const start = startDate instanceof Date ? new Date(startDate) : new Date(startDate);
     const end = endDate instanceof Date ? new Date(endDate) : new Date(endDate);
@@ -148,7 +145,6 @@ const AdsTable = ({ data }) => {
     return dateArray;
   };
 
-  // Generate chart data for multiple metrics
   function generateMultipleMetricsChartData(selectedDate = null, product = null, selectedMetrics = ["visitor"]) {
     let timeIntervals = [];
     let mode = "daily";
@@ -172,7 +168,6 @@ const AdsTable = ({ data }) => {
     } else if (selectedDate === "Bulan Ini") {
       timeIntervals = getAllDaysInAMonth();
     } else {
-      // This is a single day selection (today or yesterday)
       timeIntervals = getHourlyIntervals(selectedDate);
       mode = "hourly";
       isSingleDay = true;
@@ -203,20 +198,16 @@ const AdsTable = ({ data }) => {
       });
 
       filteredProducts?.forEach((product) => {
-        // Get the exact date and time from epoch for proper mapping
         const productDate = new Date(product.campaign.start_time * 1000);
         
         if (isSingleDay) {
-          // For hourly view, we need the specific hour
           const hourKey = String(productDate.getHours()).padStart(2, "0");
           
-          // Format to match timeIntervals format: "YYYY-MM-DD HH:00"
           const productYear = productDate.getFullYear();
           const productMonth = String(productDate.getMonth() + 1).padStart(2, "0");
           const productDay = String(productDate.getDate()).padStart(2, "0");
           const dateHourKey = `${productYear}-${productMonth}-${productDay} ${hourKey}:00`;
           
-          // Check if this date/hour matches our currently displayed day
           if (timeIntervals.includes(dateHourKey)) {
             if (dataKey === "daily_budget") {
               dataMap[dateHourKey] += product.campaign[dataKey] || 0;
@@ -225,7 +216,6 @@ const AdsTable = ({ data }) => {
             }
           }
         } else {
-          // For daily view, just need the date part
           const productYear = productDate.getFullYear();
           const productMonth = String(productDate.getMonth() + 1).padStart(2, "0");
           const productDay = String(productDate.getDate()).padStart(2, "0");
@@ -241,41 +231,9 @@ const AdsTable = ({ data }) => {
         }
       });
 
-      // filteredProducts?.forEach((product) => {
-      //   const productDateTime = convertEpochToDate(product.campaign.start_time, mode);
-      //   const productDateOnly = productDateTime.includes(" ") ? 
-      //   productDateTime.split(" ")[0] : productDateTime;
-        
-      //   if (dataMap[productDateOnly] === undefined) {
-      //     if (comparatorDate && comaparedDate) {
-      //       const productDate = new Date(product.campaign.start_time * 1000);
-      //       const startDay = new Date(comparatorDate);
-      //       startDay.setHours(0, 0, 0, 0);
-      //       const endDay = new Date(comaparedDate);
-      //       endDay.setHours(23, 59, 59, 999);
-            
-      //       if (productDate >= startDay && productDate <= endDay) {
-      //         if (!timeIntervals.includes(productDateOnly)) {
-      //           timeIntervals.push(productDateOnly);
-      //           timeIntervals.sort();
-      //           dataMap[productDateOnly] = 0;
-      //         }
-      //       }
-      //     }
-      //   }
-        
-      //   if (dataMap[productDateOnly] !== undefined) {
-      //     if (dataKey === "daily_budget") {
-      //       dataMap[productDateOnly] += product.campaign[dataKey] || 0;
-      //     } else {
-      //       dataMap[productDateOnly] += product.report[dataKey] || 0;
-      //     }
-      //   }
-      // });
-
       const seriesData = {
         name: metric.label,
-        data: timeIntervals.map((time) => dataMap[time] || 0), // Use 0 as fallback
+        data: timeIntervals.map((time) => dataMap[time] || 0),
         color: metric.color
       };
 
@@ -285,18 +243,14 @@ const AdsTable = ({ data }) => {
     return result;
   };
 
-  // Handle metric toggle
   function handleMetricFilter(metricKey) {
     setSelectedMetrics(prev => {
-      // If already selected, remove it
       if (prev.includes(metricKey)) {
         return prev.filter(m => m !== metricKey);
       } 
-      // If not selected and less than 3 selected, add it
       else if (prev.length < 3) {
         return [...prev, metricKey];
       } 
-      // If not selected but already have 3, show alert and don't change
       else {
         setShowAlert(true);
         setTimeout(() => setShowAlert(false), 2000); 
@@ -305,18 +259,14 @@ const AdsTable = ({ data }) => {
     });
   };
   
-  // Handle date selection
   function handleDateSelection(selectedDateOption) {
-    // Clear comparison dates when selecting a preset
     setComparatorDate(null);
     setComaparedDate(null);
     setDate(selectedDateOption);
   };
 
-  // Handle comparison dates confirmation
   function handleComparisonDatesConfirm() {
     if (comparatorDate && comaparedDate) {
-      // When comparison dates are selected, set date to null to indicate we're using comparison dates
       setDate(null);
       setShowCalendar(false);
     }
@@ -527,7 +477,7 @@ const AdsTable = ({ data }) => {
     if (selectedOptionPlacement && selectedOptionPlacement.value !== "all") {
       filtered = filtered.filter((entry) => entry?.manual_product_ads?.product_placement === selectedOptionPlacement.value);
     }
-
+    setCurrentPage(1);
     setFilteredData(filtered);
   }, [
     debouncedSearchTerm,
@@ -537,6 +487,102 @@ const AdsTable = ({ data }) => {
     data.data.entry_list,
   ]);
 
+  useEffect(() => {
+    const calculateTotalPages = Math.ceil(filteredData.length / itemsPerPage);
+    setTotalPages(calculateTotalPages || 1);
+
+    if (currentPage > calculateTotalPages && calculateTotalPages > 0) {
+      setCurrentPage(calculateTotalPages);
+    }
+
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    setPaginatedData(filteredData.slice(startIndex, endIndex));
+  }, [filteredData, currentPage, itemsPerPage]);
+
+  const handleItemsPerPageChange = (e) => {
+    const newItemsPerPage = parseInt(e.target.value, 10);
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (pageNumber) => {
+    if (pageNumber >= 1 && pageNumber <= totalPages) {
+      setCurrentPage(pageNumber);
+    }
+  };
+
+  const getPageNumbers = () => {
+    const pageNumbers = [];
+    for (let i = 1; i <= totalPages; i++) {
+      pageNumbers.push(i);
+    }
+    return pageNumbers;
+  };
+
+  const renderPagination = () => {
+    const pageNumbers = getPageNumbers();
+    
+    return (
+      <div className="d-flex justify-content-between align-items-center mt-3">
+        {/* Items per page dropdown */}
+        <div className="d-flex align-items-center">
+          <span className="me-2">Tampilkan</span>
+          <select 
+            className="
+            
+            "
+            value={itemsPerPage} 
+            onChange={handleItemsPerPageChange}
+            style={{ width: "80px" }}
+          >
+            <option value="20">20</option>
+            <option value="30">30</option>
+            <option value="50">50</option>
+          </select>
+          <span className="ms-2">data per halaman</span>
+        </div>
+        
+        <nav aria-label="Page navigation">
+          <ul className="pagination mb-0">
+            {/* Previous button */}
+            <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+              <button 
+                className="page-link" 
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                &laquo;
+              </button>
+            </li>
+            
+            {/* Page numbers */}
+            {pageNumbers.map(number => (
+              <li key={number} className={`page-item ${currentPage === number ? 'active' : ''}`}>
+                <button 
+                  className="page-link" 
+                  onClick={() => handlePageChange(number)}
+                >
+                  {number}
+                </button>
+              </li>
+            ))}
+            
+            {/* Next button */}
+            <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+              <button 
+                className="page-link" 
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >
+                &raquo;
+              </button>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    );
+  };
 
   // SALES CLASSIFICATION FEATURE
   // Define sales classification options
@@ -992,8 +1038,8 @@ const AdsTable = ({ data }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredData.length !== 0 && filteredData !== null ? (
-                    filteredData?.map((entry, index) => (
+                  {paginatedData.length !== 0 && paginatedData !== null ? (
+                    paginatedData?.map((entry, index) => (
                       <>
                         <tr key={entry.campaign.campaign_id}>
                           {filteredData.length > 0 && filteredData !== null && (
@@ -1201,6 +1247,7 @@ const AdsTable = ({ data }) => {
                 </tbody>
               </table>
             </div>
+            {filteredData.length > 0 && renderPagination()}
           </div>
         </div>
       </div>

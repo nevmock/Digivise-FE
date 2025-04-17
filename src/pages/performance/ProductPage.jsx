@@ -211,7 +211,7 @@ export default function PerformanceProductPage() {
         if (isSingleDay) {
           // For hourly view, we need the specific hour
           const hourKey = String(productDate.getHours()).padStart(2, "0");
-          const minutesKey = String(productDate.getMinutes()).padStart(2, "0");
+          // const minutesKey = String(productDate.getMinutes()).padStart(2, "0");
           
           // Format to match timeIntervals format: "YYYY-MM-DD HH:00"
           const productYear = productDate.getFullYear();
@@ -236,46 +236,14 @@ export default function PerformanceProductPage() {
           if (timeIntervals.includes(dateDayKey)) {
             dataMap[dateDayKey] += product[dataKey] || 0;
           } else {
-            // If the date is not in the time intervals, we can ignore it
             return;
           }
         }
       });
 
-      // filteredProducts.forEach((product) => {
-      //   const productDateTime = convertEpochToDate(product.start_time, mode);
-
-      //   // Extract just the date part for comparison
-      //   const productDateOnly = productDateTime.includes(" ") ? 
-      //   productDateTime.split(" ")[0] : productDateTime;
-        
-      //   if (dataMap[productDateOnly] === undefined) {
-          
-      //     if (comparatorDate && comaparedDate) {
-      //       const productDate = new Date(product.start_time * 1000);
-      //       const startDay = new Date(comparatorDate);
-      //       startDay.setHours(0, 0, 0, 0);
-      //       const endDay = new Date(comaparedDate);
-      //       endDay.setHours(23, 59, 59, 999);
-            
-      //       if (productDate >= startDay && productDate <= endDay) {
-      //         if (!timeIntervals.includes(productDateOnly)) {
-      //           timeIntervals.push(productDateOnly);
-      //           timeIntervals.sort();
-      //           dataMap[productDateOnly] = 0;
-      //         }
-      //       }
-      //     }
-      //   }
-        
-      //   if (dataMap[productDateOnly] !== undefined) {
-      //     dataMap[productDateOnly] += product[dataKey] || 0;
-      //   }
-      // });
-
       const seriesData = {
         name: metric.label,
-        data: timeIntervals.map((time) => dataMap[time] || 0), // Use 0 as fallback
+        data: timeIntervals.map((time) => dataMap[time] || 0),
         color: metric.color
       };
 
