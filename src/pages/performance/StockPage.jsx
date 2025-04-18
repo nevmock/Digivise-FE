@@ -217,7 +217,6 @@ export default function PerformanceStockPage() {
       });
     }
     
-    // Set chart options
     chartInstance.setOption({
       toolbox: { feature: { saveAsImage: {} } },
       grid: { left: 50, right: 50, bottom: 50, containLabel: false },
@@ -233,10 +232,6 @@ export default function PerformanceStockPage() {
           return result;
         }
       },
-      // legend: {
-      //   show: true,
-      //   data: series.map(item => item.name)
-      // },
       xAxis: { 
         type: "category", 
         data: xAxisData, 
@@ -505,7 +500,7 @@ export default function PerformanceStockPage() {
                   <span>Status Produk</span>
                   <div className="d-flex gap-2">
                     <div
-                      className={`status-button-filter rounded-pill bg-white d-flex align-items-center  ${
+                      className={`status-button-filter rounded-pill d-flex align-items-center  ${
                         statusProductFilter === "all"
                           ? "custom-font-color custom-border-select"
                           : "border border-secondary-subtle"
@@ -516,7 +511,7 @@ export default function PerformanceStockPage() {
                       Semua
                     </div>
                     <div
-                      className={`status-button-filter rounded-pill bg-white d-flex align-items-center ${
+                      className={`status-button-filter rounded-pill d-flex align-items-center ${
                         statusProductFilter === "scheduled"
                           ? "custom-font-color custom-border-select"
                           : "border border-secondary-subtle"
@@ -527,7 +522,7 @@ export default function PerformanceStockPage() {
                       Terjadwal
                     </div>
                     <div
-                      className={`status-button-filter rounded-pill bg-white d-flex align-items-center  ${
+                      className={`status-button-filter rounded-pill d-flex align-items-center  ${
                         statusProductFilter === "ongoing"
                           ? "custom-font-color custom-border-select"
                           : "border border-secondary-subtle"
@@ -538,7 +533,7 @@ export default function PerformanceStockPage() {
                       Berjalan
                     </div>
                     <div
-                      className={`status-button-filter rounded-pill bg-white d-flex align-items-center  ${
+                      className={`status-button-filter rounded-pill d-flex align-items-center  ${
                         statusProductFilter === "paused"
                           ? "custom-font-color custom-border-select"
                           : "border border-secondary-subtle"
@@ -549,7 +544,7 @@ export default function PerformanceStockPage() {
                       Nonaktif
                     </div>
                     <div
-                      className={`status-button-filter rounded-pill bg-white d-flex align-items-center ${
+                      className={`status-button-filter rounded-pill d-flex align-items-center ${
                         statusProductFilter === "ended"
                           ? "custom-font-color custom-border-select"
                           : "border border-secondary-subtle"
@@ -586,18 +581,20 @@ export default function PerformanceStockPage() {
                           styles={{
                             control: (base) => ({
                               ...base,
-                              border: "2px solid #d8dfe7 !important",
+                              backgroundColor: "#FFFFFF00 !important",
+                              border: "0.5px solid #d8dfe7 !important",
+                              borderColor: "#d8dfe7 !important",
                               boxShadow: "none",
                               "&:hover": {
-                                border: "2px solid #d8dfe7 !important",
+                                border: "0.5px solid #d8dfe7 !important",
                                 boxShadow: "none",
                               },
                               "&:focus": {
-                                border: "2px solid #d8dfe7 !important",
+                                border: "0.5px solid #d8dfe7 !important",
                                 boxShadow: "none",
                               },
                               "&:active": {
-                                border: "2px solid #d8dfe7 !important",
+                                border: "0.5px solid #d8dfe7 !important",
                                 boxShadow: "none",
                               },
                               padding: "0.6px 4px",

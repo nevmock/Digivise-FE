@@ -248,7 +248,7 @@ const AdsTable = ({ data }) => {
       if (prev.includes(metricKey)) {
         return prev.filter(m => m !== metricKey);
       } 
-      else if (prev.length < 3) {
+      else if (prev.length < 4) {
         return [...prev, metricKey];
       } 
       else {
@@ -436,6 +436,7 @@ const AdsTable = ({ data }) => {
     { key: "classification", label: "Sales Clasification" },
     { key: "insight", label: "Insight" },
     { key: "custom_roas", label: "Custom Roas" },
+    { key: "detail", label: "" },
   ];
 
   // Initialize selected columns state
@@ -660,7 +661,7 @@ const AdsTable = ({ data }) => {
     const metric = metrics[metricKey];
     
     return {
-      backgroundColor: "white",
+      backgroundColor: "#ffffff00",
       border: `1px solid ${isActive ? metric.color : "rgb(179.4, 184.2, 189)"}`,
       color: isActive ? metric.color : "#666666",
       padding: "6px 12px",
@@ -782,7 +783,7 @@ const AdsTable = ({ data }) => {
             {/* Alert validation */}
             {showAlert && (
               <div className="alert alert-warning alert-dismissible fade show" role="alert">
-                Maksimal 3 metrik yang dapat dipilih
+                Maksimal 4 metrik yang dapat dipilih
                 <button type="button" className="btn-close" onClick={() => setShowAlert(false)}></button>
               </div>
             )}
@@ -817,7 +818,7 @@ const AdsTable = ({ data }) => {
               <span>Status Produk</span>
               <div className="d-flex gap-2">
                 <div
-                  className={`status-button-filter px-2 py-1 rounded-pill bg-white ${statusProduct === "all"
+                  className={`status-button-filter px-2 py-1 rounded-pill ${statusProduct === "all"
                       ? "custom-font-color custom-border-select"
                       : "border border-secondary-subtle"
                     }`}
@@ -827,7 +828,7 @@ const AdsTable = ({ data }) => {
                   Semua
                 </div>
                 <div
-                  className={`status-button-filter px-2 py-1 rounded-pill bg-white ${statusProduct === "scheduled"
+                  className={`status-button-filter px-2 py-1 rounded-pill ${statusProduct === "scheduled"
                       ? "custom-font-color custom-border-select"
                       : "border border-secondary-subtle"
                     }`}
@@ -837,7 +838,7 @@ const AdsTable = ({ data }) => {
                   Terjadwal
                 </div>
                 <div
-                  className={`status-button-filter px-2 py-1 rounded-pill bg-white ${statusProduct === "ongoing"
+                  className={`status-button-filter px-2 py-1 rounded-pill ${statusProduct === "ongoing"
                       ? "custom-font-color custom-border-select"
                       : "border border-secondary-subtle"
                     }`}
@@ -847,7 +848,7 @@ const AdsTable = ({ data }) => {
                   Berjalan
                 </div>
                 <div
-                  className={`status-button-filter px-2 py-1 rounded-pill bg-white ${statusProduct === "paused"
+                  className={`status-button-filter px-2 py-1 rounded-pill ${statusProduct === "paused"
                       ? "custom-font-color custom-border-select"
                       : "border border-secondary-subtle"
                     }`}
@@ -857,7 +858,7 @@ const AdsTable = ({ data }) => {
                   Nonaktif
                 </div>
                 <div
-                  className={`status-button-filter px-2 py-1 rounded-pill bg-white ${statusProduct === "ended"
+                  className={`status-button-filter px-2 py-1 rounded-pill ${statusProduct === "ended"
                       ? "custom-font-color custom-border-select"
                       : "border border-secondary-subtle"
                     }`}
@@ -892,18 +893,20 @@ const AdsTable = ({ data }) => {
                         styles={{
                           control: (base) => ({
                             ...base,
-                            border: "2px solid #d8dfe7 !important",
+                            backgroundColor: "#FFFFFF00 !important",
+                            border: "0.5px solid #d8dfe7 !important",
+                            borderColor: "#d8dfe7 !important",
                             boxShadow: "none",
                             "&:hover": {
-                              border: "2px solid #d8dfe7 !important",
+                              border: "0.5px solid #d8dfe7 !important",
                               boxShadow: "none",
                             },
                             "&:focus": {
-                              border: "2px solid #d8dfe7 !important",
+                              border: "0.5px solid #d8dfe7 !important",
                               boxShadow: "none",
                             },
                             "&:active": {
-                              border: "2px solid #d8dfe7 !important",
+                              border: "0.5px solid #d8dfe7 !important",
                               boxShadow: "none",
                             },
                             padding: "0.6px 4px",
@@ -924,18 +927,20 @@ const AdsTable = ({ data }) => {
                       styles={{
                         control: (base) => ({
                           ...base,
-                          border: "2px solid #d8dfe7 !important",
+                          backgroundColor: "#FFFFFF00 !important",
+                          border: "0.5px solid #d8dfe7 !important",
+                          borderColor: "#d8dfe7 !important",
                           boxShadow: "none",
                           "&:hover": {
-                            border: "2px solid #d8dfe7 !important",
+                            border: "0.5px solid #d8dfe7 !important",
                             boxShadow: "none",
                           },
                           "&:focus": {
-                            border: "2px solid #d8dfe7 !important",
+                            border: "0.5px solid #d8dfe7 !important",
                             boxShadow: "none",
                           },
                           "&:active": {
-                            border: "2px solid #d8dfe7 !important",
+                            border: "0.5px solid #d8dfe7 !important",
                             boxShadow: "none",
                           },
                           padding: "0.6px 4px",
@@ -954,18 +959,20 @@ const AdsTable = ({ data }) => {
                       styles={{
                         control: (base) => ({
                           ...base,
-                          border: "2px solid #d8dfe7 !important",
+                          backgroundColor: "#FFFFFF00 !important",
+                          border: "0.5px solid #d8dfe7 !important",
+                          borderColor: "#d8dfe7 !important",
                           boxShadow: "none",
                           "&:hover": {
-                            border: "2px solid #d8dfe7 !important",
+                            border: "0.5px solid #d8dfe7 !important",
                             boxShadow: "none",
                           },
                           "&:focus": {
-                            border: "2px solid #d8dfe7 !important",
+                            border: "0.5px solid #d8dfe7 !important",
                             boxShadow: "none",
                           },
                           "&:active": {
-                            border: "2px solid #d8dfe7 !important",
+                            border: "0.5px solid #d8dfe7 !important",
                             boxShadow: "none",
                           },
                           padding: "0.6px 4px",
@@ -1234,6 +1241,17 @@ const AdsTable = ({ data }) => {
                               >
                                 Simpan
                               </button>
+                            </td>
+                          )}
+                          {selectedColumns.includes("detail") && (
+                            <td style={{ width: "200px" }}>
+                              {
+                                entry.type === "product_manual" && (
+                                  <Link to={"/performance/ads/detail"}>
+                                    <span style={{ color: "white", fontSize: "12px", backgroundColor: "#8042D4", padding: "8px 12px", borderRadius: "4px"}}>Cek detail</span>
+                                  </Link>
+                                )
+                              }
                             </td>
                           )}
                         </tr>

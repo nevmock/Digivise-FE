@@ -554,7 +554,6 @@ export default function DetailAds() {
         }, 0);
     };
 
-
     return (
         <>
             <BaseLayout>
@@ -571,7 +570,7 @@ export default function DetailAds() {
                         <h4 className="fw-bold">Detail Iklan</h4>
                         <div className="card d-flex flex-column align-items-center gap-3 p-2">
                             {/* Info iklan */}
-                            <div className="w-100 d-flex align-items-center">
+                            <div className="w-100 d-flex align-items-center gap-1">
                                 <img src={"https://down-id.img.susercontent.com/file/" + filteredData?.image} alt={filteredData.title} className="rounded" style={{ width: "100px", height: "100px", objectFit: "cover", aspectRatio: "1/1" }} />
                                 <div>
                                     <h5 className="mb-1">
@@ -656,10 +655,10 @@ export default function DetailAds() {
                         <div className="card d-flex flex-column p-2 gap-2">
                             {/* Ads Performance */}
                             <div className="d-flex flex-column gap-1">
-                                <div className="d-flex gap-3 flex-column bg-white rounded p-2">
+                                <div className="d-flex gap-3 flex-column rounded p-2">
                                     {/* Header & Date filter */}
                                     <div className="d-flex justify-content-between">
-                                        <h5 className="fw-bold">klan</h5>
+                                        <h5 className="fw-bold">Iklan</h5>
                                         <div style={{ position: "relative" }}>
                                             <button
                                                 onClick={() => setShowCalendar(!showCalendar)}

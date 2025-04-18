@@ -261,7 +261,7 @@ export default function PerformanceProductPage() {
         return prev.filter(m => m !== metricKey);
       } 
       // If not selected and less than 3 selected, add it
-      else if (prev.length < 3) {
+      else if (prev.length < 4) {
         return [...prev, metricKey];
       } 
       // If not selected but already have 3, show alert and don't change
@@ -497,7 +497,7 @@ export default function PerformanceProductPage() {
     const metric = metrics[metricKey];
     
     return {
-      backgroundColor: "white",
+      backgroundColor: "#ffffff00",
       border: `1px solid ${isActive ? metric.color : "rgb(179.4, 184.2, 189)"}`,
       color: isActive ? metric.color : "#666666",
       padding: "6px 12px",
@@ -595,7 +595,7 @@ export default function PerformanceProductPage() {
                   {/* Alert validation */}
                   {showAlert && (
                     <div className="alert alert-warning alert-dismissible fade show" role="alert">
-                      Maksimal 3 metrik yang dapat dipilih
+                      Maksimal 4 metrik yang dapat dipilih
                       <button type="button" className="btn-close" onClick={() => setShowAlert(false)}></button>
                     </div>
                   )}
@@ -630,7 +630,7 @@ export default function PerformanceProductPage() {
                     <span>Status Produk</span>
                     <div className="d-flex gap-2">
                       <div
-                        className={`status-button-filter rounded-pill bg-white d-flex align-items-center  ${
+                        className={`status-button-filter rounded-pill d-flex align-items-center  ${
                           statusProduct === "all"
                             ? "custom-font-color custom-border-select"
                             : "border border-secondary-subtle"
@@ -641,7 +641,7 @@ export default function PerformanceProductPage() {
                         Semua
                       </div>
                       <div
-                        className={`status-button-filter rounded-pill bg-white d-flex align-items-center ${
+                        className={`status-button-filter rounded-pill d-flex align-items-center ${
                           statusProduct === "scheduled"
                             ? "custom-font-color custom-border-select"
                             : "border border-secondary-subtle"
@@ -652,7 +652,7 @@ export default function PerformanceProductPage() {
                         Terjadwal
                       </div>
                       <div
-                        className={`status-button-filter rounded-pill bg-white d-flex align-items-center  ${
+                        className={`status-button-filter rounded-pill d-flex align-items-center  ${
                           statusProduct === "ongoing"
                             ? "custom-font-color custom-border-select"
                             : "border border-secondary-subtle"
@@ -663,7 +663,7 @@ export default function PerformanceProductPage() {
                         Berjalan
                       </div>
                       <div
-                        className={`status-button-filter rounded-pill bg-white d-flex align-items-center  ${
+                        className={`status-button-filter rounded-pill d-flex align-items-center  ${
                           statusProduct === "paused"
                             ? "custom-font-color custom-border-select"
                             : "border border-secondary-subtle"
@@ -674,7 +674,7 @@ export default function PerformanceProductPage() {
                         Nonaktif
                       </div>
                       <div
-                        className={`status-button-filter rounded-pill bg-white d-flex align-items-center ${
+                        className={`status-button-filter rounded-pill d-flex align-items-center ${
                           statusProduct === "ended"
                             ? "custom-font-color custom-border-select"
                             : "border border-secondary-subtle"
@@ -710,18 +710,20 @@ export default function PerformanceProductPage() {
                             styles={{
                               control: (base) => ({
                                 ...base,
-                                border: "2px solid #d8dfe7 !important",
+                                backgroundColor: "#FFFFFF00 !important",
+                                border: "0.5px solid #d8dfe7 !important",
+                                borderColor: "#d8dfe7 !important",
                                 boxShadow: "none",
                                 "&:hover": {
-                                  border: "2px solid #d8dfe7 !important",
+                                  border: "0.5px solid #d8dfe7 !important",
                                   boxShadow: "none",
                                 },
                                 "&:focus": {
-                                  border: "2px solid #d8dfe7 !important",
+                                  border: "0.5px solid #d8dfe7 !important",
                                   boxShadow: "none",
                                 },
                                 "&:active": {
-                                  border: "2px solid #d8dfe7 !important",
+                                  border: "0.5px solid #d8dfe7 !important",
                                   boxShadow: "none",
                                 },
                                 padding: "0.6px 4px",
