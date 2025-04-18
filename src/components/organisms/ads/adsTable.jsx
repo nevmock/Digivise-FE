@@ -4,7 +4,7 @@ import Select from "react-select";
 import Calendar from "react-calendar";
 import * as echarts from "echarts";
 
-import useDebounce from "../../hooks/useDebounce";
+import useDebounce from "../../../hooks/useDebounce";
 
 const AdsTable = ({ data }) => {
   const [searchTerm, setSearchTerm] = useState("");

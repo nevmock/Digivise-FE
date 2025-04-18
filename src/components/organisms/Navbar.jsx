@@ -130,17 +130,17 @@ const Navbar = () => {
                                     </span>
                                 </a>
                                 <div className="dropdown-menu dropdown-menu-end">
-                                    <a className="dropdown-item" href="#">
+                                    <a className="dropdown-item d-flex align-items-center gap-1">
                                         <iconify-icon icon="solar:user-outline"
-                                            className="align-middle me-2 fs-18"></iconify-icon><span className="align-middle">My
+                                            className="align-middle fs-18"></iconify-icon><span className="align-middle">My
                                                 Account</span>
                                     </a>
 
                                     <div className="dropdown-divider my-1"></div>
 
-                                    <a className="dropdown-item text-danger" href="auth-signin.php">
+                                    <a className="dropdown-item text-danger d-flex align-items-center gap-1">
                                         <iconify-icon icon="solar:logout-3-outline"
-                                            className="align-middle me-2 fs-18"></iconify-icon><span
+                                            className="align-middle fs-18"></iconify-icon><span
                                                 className="align-middle">Logout</span>
                                     </a>
                                 </div>

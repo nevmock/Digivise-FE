@@ -1,6 +1,6 @@
 import adsJsonData from "../../api/ads.json";
 import BaseLayout from "../../components/organisms/BaseLayout";
-import AdsTable from "../../components/organisms/adsTable";
+import AdsTable from "../../components/organisms/ads/adsTable";
 
 export default function PerformanceAdsPage() {
     return (
