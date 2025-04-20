@@ -26,7 +26,6 @@ export default function KpiSection({ title, category, globalKpiData, setGlobalKp
             newValue: item.newValue === "" ? 0 : Number(item.newValue),
         }));
 
-        // Update ke globalKpiData
         const updatedGlobal = globalKpiData.map((item) => {
             const match = updatedLocal.find(
                 (u) => u.name === item.name && u.category === item.category

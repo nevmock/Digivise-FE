@@ -527,12 +527,10 @@ const AdsTable = ({ data }) => {
     return (
       <div className="d-flex justify-content-between align-items-center mt-3">
         {/* Items per page dropdown */}
-        <div className="d-flex align-items-center">
-          <span className="me-2">Tampilkan</span>
+        <div className="d-flex align-items-center gap-2">
+          <span>Tampilan</span>
           <select 
-            className="
-            
-            "
+            className="form-select"
             value={itemsPerPage} 
             onChange={handleItemsPerPageChange}
             style={{ width: "80px" }}
@@ -541,7 +539,7 @@ const AdsTable = ({ data }) => {
             <option value="30">30</option>
             <option value="50">50</option>
           </select>
-          <span className="ms-2">data per halaman</span>
+          <span>data per halaman</span>
         </div>
         
         <nav aria-label="Page navigation">
@@ -823,7 +821,7 @@ const AdsTable = ({ data }) => {
                       : "border border-secondary-subtle"
                     }`}
                   onClick={() => setStatusProduct("all")}
-                  style={{ cursor: "pointer", fontSize: "13px" }}
+                  style={{ cursor: "pointer", fontSize: "12px" }}
                 >
                   Semua
                 </div>
@@ -833,7 +831,7 @@ const AdsTable = ({ data }) => {
                       : "border border-secondary-subtle"
                     }`}
                   onClick={() => setStatusProduct("scheduled")}
-                  style={{ cursor: "pointer", fontSize: "13px" }}
+                  style={{ cursor: "pointer", fontSize: "12px" }}
                 >
                   Terjadwal
                 </div>
@@ -843,7 +841,7 @@ const AdsTable = ({ data }) => {
                       : "border border-secondary-subtle"
                     }`}
                   onClick={() => setStatusProduct("ongoing")}
-                  style={{ cursor: "pointer", fontSize: "13px" }}
+                  style={{ cursor: "pointer", fontSize: "12px" }}
                 >
                   Berjalan
                 </div>
@@ -853,7 +851,7 @@ const AdsTable = ({ data }) => {
                       : "border border-secondary-subtle"
                     }`}
                   onClick={() => setStatusProduct("paused")}
-                  style={{ cursor: "pointer", fontSize: "13px" }}
+                  style={{ cursor: "pointer", fontSize: "12px" }}
                 >
                   Nonaktif
                 </div>
@@ -863,7 +861,7 @@ const AdsTable = ({ data }) => {
                       : "border border-secondary-subtle"
                     }`}
                   onClick={() => setStatusProduct("ended")}
-                  style={{ cursor: "pointer", fontSize: "13px" }}
+                  style={{ cursor: "pointer", fontSize: "12px" }}
                 >
                   Berakhir
                 </div>
@@ -1066,7 +1064,6 @@ const AdsTable = ({ data }) => {
                               }}
                               onClick={() => handleProductClick(entry)}
                             >
-                              <div className="d-flex flex-column align-items-center gap-1">
                                 <img
                                   src={
                                     "https://down-id.img.susercontent.com/file/" +
@@ -1076,14 +1073,6 @@ const AdsTable = ({ data }) => {
                                   className="rounded"
                                   style={{ width: "60px", height: "60px" }}
                                 />
-                                {
-                                  entry.type === "product_manual" && (
-                                    <Link to={"/performance/ads/detail"}>
-                                      <span style={{ fontSize: "10px"}}>Cek detail</span>
-                                    </Link>
-                                  )
-                                }
-                              </div>
                               <div className="d-flex flex-column">
                                 <span>{entry.title}</span>
                                 <span className="text-secondary" style={{ fontSize: "12px" }}>
@@ -1248,7 +1237,8 @@ const AdsTable = ({ data }) => {
                               {
                                 entry.type === "product_manual" && (
                                   <Link to={"/performance/ads/detail"}>
-                                    <span style={{ color: "white", fontSize: "12px", backgroundColor: "#8042D4", padding: "8px 12px", borderRadius: "4px"}}>Cek detail</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24"><path fill="currentColor" d="m16 8.4l-8.9 8.9q-.275.275-.7.275t-.7-.275t-.275-.7t.275-.7L14.6 7H7q-.425 0-.712-.288T6 6t.288-.712T7 5h10q.425 0 .713.288T18 6v10q0 .425-.288.713T17 17t-.712-.288T16 16z"></path></svg>
+                                    {/* <span style={{ color: "white", fontSize: "12px", backgroundColor: "#8042D4", padding: "8px 12px", borderRadius: "4px"}}>Cek detail</span> */}
                                   </Link>
                                 )
                               }

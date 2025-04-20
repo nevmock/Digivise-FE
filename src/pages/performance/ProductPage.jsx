@@ -22,6 +22,10 @@ export default function PerformanceProductPage() {
   const chartRef = useRef(null);
   const [selectedMetrics, setSelectedMetrics] = useState(["visitor"]);
   const [showAlert, setShowAlert] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
+  const [paginatedData, setPaginatedData] = useState([]);
+  const [totalPages, setTotalPages] = useState(1);
 
   // CUSTOM CHART WITH FILTER DATE, CLICK PRODUCT FEATURE
   // Define metrics with their display names and colors

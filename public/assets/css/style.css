@@ -3122,7 +3122,7 @@ textarea.form-control-lg {
   --bs-form-select-bg-img: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%2336404a' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
   display: block;
   width: 100%;
-  padding: 0.5rem 4.5rem 0.5rem 1.5rem;
+  padding: 0.5rem 0.5rem 0.5rem 1.2rem;
   font-size: 0.875rem;
   font-weight: 400;
   line-height: 1.5;
@@ -3133,7 +3133,7 @@ textarea.form-control-lg {
   background-color: var(--bs-secondary-bg);
   background-image: var(--bs-form-select-bg-img), var(--bs-form-select-bg-icon, none);
   background-repeat: no-repeat;
-  background-position: right 1.5rem center;
+  background-position: right 1rem center;
   background-size: 14px 10px;
   border: var(--bs-border-width) solid var(--bs-input-border-color);
   border-radius: 0.35rem;

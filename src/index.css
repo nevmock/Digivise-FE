@@ -76,11 +76,38 @@
   width: 220px !important;
 }
 
-@media screen and (max-width: 768px) {
+#container-filter-stock-right {
+  width: auto;
+}
+
+
+
+
+@media screen and (max-width: 812px) {
   .custom-filter-search {
-    width: 200px;
+    width: 200px !important;
   }
   .custom-filter-salesClassification, .custom-filter-typePlacement, .custom-filter-typeAds {
-    width: 100px;
+    width: 180px !important;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  #container-filter-stock {
+    flex-direction: column !important;
+    align-items: start !important;
+    gap: 1.3rem !important;
+  }
+  #container-filter-stock-right {
+    width: 100%;
+  }
+  #container-filter-stock-left {
+    width: 100% !important;
+  }
+  .custom-filter-search {
+    width: 100% !important;
+  }
+  .custom-filter-salesClassification, .custom-filter-typePlacement, .custom-filter-typeAds {
+    width: 100% !important;
   }
 }

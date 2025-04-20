@@ -419,7 +419,7 @@ export default function PerformanceStockPage() {
       <BaseLayout>
         <div className="d-flex flex-column gap-1">
           <div className="d-flex align-items-center">
-            <h3>Performa stock</h3>
+            <h3>Peforma stock</h3>
           </div>
           <div className="card">
             <div className="card-body">
@@ -491,14 +491,14 @@ export default function PerformanceStockPage() {
               {/* Chart */}
               <div ref={chartRef} style={{ width: "100%", height: "300px" }} className="mb-2"></div>
               {/* Filter & Table */}
-              <div className="d-flex flex-column gap-2">
+              <div className="d-flex flex-column gap-3 gap-md-2">
                 {/* Status filter */}
                 <div
-                  className="d-flex align-items-center gap-2"
+                  className="d-flex align-items-center gap-1 gap-md-2 flex-wrap"
                   style={{ width: "fit-content", listStyleType: "none" }}
                 >
                   <span>Status Produk</span>
-                  <div className="d-flex gap-2">
+                  <div className="d-flex gap-1 gap-md-2">
                     <div
                       className={`status-button-filter rounded-pill d-flex align-items-center  ${
                         statusProductFilter === "all"
@@ -558,8 +558,8 @@ export default function PerformanceStockPage() {
                 </div>
                 {/* Other filter*/}
                 <div className="d-flex flex-column mb-3 gap-2">
-                  <div className="d-flex w-full justify-content-between align-items-center">
-                    <div className="d-flex gap-2">
+                  <div id="container-filter-stock" className="d-flex w-full justify-content-between align-items-center">
+                    <div id="container-filter-stock-left" className="d-flex gap-2 flex-wrap">
                       {/* Search bar */}
                       <div className="custom-filter-search">
                         <input
@@ -608,9 +608,9 @@ export default function PerformanceStockPage() {
                       </div>
                     </div>
                     {/* Column filter */}
-                    <div className="w-full h-full">
+                    <div id="container-filter-stock-right">
                       <button
-                        className="btn btn-secondary dropdown-toggle"
+                        className="btn btn-secondary dropdown-toggle w-100"
                         type="button"
                         onClick={() => setShowTableColumn(!showTableColumn)}
                         style={{ backgroundColor: "#8042D4", border: "none" }}
