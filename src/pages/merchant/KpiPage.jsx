@@ -37,19 +37,23 @@ export default function MerchantKpiPage() {
       <div>
         <div className="card px-3 py-3">
           <h5 className="text-left">Merchant Key Performance Indicator (KPI)</h5>
-          <div className="d-flex justify-content-between gap-2">
-            <KpiSection
-              title="Efeceiency Uptumize KPI Metrics"
-              category="efeciency"
-              globalKpiData={kpiData}
-              setGlobalKpiData={setKpiData}
-            />
-            <KpiSection
-              title="Scale up KPI Metrics"
-              category="scaleup"
-              globalKpiData={kpiData}
-              setGlobalKpiData={setKpiData}
-            />
+          <div className="row row-cols-1 row-cols-md-2 g-3">
+            <div className="col">
+              <KpiSection
+                title="Efeceiency Uptumize KPI Metrics"
+                category="efeciency"
+                globalKpiData={kpiData}
+                setGlobalKpiData={setKpiData}
+              />
+            </div>
+            <div className="col">
+              <KpiSection
+                title="Scale up KPI Metrics"
+                category="scaleup"
+                globalKpiData={kpiData}
+                setGlobalKpiData={setKpiData}
+              />
+            </div>
           </div>
         </div>
       </div>

@@ -118,3 +118,37 @@
     max-height: 80px !important;
   }
 }
+
+.responsive-button {
+  width: 40%;
+}
+
+@media (max-width: 416px) {
+  .responsive-button {
+    width: 50%;
+  }
+}
+
+@media (min-width: 576px) {
+  .responsive-button {
+    width: 50%;
+  }
+}
+
+@media (min-width: 768px) {
+  .responsive-button {
+    width: 50%;
+  }
+}
+
+@media (min-width: 992px) {
+  .responsive-button {
+    width: 50%;
+  }
+}
+
+@media (min-width: 1200px) {
+  .responsive-button {
+    width: 25%;
+  }
+}

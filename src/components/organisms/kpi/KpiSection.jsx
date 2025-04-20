@@ -84,7 +84,7 @@ export default function KpiSection({ title, category, globalKpiData, setGlobalKp
                 </div>
                 <div className="w-full d-flex justify-content-end">
                     <button
-                        className="fw-semibold btn btn-primary w-25"
+                        className="fw-semibold btn btn-primary responsive-button"
                         type="submit"
                         onClick={handleUpdate}
                     >
