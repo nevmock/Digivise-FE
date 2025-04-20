@@ -13,6 +13,7 @@ export default function MerchantInformationPage() {
             <div className="d-flex gap-2 align-items-start">
               <span className="d-flex align-items-center">
                 <img
+                  id="custom-image-profile-merchant-information"
                   className="rounded-circle"
                   width="100"
                   src="../../assets/images/users/avatar-1.jpg"
@@ -37,8 +38,8 @@ export default function MerchantInformationPage() {
           </div>
         </div>
 
-        <div className="row row-cols-lg-2 gx-3">
-          <div className="col">
+        <div className="row gx-3">
+          <div className="col-12 col-md-6">
             <div className="card">
               <div className="card-header">
                 <h5 className="card-title mb-0">Matrix Peforma Toko</h5>
@@ -73,7 +74,7 @@ export default function MerchantInformationPage() {
             </div>
           </div>
 
-          <div className="col">
+          <div className="col-12 col-md-6">
             <div className="card">
               <div className="card-header">
                 <h5 className="card-title mb-0">Matrix Iklan</h5>
