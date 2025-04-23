@@ -460,24 +460,25 @@ const AdsTable = ({ data }) => {
       filtered = data.data.entry_list.filter((entry) =>
         entry.title.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
       );
-    }
+    };
 
     // Filter by status
     if (statusProduct !== "all") {
       filtered = filtered.filter((entry) => entry.state === statusProduct);
-    }
+    };
 
     // Filter by ads type (exclude "all" from filtering logic)
     const selectedAdValues = selectedTypeAds.map((ad) => ad.value);
     // Only filter if "all" is not selected
     if (!selectedAdValues.includes("all")) {
       filtered = filtered.filter((entry) => selectedAdValues.includes(entry.type));
-    }
+    };
 
     // Filter by placement (if a placement is selected and not "all")
     if (selectedOptionPlacement && selectedOptionPlacement.value !== "all") {
       filtered = filtered.filter((entry) => entry?.manual_product_ads?.product_placement === selectedOptionPlacement.value);
-    }
+    };
+
     setCurrentPage(1);
     setFilteredData(filtered);
   }, [
@@ -1255,6 +1256,7 @@ const AdsTable = ({ data }) => {
                 </tbody>
               </table>
             </div>
+            {/* Pagination */}
             {filteredData.length > 0 && renderPagination()}
           </div>
         </div>

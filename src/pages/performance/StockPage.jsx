@@ -27,6 +27,10 @@ export default function PerformanceStockPage() {
   const [date, setDate] = useState(getAllDaysInLast7Days());
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
+  const [paginatedData, setPaginatedData] = useState([]);
+  const [totalPages, setTotalPages] = useState(1);
 
   // CUSTOM CHART & PRODUCT CLICK FEATURE
   // Handle product click by clicking the product in name column
@@ -307,6 +311,7 @@ export default function PerformanceStockPage() {
       });
     }
 
+    setCurrentPage(1);
     setFilteredData(filtered);
   }, [
     debouncedSearchTerm,
@@ -412,6 +417,103 @@ export default function PerformanceStockPage() {
       });
       setFilteredData(sortedData);
     }
+  };
+
+
+
+  useEffect(() => {
+    const calculateTotalPages = Math.ceil(filteredData.length / itemsPerPage);
+    setTotalPages(calculateTotalPages || 1);
+
+    if (currentPage > calculateTotalPages && calculateTotalPages > 0) {
+      setCurrentPage(calculateTotalPages);
+    }
+
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    setPaginatedData(filteredData.slice(startIndex, endIndex));
+  }, [filteredData, currentPage, itemsPerPage]);
+
+  const handleItemsPerPageChange = (e) => {
+    const newItemsPerPage = parseInt(e.target.value, 10);
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (pageNumber) => {
+    if (pageNumber >= 1 && pageNumber <= totalPages) {
+      setCurrentPage(pageNumber);
+    }
+  };
+
+  const getPageNumbers = () => {
+    const pageNumbers = [];
+    for (let i = 1; i <= totalPages; i++) {
+      pageNumbers.push(i);
+    }
+    return pageNumbers;
+  };
+
+  const renderPagination = () => {
+    const pageNumbers = getPageNumbers();
+    
+    return (
+      <div className="d-flex justify-content-between align-items-center mt-3">
+        {/* Items per page dropdown */}
+        <div className="d-flex align-items-center gap-2">
+          <span>Tampilan</span>
+          <select 
+            className="form-select"
+            value={itemsPerPage} 
+            onChange={handleItemsPerPageChange}
+            style={{ width: "80px" }}
+          >
+            <option value="20">20</option>
+            <option value="30">30</option>
+            <option value="50">50</option>
+          </select>
+          <span>data per halaman</span>
+        </div>
+        
+        <nav aria-label="Page navigation">
+          <ul className="pagination mb-0">
+            {/* Previous button */}
+            <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+              <button 
+                className="page-link" 
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                &laquo;
+              </button>
+            </li>
+            
+            {/* Page numbers */}
+            {pageNumbers.map(number => (
+              <li key={number} className={`page-item ${currentPage === number ? 'active' : ''}`}>
+                <button 
+                  className="page-link" 
+                  onClick={() => handlePageChange(number)}
+                >
+                  {number}
+                </button>
+              </li>
+            ))}
+            
+            {/* Next button */}
+            <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+              <button 
+                className="page-link" 
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >
+                &raquo;
+              </button>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    );
   };
 
   return (
@@ -698,8 +800,8 @@ export default function PerformanceStockPage() {
                     </thead>
                     {/* Body Table */}
                     <tbody>
-                      {filteredData.length !== 0 && filteredData !== null ? (
-                        filteredData?.map((entry) => (
+                      {paginatedData.length !== 0 && paginatedData !== null ? (
+                        paginatedData?.map((entry, index) => (
                           <>
                             <tr key={entry.id}>
                               {filteredData.length > 0 && (
@@ -861,6 +963,8 @@ export default function PerformanceStockPage() {
                     </tbody>
                   </table>
                 </div>
+                {/* Pagination */}
+                {filteredData.length > 0 && renderPagination()}
               </div>
             </div>
           </div>
