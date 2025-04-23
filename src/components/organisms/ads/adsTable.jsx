@@ -782,7 +782,7 @@ const AdsTable = ({ data }) => {
             {/* Alert validation */}
             {showAlert && (
               <div className="alert alert-warning alert-dismissible fade show" role="alert">
-                Maksimal 4 metrik yang dapat dipilih
+                Maksimal metrik yang dapat dipilih adalah 4 metrik
                 <button type="button" className="btn-close" onClick={() => setShowAlert(false)}></button>
               </div>
             )}
@@ -1257,7 +1257,7 @@ const AdsTable = ({ data }) => {
               </table>
             </div>
             {/* Pagination */}
-            {filteredData.length > 0 && renderPagination()}
+            {filteredData.length > 0 && filteredData !== null && renderPagination()}
           </div>
         </div>
       </div>

@@ -964,7 +964,7 @@ export default function PerformanceStockPage() {
                   </table>
                 </div>
                 {/* Pagination */}
-                {filteredData.length > 0 && renderPagination()}
+                {filteredData.length > 0 && filteredData !== null && renderPagination()}
               </div>
             </div>
           </div>
