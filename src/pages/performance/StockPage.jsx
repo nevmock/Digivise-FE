@@ -660,8 +660,8 @@ export default function PerformanceStockPage() {
                 </div>
                 {/* Other filter*/}
                 <div className="d-flex flex-column mb-3 gap-2">
-                  <div id="container-filter-stock" className="d-flex w-full justify-content-between align-items-center">
-                    <div id="container-filter-stock-left" className="d-flex gap-2 flex-wrap">
+                  <div id="container-other-filters" className="d-flex w-full justify-content-between align-items-center">
+                    <div id="container-other-filters-left" className="d-flex gap-2 flex-wrap">
                       {/* Search bar */}
                       <div className="custom-filter-search">
                         <input
@@ -710,7 +710,7 @@ export default function PerformanceStockPage() {
                       </div>
                     </div>
                     {/* Column filter */}
-                    <div id="container-filter-stock-right">
+                    <div id="container-other-filters-right">
                       <button
                         className="btn btn-secondary dropdown-toggle w-100"
                         type="button"

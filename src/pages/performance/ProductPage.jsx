@@ -795,8 +795,8 @@ export default function PerformanceProductPage() {
                   </div>
                   {/* Other filter */}
                   <div className="d-flex flex-column mb-3 gap-2">
-                    <div id="container-filter-stock" className="d-flex w-full justify-content-between align-items-center">
-                      <div id="container-filter-stock-left" className="d-flex gap-2 flex-wrap">
+                    <div id="container-other-filters" className="d-flex w-full justify-content-between align-items-center">
+                      <div id="container-other-filters-left" className="d-flex gap-2 flex-wrap">
                         {/* Search bar */}
                         <div className="custom-filter-search">
                           <input
@@ -817,20 +817,20 @@ export default function PerformanceProductPage() {
                               control: (base) => ({
                                 ...base,
                                 backgroundColor: "#FFFFFF00 !important",
-                                border: "2px solid #d8dfe7 !important",
+                                border: "0.5px solid #d8dfe7 !important",
                                 borderColor: "#d8dfe7 !important",
                                 borderRadius: "6px",
                                 boxShadow: "none",
                                 "&:hover": {
-                                  border: "2px solid #d8dfe7 !important",
+                                  border: "0.5px solid #d8dfe7 !important",
                                   boxShadow: "none",
                                 },
                                 "&:focus": {
-                                  border: "2px solid #d8dfe7 !important",
+                                  border: "0.5px solid #d8dfe7 !important",
                                   boxShadow: "none",
                                 },
                                 "&:active": {
-                                  border: "2px solid #d8dfe7 !important",
+                                  border: "0.5px solid #d8dfe7 !important",
                                   boxShadow: "none",
                                 },
                                 padding: "0.6px 4px",
@@ -844,7 +844,7 @@ export default function PerformanceProductPage() {
                         </div>
                       </div>
                       {/* Column filter */}
-                      <div id="container-filter-stock-right">
+                      <div id="container-other-filters-right">
                         <button
                           className="btn btn-secondary dropdown-toggle w-100"
                           type="button"

@@ -881,8 +881,8 @@ const AdsTable = ({ data }) => {
             </div>
             {/* Other filter*/}
             <div className="d-flex flex-column mb-3 gap-2">
-              <div className="d-flex w-full justify-content-between align-items-start">
-                <div className="d-flex gap-2">
+              <div id="container-other-filters" className="d-flex w-full justify-content-between align-items-start">
+                <div id="container-other-filters-left" className="d-flex gap-2 flex-wrap">
                   {/* search bar */}
                   <div className="custom-filter-search">
                     <input
@@ -995,10 +995,10 @@ const AdsTable = ({ data }) => {
                     />
                   </div>
                 </div>
-                {/* column filter */}
-                <div className="w-full h-full">
+                {/* Column filter */}
+                <div id="container-other-filters-right">
                   <button
-                    className="btn btn-secondary dropdown-toggle"
+                    className="btn btn-secondary dropdown-toggle w-100"
                     type="button"
                     onClick={() => setShowTableColumn(!showTableColumn)}
                     style={{ backgroundColor: "#8042D4", border: "none" }}
@@ -1023,9 +1023,17 @@ const AdsTable = ({ data }) => {
                         checked={selectedColumns.includes(col.key)}
                         onChange={() => handleColumnChange(col.key)}
                       />
-                      <label className="form-check-label fs-5 ms-1">
-                        {col.label}
-                      </label>
+                      {
+                        col.label ? (
+                          <span className="text-secondary" style={{ fontSize: "12px" }}>
+                            {col.label}
+                          </span>
+                        ) : (
+                          <span className="text-secondary" style={{ fontSize: "12px" }}>
+                            Detail
+                          </span>
+                        )
+                      }
                     </div>
                   ))}
                 </div>
