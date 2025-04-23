@@ -8,7 +8,7 @@ import useDebounce from "../../hooks/useDebounce";
 import BaseLayout from "../../components/organisms/BaseLayout";
 import iconArrowUp from "../../assets/icon/arrow-up.png";
 import iconArrowDown from "../../assets/icon/arrow-down.png";
-import "react-calendar/dist/Calendar.css";
+
 
 export default function PerformanceStockPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -600,7 +600,7 @@ export default function PerformanceStockPage() {
                   style={{ width: "fit-content", listStyleType: "none" }}
                 >
                   <span>Status Produk</span>
-                  <div className="d-flex gap-1 gap-md-2">
+                  <div className="d-flex gap-1 gap-md-2 flex-wrap">
                     <div
                       className={`status-button-filter rounded-pill d-flex align-items-center  ${
                         statusProductFilter === "all"

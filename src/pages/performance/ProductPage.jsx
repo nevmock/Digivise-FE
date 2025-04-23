@@ -7,11 +7,12 @@ import useDebounce from "../../hooks/useDebounce";
 import productJsonData from "../../api/products.json";
 import BaseLayout from "../../components/organisms/BaseLayout";
 
+
 export default function PerformanceProductPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [filteredData, setFilteredData] = useState(productJsonData.result.items);
-  const [statusProduct, setStatusProduct] = useState("all");
+  const [statusProductFilter, setStatusProductFilter] = useState("all");
   const [showTableColumn, setShowTableColumn] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [comparatorDate, setComparatorDate] = useState(null);
@@ -473,9 +474,9 @@ export default function PerformanceProductPage() {
     }
 
     // Filter by status
-    if (statusProduct !== "all") {
+    if (statusProductFilter !== "all") {
       filtered = filtered.filter(
-        (entry) => entry.state === statusProduct
+        (entry) => entry.state === statusProductFilter
       );
     }
 
@@ -483,7 +484,7 @@ export default function PerformanceProductPage() {
     setFilteredData(filtered);
   }, [
     debouncedSearchTerm,
-    statusProduct,
+    statusProductFilter,
     productJsonData.result.items
   ]);
 
@@ -598,9 +599,8 @@ export default function PerformanceProductPage() {
     const metric = metrics[metricKey];
     
     return {
-      backgroundColor: "#ffffff00",
-      border: `1px solid ${isActive ? metric.color : "rgb(179.4, 184.2, 189)"}`,
-      color: isActive ? metric.color : "#666666",
+      color: isActive ? metric.color : "",
+      border: `1px solid ${isActive ? metric.color : ""}`,
       padding: "6px 12px",
       borderRadius: "20px",
       cursor: "pointer",
@@ -608,6 +608,10 @@ export default function PerformanceProductPage() {
       fontWeight: isActive ? "medium" : "normal",
       transition: "all 0.3s ease"
     };
+  };
+
+  const handleClassisActiveMetricButton = (metricKey) => {
+    return selectedMetrics.includes(metricKey) ? "" : "border border-secondary-subtle";
   };
 
   return (
@@ -691,7 +695,7 @@ export default function PerformanceProductPage() {
               <div className="d-flex flex-column gap-3">
                 {/* Chart */}
                 <div ref={chartRef} style={{ width: "100%", height: "300px" }}></div>
-                {/* Filter & Table */}
+                {/* Filters & Table */}
                 <div className="d-flex flex-column gap-2">
                   {/* Alert validation */}
                   {showAlert && (
@@ -707,80 +711,82 @@ export default function PerformanceProductPage() {
                   )}
                   {/* Matric filter */}
                   <div
+                    id="custom-product-container-filter-metric"
                     className="d-flex align-items-center gap-2"
                     style={{ width: "fit-content", listStyleType: "none" }}
                   >
                     <span>Matric Produk</span>
-                    <div className="d-flex gap-2">
+                    <div className="custom-metric-filter-buttons-wrapper">
                       {Object.keys(metrics).map((metricKey) => (
-                        <button 
+                        <div 
                           key={metricKey}
                           style={handleStyleMatricButton(metricKey)}
                           onClick={() => handleMetricFilter(metricKey)}
+                          className={handleClassisActiveMetricButton(metricKey)}
                         >
                           {metrics[metricKey].label}
-                        </button>
+                        </div>
                       ))}
                     </div>
                   </div>
                   {/* Status filter */}
                   <div
-                    className="d-flex align-items-center gap-2"
+                    className="d-flex align-items-center gap-1 gap-md-2 flex-wrap"
                     style={{ width: "fit-content", listStyleType: "none" }}
                   >
                     <span>Status Produk</span>
-                    <div className="d-flex gap-2">
+                    <div className="d-flex gap-1 gap-md-2 flex-wrap">
                       <div
                         className={`status-button-filter rounded-pill d-flex align-items-center  ${
-                          statusProduct === "all"
+                          statusProductFilter === "all"
                             ? "custom-font-color custom-border-select"
                             : "border border-secondary-subtle"
                         }`}
-                        onClick={() => setStatusProduct("all")}
+                        onClick={() => setStatusProductFilter("all")}
                         style={{ cursor: "pointer", fontSize: "12px", padding: "6px 12px", }}
                       >
                         Semua
                       </div>
                       <div
                         className={`status-button-filter rounded-pill d-flex align-items-center ${
-                          statusProduct === "scheduled"
+                          statusProductFilter === "scheduled"
                             ? "custom-font-color custom-border-select"
                             : "border border-secondary-subtle"
                         }`}
-                        onClick={() => setStatusProduct("scheduled")}
+                        onClick={() => setStatusProductFilter("scheduled")}
                         style={{ cursor: "pointer", fontSize: "12px", padding: "6px 12px", }}
                       >
                         Terjadwal
                       </div>
                       <div
                         className={`status-button-filter rounded-pill d-flex align-items-center  ${
-                          statusProduct === "ongoing"
+                          statusProductFilter === "ongoing"
                             ? "custom-font-color custom-border-select"
                             : "border border-secondary-subtle"
                         }`}
-                        onClick={() => setStatusProduct("ongoing")}
+                        onClick={() => setStatusProductFilter("ongoing")}
                         style={{ cursor: "pointer", fontSize: "12px", padding: "6px 12px", }}
                       >
                         Berjalan
                       </div>
                       <div
                         className={`status-button-filter rounded-pill d-flex align-items-center  ${
-                          statusProduct === "paused"
+                          statusProductFilter === "paused"
                             ? "custom-font-color custom-border-select"
                             : "border border-secondary-subtle"
                         }`}
-                        onClick={() => setStatusProduct("paused")}
+                        onClick={() => setStatusProductFilter("paused")}
                         style={{ cursor: "pointer", fontSize: "12px", padding: "6px 12px", }}
                       >
                         Nonaktif
                       </div>
                       <div
                         className={`status-button-filter rounded-pill d-flex align-items-center ${
-                          statusProduct === "ended"
+                          statusProductFilter === "ended"
                             ? "custom-font-color custom-border-select"
                             : "border border-secondary-subtle"
                         }`}
-                        onClick={() => setStatusProduct("ended")}
+                        onClick={() => setStatusProductFilter("ended")}
                         style={{ cursor: "pointer", fontSize: "12px", padding: "1px 12px", }}
                       >
                         Berakhir
@@ -789,10 +795,9 @@ export default function PerformanceProductPage() {
                   </div>
                   {/* Other filter */}
                   <div className="d-flex flex-column mb-3 gap-2">
-                    <div className="d-flex w-full justify-content-between align-items-center">
-                      {/* Search & classification Filter */}
-                      <div className="d-flex gap-2">
-                        {/* search bar */}
+                    <div id="container-filter-stock" className="d-flex w-full justify-content-between align-items-center">
+                      <div id="container-filter-stock-left" className="d-flex gap-2 flex-wrap">
+                        {/* Search bar */}
                         <div className="custom-filter-search">
                           <input
                             type="text"
@@ -802,7 +807,7 @@ export default function PerformanceProductPage() {
                             onChange={(e) => setSearchTerm(e.target.value)}
                           />
                         </div>
-                        {/*  classification */}
+                        {/* Clasification filter */}
                         <div className="custom-filter-salesClassification">
                           <Select
                             isMulti
@@ -812,19 +817,20 @@ export default function PerformanceProductPage() {
                               control: (base) => ({
                                 ...base,
                                 backgroundColor: "#FFFFFF00 !important",
-                                border: "0.5px solid #d8dfe7 !important",
+                                border: "2px solid #d8dfe7 !important",
                                 borderColor: "#d8dfe7 !important",
+                                borderRadius: "6px",
                                 boxShadow: "none",
                                 "&:hover": {
-                                  border: "0.5px solid #d8dfe7 !important",
+                                  border: "2px solid #d8dfe7 !important",
                                   boxShadow: "none",
                                 },
                                 "&:focus": {
-                                  border: "0.5px solid #d8dfe7 !important",
+                                  border: "2px solid #d8dfe7 !important",
                                   boxShadow: "none",
                                 },
                                 "&:active": {
-                                  border: "0.5px solid #d8dfe7 !important",
+                                  border: "2px solid #d8dfe7 !important",
                                   boxShadow: "none",
                                 },
                                 padding: "0.6px 4px",
@@ -837,10 +843,10 @@ export default function PerformanceProductPage() {
                           />
                         </div>
                       </div>
-                      {/* column filter */}
-                      <div className="h-full w-full">
+                      {/* Column filter */}
+                      <div id="container-filter-stock-right">
                         <button
-                          className="btn btn-secondary dropdown-toggle"
+                          className="btn btn-secondary dropdown-toggle w-100"
                           type="button"
                           onClick={() => setShowTableColumn(!showTableColumn)}
                           style={{ backgroundColor: "#8042D4", border: "none" }}
@@ -849,35 +855,35 @@ export default function PerformanceProductPage() {
                         </button>
                       </div>
                     </div>
+                    {/* Option column filter */}
                     {showTableColumn && (
                       <div className="border px-2 py-2 rounded">
-                        {allColumns.filter((column) => column.key !== "name")
-                          .map((col) => (
-                            <div
-                              key={col.key}
-                              className="form-check form-check-inline"
-                            >
-                              <input
-                                style={{
-                                  border: "1px solid #8042D4",
-                                  width: "18px",
-                                  height: "18px",
-                                  borderRadius: "10%",
-                                }}
-                                className="form-check-input "
-                                type="checkbox"
-                                checked={selectedColumns.includes(col.key)}
-                                onChange={() => handleColumnChange(col.key)}
-                              />
-                              <label className="form-check-label fs-5 ms-1">
-                                {col.label}
-                              </label>
-                            </div>
-                          ))}
+                        {allColumns.map((col) => (
+                          <div
+                            key={col.key}
+                            className="form-check form-check-inline"
+                          >
+                            <input
+                              style={{
+                                border: "1px solid #8042D4",
+                                width: "18px",
+                                height: "18px",
+                                borderRadius: "10%",
+                              }}
+                              className="form-check-input "
+                              type="checkbox"
+                              checked={selectedColumns.includes(col.key)}
+                              onChange={() => handleColumnChange(col.key)}
+                            />
+                            <label className="form-check-label fs-5 ms-1">
+                              {col.label}
+                            </label>
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>
-                  {/* Table container */}
+                  {/* Container table */}
                   <div className="table-responsive"
                     // style={{
                     //   width: "max-content",

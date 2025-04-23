@@ -20,9 +20,6 @@ const Navbar = () => {
             if (showModal && modalRef.current && !modalRef.current.contains(event.target)) {
                 setShowModal(false);
             }            
-            // if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-            //     setShowDropdown(false);
-            // }
         };
 
         document.addEventListener("mousedown", handleClickOutside);

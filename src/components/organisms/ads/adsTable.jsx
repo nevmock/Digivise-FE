@@ -10,7 +10,7 @@ const AdsTable = ({ data }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [filteredData, setFilteredData] = useState(data.data.entry_list);
-  const [statusProduct, setStatusProduct] = useState("all");
+  const [statusProductFilter, setStatusProductFilter] = useState("all");
   const [selectedClassificationOption, setSelectedClassificationOption] = useState([]);
   const [selectedOptionPlacement, setSelectedOptionPlacement] = useState(null);
   const [selectedTypeAds, setSelectedTypeAds] = useState([{ value: "all", label: "Semua Tipe" }]);
@@ -463,8 +463,8 @@ const AdsTable = ({ data }) => {
     };
 
     // Filter by status
-    if (statusProduct !== "all") {
-      filtered = filtered.filter((entry) => entry.state === statusProduct);
+    if (statusProductFilter !== "all") {
+      filtered = filtered.filter((entry) => entry.state === statusProductFilter);
     };
 
     // Filter by ads type (exclude "all" from filtering logic)
@@ -483,7 +483,7 @@ const AdsTable = ({ data }) => {
     setFilteredData(filtered);
   }, [
     debouncedSearchTerm,
-    statusProduct,
+    statusProductFilter,
     selectedOptionPlacement,
     selectedTypeAds,
     data.data.entry_list,
@@ -703,6 +703,10 @@ const AdsTable = ({ data }) => {
     }).format(convertedBudget);
   };
 
+  const handleClassisActiveMetricButton = (metricKey) => {
+    return selectedMetrics.includes(metricKey) ? "" : "border border-secondary-subtle";
+  };
+
   return (
     <div className="card">
       <div className="card-body">
@@ -793,76 +797,83 @@ const AdsTable = ({ data }) => {
             )}
             {/* Matric filter */}
             <div
+              id="custom-ads-container-filter-metric"
               className="d-flex align-items-center gap-2"
               style={{ width: "fit-content", listStyleType: "none" }}
             >
               <span>Matric Produk</span>
-              <div className="d-flex gap-2">
+              <div className="custom-metric-filter-buttons-wrapper">
                 {Object.keys(metrics).map((metricKey) => (
-                  <button 
+                  <div 
                     key={metricKey}
                     style={handleStyleMatricButton(metricKey)}
                     onClick={() => handleMetricFilter(metricKey)}
+                    className={handleClassisActiveMetricButton(metricKey)}
                   >
                     {metrics[metricKey].label}
-                  </button>
+                  </div>
                 ))}
               </div>
             </div>
-            {/* Status Filter*/}
+            {/* Status filter */}
             <div
-              className="d-flex align-items-center gap-2 mb-3"
+              className="d-flex align-items-center gap-1 gap-md-2 flex-wrap"
               style={{ width: "fit-content", listStyleType: "none" }}
             >
               <span>Status Produk</span>
-              <div className="d-flex gap-2">
+              <div className="d-flex gap-1 gap-md-2 flex-wrap">
                 <div
-                  className={`status-button-filter px-2 py-1 rounded-pill ${statusProduct === "all"
+                  className={`status-button-filter rounded-pill d-flex align-items-center  ${
+                    statusProductFilter === "all"
                       ? "custom-font-color custom-border-select"
                       : "border border-secondary-subtle"
-                    }`}
-                  onClick={() => setStatusProduct("all")}
-                  style={{ cursor: "pointer", fontSize: "12px" }}
+                  }`}
+                  onClick={() => setStatusProductFilter("all")}
+                  style={{ cursor: "pointer", fontSize: "12px", padding: "6px 12px", }}
                 >
                   Semua
                 </div>
                 <div
-                  className={`status-button-filter px-2 py-1 rounded-pill ${statusProduct === "scheduled"
+                  className={`status-button-filter rounded-pill d-flex align-items-center ${
+                    statusProductFilter === "scheduled"
                       ? "custom-font-color custom-border-select"
                       : "border border-secondary-subtle"
-                    }`}
-                  onClick={() => setStatusProduct("scheduled")}
-                  style={{ cursor: "pointer", fontSize: "12px" }}
+                  }`}
+                  onClick={() => setStatusProductFilter("scheduled")}
+                  style={{ cursor: "pointer", fontSize: "12px", padding: "6px 12px", }}
                 >
                   Terjadwal
                 </div>
                 <div
-                  className={`status-button-filter px-2 py-1 rounded-pill ${statusProduct === "ongoing"
+                  className={`status-button-filter rounded-pill d-flex align-items-center  ${
+                    statusProductFilter === "ongoing"
                       ? "custom-font-color custom-border-select"
                       : "border border-secondary-subtle"
-                    }`}
-                  onClick={() => setStatusProduct("ongoing")}
-                  style={{ cursor: "pointer", fontSize: "12px" }}
+                  }`}
+                  onClick={() => setStatusProductFilter("ongoing")}
+                  style={{ cursor: "pointer", fontSize: "12px", padding: "6px 12px", }}
                 >
                   Berjalan
                 </div>
                 <div
-                  className={`status-button-filter px-2 py-1 rounded-pill ${statusProduct === "paused"
+                  className={`status-button-filter rounded-pill d-flex align-items-center  ${
+                    statusProductFilter === "paused"
                       ? "custom-font-color custom-border-select"
                       : "border border-secondary-subtle"
-                    }`}
-                  onClick={() => setStatusProduct("paused")}
-                  style={{ cursor: "pointer", fontSize: "12px" }}
+                  }`}
+                  onClick={() => setStatusProductFilter("paused")}
+                  style={{ cursor: "pointer", fontSize: "12px", padding: "6px 12px", }}
                 >
                   Nonaktif
                 </div>
                 <div
-                  className={`status-button-filter px-2 py-1 rounded-pill ${statusProduct === "ended"
+                  className={`status-button-filter rounded-pill d-flex align-items-center ${
+                    statusProductFilter === "ended"
                       ? "custom-font-color custom-border-select"
                       : "border border-secondary-subtle"
-                    }`}
-                  onClick={() => setStatusProduct("ended")}
-                  style={{ cursor: "pointer", fontSize: "12px" }}
+                  }`}
+                  onClick={() => setStatusProductFilter("ended")}
+                  style={{ cursor: "pointer", fontSize: "12px", padding: "1px 12px", }}
                 >
                   Berakhir
                 </div>
@@ -981,7 +992,6 @@ const AdsTable = ({ data }) => {
                           backgroundColor: "#F9DBBF",
                         }),
                       }}
-                      
                     />
                   </div>
                 </div>

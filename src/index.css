@@ -80,8 +80,21 @@
   width: auto;
 }
 
+.custom-metric-filter-buttons-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
 
 
+
+
+@media screen and (max-width: 1243px) {
+  #custom-product-container-filter-metric {
+    flex-direction: column !important;
+    align-items: start !important;
+  }
+}
 
 @media screen and (max-width: 812px) {
   .custom-filter-search {
@@ -109,6 +122,13 @@
   }
   .custom-filter-salesClassification, .custom-filter-typePlacement, .custom-filter-typeAds {
     width: 100% !important;
+  }
+}
+
+@media screen and (max-width: 646px) {
+  #custom-ads-container-filter-metric {
+    flex-direction: column !important;
+    align-items: start !important;
   }
 }
 
