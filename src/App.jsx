@@ -1,5 +1,5 @@
 import { Routes, Route } from "react-router-dom";
-import GlobalJSScripts from './assets/global';
+import GlobalJsScripts from './assets/global';
 import LoginPage from './pages/auth/LoginPage';
 import OtpPage from './pages/auth/OtpPage';
 import HomeDashboardPage from "./pages/index";
@@ -14,7 +14,7 @@ import NotFoundPage from "./pages/NotFound";
 function App() {
   return (
     <>
-      <GlobalJSScripts />
+      <GlobalJsScripts />
       <Routes>
         {/* route login akan menjadi "/" jika sudah implmentasi api */}
         <Route path="/login" element={<LoginPage />} />

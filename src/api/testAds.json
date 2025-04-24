@@ -9,7 +9,7 @@
           "campaign": {
             "campaign_id": 121828260,
             "daily_budget": 4000000000,
-            "start_time" : 1744137600
+            "start_time" : 1745164800
           },
           "type": "product_manual",
           "report": {
@@ -24,7 +24,7 @@
           "campaign": {
             "campaign_id": 315516327,
             "daily_budget": 0,
-            "start_time" : 1744137600
+            "start_time" : 1745164800
           },
           "type": "product_manual",
           "report": {

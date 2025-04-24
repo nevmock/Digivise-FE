@@ -1,49 +1,41 @@
-// import detailAdsJson from "../../api/detail-ads.json";
-// export default function DetailAds() {
-//     const [filteredData, setFilteredData] = useState(detailAdsJson.data);
-//     const [showTableColumn, setShowTableColumn] = useState(false);
+// const AdsTable = ({ data }) => {
+//     const [searchTerm, setSearchTerm] = useState("");
+//     const debouncedSearchTerm = useDebounce(searchTerm, 300);
+//     const [filteredData, setFilteredData] = useState(data.data.entry_list);
 //     const [chartData, setChartData] = useState([]);
 //     const [comparatorDate, setComparatorDate] = useState(null);
 //     const [comaparedDate, setComaparedDate] = useState(null);
 //     const [date, setDate] = useState(getAllDaysInLast7Days());
 //     const [showCalendar, setShowCalendar] = useState(false);
 //     const chartRef = useRef(null);
-//     const [showAlert, setShowAlert] = useState(false);
-//     const [selectedMetrics, setSelectedMetrics] = useState(["impression"]);
+//     const [selectedProduct, setSelectedProduct] = useState(null);
+//     const [selectedMetrics, setSelectedMetrics] = useState(["daily_budget"]);
 
+//     // CUSTOM CHART WITH FILTER DATE, CLICK PRODUCT FEATURE
+//     // Define metrics with their display names and colors
 //     const metrics = {
+//         daily_budget: {
+//             label: "Biaya",
+//             color: "#00B69A",
+//             dataKey: "daily_budget"
+//         },
 //         impression: {
-//             label: "Iklan Dilihat", //
-//             color: "#A50000FF",
+//             label: "Iklan Dilihat",
+//             color: "#D50000",
 //             dataKey: "impression"
-//         },
-//         clicks: {
-//             label: "Jumlah Klik", //
-//             color: "#37009EFF",
-//             dataKey: "clicks"
-//         },
-//         persentage_per_click: {
-//             label: "Persentase Klik", // 
-//             color: "#004CBEFF",
-//             dataKey: "persentage_per_click"
-//         },
-//         // dan metric lainnya dibawah 
+//         }
 //     };
 
-//     // Convert start_time to date format with epoch method
-//     const convertEpochToDate = (epoch, mode = "daily") => {
-//         const date = new Date(epoch * 1000);
-//         date.setMinutes(0, 0, 0);
-
-//         const year = date.getFullYear();
-//         const month = String(date.getMonth() + 1).padStart(2, "0");
-//         const day = String(date.getDate()).padStart(2, "0");
-//         const hours = String(date.getHours()).padStart(2, "0");
-//         const minutes = String(date.getMinutes()).padStart(2, "0");
-
-//         return mode === "hourly" ? `${year}-${month}-${day} ${hours}:${minutes}` : `${year}-${month}-${day}`;
+//     // Handle product click by clicking the product in name column
+//     const handleProductClick = (product) => {
+//         if (selectedProduct?.campaign.campaign_id === product.campaign.campaign_id) {
+//             setSelectedProduct(null);
+//         } else {
+//             setSelectedProduct(product);
+//         }
 //     };
 
+//     // Get all days in last 7 days in a month
 //     function getAllDaysInLast7Days() {
 //         return Array.from({ length: 7 }, (_, i) => {
 //             const d = new Date();
@@ -52,6 +44,7 @@
 //         }).reverse();
 //     };
 
+//     // Get all days in a month
 //     function getAllDaysInAMonth() {
 //         const today = new Date();
 //         const year = today.getFullYear();
@@ -63,10 +56,15 @@
 //         );
 //     };
 
+//     // Get all hours in a day
 //     function getHourlyIntervals(selectedDate) {
+//         const datePart = selectedDate.includes(" ")
+//             ? selectedDate.split(" ")[0]
+//             : selectedDate;
+
 //         return Array.from({ length: 24 }, (_, i) => {
 //             const hour = String(i).padStart(2, "0");
-//             return `${selectedDate} ${hour}:00`;
+//             return `${datePart} ${hour}:00`;
 //         });
 //     };
 
@@ -95,9 +93,7 @@
 //         return dateArray;
 //     };
 
-//     function generateSingleCampaignChartData(selectedDate = null, filteredData = null, selectedMetrics = ["cost_per_click"]) {
-//         if (!filteredData) return { timeIntervals: [], series: [], isSingleDay: false };
-
+//     function generateMultipleMetricsChartData(selectedDate = null, product = null, selectedMetrics = ["visitor"]) {
 //         let timeIntervals = [];
 //         let mode = "daily";
 //         let result = {};
@@ -133,9 +129,10 @@
 //         result.isSingleDay = isSingleDay;
 //         result.series = [];
 
-//         const campaignStartDate = convertEpochToDate(filteredData.campaign.start_time, mode);
-//         const campaignDateOnly = campaignStartDate.includes(" ") ?
-//             campaignStartDate.split(" ")[0] : campaignStartDate;
+//         let filteredProducts = data.data.entry_list;
+//         if (product) {
+//             filteredProducts = data.data.entry_list.filter((p) => p.campaign.campaign_id === product.campaign.campaign_id);
+//         }
 
 //         selectedMetrics?.forEach(metricKey => {
 //             const metric = metrics[metricKey];
@@ -148,33 +145,39 @@
 //                 dataMap[time] = 0;
 //             });
 
-//             if (timeIntervals.includes(campaignDateOnly)) {
-//                 if (dataKey === "cost_per_click") {
-//                     dataMap[campaignDateOnly] = filteredData.campaign[dataKey] || 0;
+//             filteredProducts?.forEach((product) => {
+//                 const productDate = new Date(product.campaign.start_time * 1000);
+
+//                 if (isSingleDay) {
+//                     const hourKey = String(productDate.getHours()).padStart(2, "0");
+
+//                     const productYear = productDate.getFullYear();
+//                     const productMonth = String(productDate.getMonth() + 1).padStart(2, "0");
+//                     const productDay = String(productDate.getDate()).padStart(2, "0");
+//                     const dateHourKey = `${productYear}-${productMonth}-${productDay} ${hourKey}:00`;
+
+//                     if (timeIntervals.includes(dateHourKey)) {
+//                         if (dataKey === "daily_budget") {
+//                             dataMap[dateHourKey] += product.campaign[dataKey] || 0;
+//                         } else {
+//                             dataMap[dateHourKey] += product.report[dataKey] || 0;
+//                         }
+//                     }
 //                 } else {
-//                     dataMap[campaignDateOnly] = filteredData.report[dataKey] || 0;
-//                 }
-//             }
-//             else if (comparatorDate && comaparedDate) {
-//                 const campaignDate = new Date(filteredData.campaign.start_time * 1000);
-//                 const startDay = new Date(comparatorDate);
-//                 startDay.setHours(0, 0, 0, 0);
-//                 const endDay = new Date(comaparedDate);
-//                 endDay.setHours(23, 59, 59, 999);
+//                     const productYear = productDate.getFullYear();
+//                     const productMonth = String(productDate.getMonth() + 1).padStart(2, "0");
+//                     const productDay = String(productDate.getDate()).padStart(2, "0");
+//                     const dateDayKey = `${productYear}-${productMonth}-${productDay}`;
 
-//                 if (campaignDate >= startDay && campaignDate <= endDay) {
-//                     if (!timeIntervals.includes(campaignDateOnly)) {
-//                         timeIntervals.push(campaignDateOnly);
-//                         timeIntervals.sort();
-//                     }
-
-//                     if (dataKey === "cost_per_click") {
-//                         dataMap[campaignDateOnly] = filteredData.campaign[dataKey] || 0;
-//                     } else {
-//                         dataMap[campaignDateOnly] = filteredData.report[dataKey] || 0;
+//                     if (timeIntervals.includes(dateDayKey)) {
+//                         if (dataKey === "daily_budget") {
+//                             dataMap[dateDayKey] += product.campaign[dataKey] || 0;
+//                         } else {
+//                             dataMap[dateDayKey] += product.report[dataKey] || 0;
+//                         }
 //                     }
 //                 }
-//             }
+//             });
 
 //             const seriesData = {
 //                 name: metric.label,
@@ -193,7 +196,7 @@
 //             if (prev.includes(metricKey)) {
 //                 return prev.filter(m => m !== metricKey);
 //             }
-//             else if (prev.length < 3) {
+//             else if (prev.length < 4) {
 //                 return [...prev, metricKey];
 //             }
 //             else {
@@ -217,29 +220,13 @@
 //         }
 //     };
 
-//     const handleStyleMatricButton = (metricKey) => {
-//         const isActive = selectedMetrics.includes(metricKey);
-//         const metric = metrics[metricKey];
-
-//         return {
-//             color: isActive ? metric.color : "#666666",
-//             borderRadius: "6px",
-//             cursor: "pointer",
-//             fontSize: "12px",
-//             fontWeight: isActive ? "medium" : "normal",
-//             transition: "all 0.3s ease"
-//         };
-//     };
+//     useEffect(() => {
+//         const chartData = generateMultipleMetricsChartData(date, selectedProduct, selectedMetrics);
+//         setChartData(chartData);
+//     }, [date, selectedProduct, selectedMetrics, comparatorDate, comaparedDate, data.data.entry_list]);
 
 //     useEffect(() => {
-//         if (filteredData && filteredData.keyword_ads) {
-//             const chartData = generateSingleCampaignChartData(date, filteredData, selectedMetrics);
-//             setChartData(chartData);
-//         }
-//     }, [date, filteredData, selectedMetrics, comparatorDate, comaparedDate]);
-
-//     useEffect(() => {
-//         if (chartRef.current && chartData.timeIntervals) {
+//         if (chartRef.current) {
 //             const chartInstance = echarts.init(chartRef.current);
 
 //             const series = chartData.series?.map(s => ({
@@ -258,11 +245,69 @@
 //             })) || [];
 
 //             const hasData = series.some(s => s.data && s.data.some(value => value > 0));
-//             const isSingleDay = chartData.isSingleDay;
-//             const xAxisData = chartData.timeIntervals;
 
-//             const leftGrid = 60; 
-//             const rotateAxisLabel = 45; 
+//             let leftGrid;
+//             if (selectedMetrics.length == 1 && (selectedMetrics.includes("daily_budget") || selectedMetrics.includes("impression"))) {
+//                 leftGrid = 80;
+//             } else if (selectedMetrics.length > 1 && selectedMetrics.includes("impression")) {
+//                 leftGrid = 80;
+//             } else {
+//                 leftGrid = 50;
+//             }
+
+//             let xAxisData = chartData?.timeIntervals || [];
+//             const isSingleDay = chartData?.isSingleDay || false;
+
+//             if (isSingleDay) {
+//                 // Extract only the time portion (HH:00) for hourly view
+//                 xAxisData = xAxisData.map(interval => {
+//                     if (!interval) return "";
+//                     if (interval.includes(" ")) {
+//                         return interval.split(" ")[1]; // Return only the time part
+//                     }
+//                     return interval;
+//                 });
+//             } else {
+//                 // For multi-day view, normalize date formats first
+//                 xAxisData = xAxisData.map(date => {
+//                     if (!date) return "";
+//                     // If it contains a space (has time component), take only the date part
+//                     if (date.includes(" ")) {
+//                         return date.split(" ")[0];
+//                     }
+//                     return date;
+//                 });
+
+//                 // Format multi-day dates to show just month-day
+//                 xAxisData = xAxisData.map(data => {
+//                     if (!data) return "";
+//                     const parts = data.split("-");
+//                     if (parts.length >= 3) {
+//                         return `${parts[1]}-${parts[2]}`;  // month-day format
+//                     }
+//                     return data;
+//                 });
+//             };
+
+//             let rotateAxisLabel = 0;
+//             if (!isSingleDay) {
+//                 if (xAxisData?.length > 7 && xAxisData?.length <= 20) {
+//                     rotateAxisLabel = 30;
+//                 } else if (xAxisData?.length > 20) {
+//                     rotateAxisLabel = 40;
+//                 }
+//             };
+
+//             for (let i = 0; i < series.length; i++) {
+//                 if (series[i].name == "Biaya") {
+//                     series[i].data = series[i].data.map((value) => {
+//                         if (value > 0) {
+//                             return value / 100000;
+//                         }
+//                         return 0;
+//                     });
+//                 }
+//             };
 
 //             const option = {
 //                 toolbox: { feature: { saveAsImage: {} } },
@@ -277,7 +322,7 @@
 //                     formatter: function (params) {
 //                         let result = params[0].axisValue + '<br/>';
 //                         params.forEach(param => {
-//                             result += `<span;background-color:${param.color};"></span> ${param.seriesName}: ${param.value}<br/>`;
+//                             result += `<span style="background-color:${param.color};"></span> ${param.seriesName}: ${param.value}<br/>`;
 //                         });
 //                         return result;
 //                     }
@@ -325,136 +370,131 @@
 //         }
 //     }, [chartData, selectedMetrics]);
 
+
+//     // FILTER COLUMNS FEATURE
+//     // Define all columns
 //     const allColumns = [
-//         { key: "keywords", label: "Kata Pencarian" },
-//         { key: "mathcing_type", label: "Tipe Pencocokan" },
-//         { key: "cost_per_click", label: "Per Klik" },
-//         { key: "impression", label: "Iklan Dilihat" },
-//         // dan kolom lainnya
+//         { key: "info_iklan", label: "Info iklan" },
+//         { key: "biaya", label: " Biaya" },
+//         { key: "iklan_dilihat", label: "Iklan Dilihat" },
+//         // dan colom lainnya dibawah
 //     ];
 
-//     const calculateTotalMetric = (metricKey) => {
-//         if (!filteredData || !filteredData.keyword_ads || filteredData.keyword_ads.length === 0) {
-//             return 0;
-//         }
-//         let filteredKeywords = filteredData.keyword_ads;
-//         if (date || (comparatorDate && comaparedDate)) {
-//             let startDate, endDate;
+//     useEffect(() => {
+//         let filtered = data.data.entry_list;
+//         // Filter by search term
+//         if (debouncedSearchTerm !== "") {
+//             filtered = data.data.entry_list.filter((entry) =>
+//                 entry.title.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+//             );
+//         };
+//         setCurrentPage(1);
+//         setFilteredData(filtered);
+//     }, [
+//         debouncedSearchTerm,
+//         data.data.entry_list,
+//     ]);
 
-//             if (comparatorDate && comaparedDate) {
-//                 startDate = new Date(comparatorDate);
-//                 startDate.setHours(0, 0, 0, 0);
 
-//                 endDate = new Date(comaparedDate);
-//                 endDate.setHours(23, 59, 59, 999);
-//             } else if (typeof date === 'string' && date === "Bulan Ini") {
-//                 const today = new Date();
-//                 startDate = new Date(today.getFullYear(), today.getMonth(), 1);
-//                 endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-//             } else if (Array.isArray(date)) {
-//                 startDate = new Date(date[0]);
-//                 endDate = new Date(date[date.length - 1]);
-//                 endDate.setHours(23, 59, 59, 999);
-//             } else if (typeof date === 'string') {
-//                 startDate = new Date(date);
-//                 startDate.setHours(0, 0, 0, 0);
-
-//                 endDate = new Date(date);
-//                 endDate.setHours(23, 59, 59, 999);
-//             }
-
-//             if (startDate && endDate) {
-//                 filteredKeywords = filteredKeywords.filter(keyword => {
-//                     const keywordDate = new Date(filteredData.campaign.start_time * 1000);
-//                     return keywordDate >= startDate && keywordDate <= endDate;
-//                 });
-//             }
-//         }
-
-//         return filteredKeywords.reduce((total, keyword) => {
-//             return total + (keyword[metricKey] || 0);
-//         }, 0);
+//     // Handle style for matric filter button
+//     const handleStyleMatricButton = (metricKey) => {
+//         return {
+//             backgroundColor: "#ffffff00",
+//         };
 //     };
 
-
 //     return (
-//         <>
-//             <BaseLayout>
-//                 {/* Peforma */}
-//                 <div className="d-flex">
-//                     {/* Date filter */}
-//                     <div style={{ position: "relative" }}>
-//                         <button
-//                             onClick={() => setShowCalendar(!showCalendar)}
-//                             className="btn btn-secondary"
-//                             style={{ backgroundColor: "#8042D4", border: "none" }}
+//         <div className="card">
+//             {/* Header & Date Filter */}
+//             <div className="d-flex justify-content-between">
+//                 <div style={{ position: "relative" }}>
+//                     <button
+//                         onClick={() => setShowCalendar(!showCalendar)}
+//                     >
+//                         {comparatorDate && comaparedDate
+//                             ? `${comparatorDate.toLocaleDateString("id-ID")} - ${comaparedDate.toLocaleDateString("id-ID")}`
+//                             : (typeof date === 'string' ? date : (Array.isArray(date) ? "1 Minggu terakhir" : "Pilih Tanggal"))}
+//                     </button>
+//                     {showCalendar && (
+//                         <div
+//                             className="d-flex"
 //                         >
-//                             {comparatorDate && comaparedDate
-//                                 ? `${comparatorDate.toLocaleDateString("id-ID")} - ${comaparedDate.toLocaleDateString("id-ID")}`
-//                                 : (typeof date === 'string' ? date : (Array.isArray(date) ? "1 Minggu terakhir" : "Pilih Tanggal"))}
-//                         </button>
-//                         {showCalendar && (
-//                             <div className="d-flex">
-//                                 <div className="d-flex">
-//                                     <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection(new Date().toISOString().split("T")[0])}>Hari ini</p>
-//                                     <p style={{ cursor: "pointer" }}
-//                                         onClick={() => {
-//                                             const yesterday = new Date();
-//                                             yesterday.setDate(yesterday.getDate() - 1);
-//                                             handleDateSelection(yesterday.toISOString().split("T")[0]);
-//                                         }}
-//                                     >
-//                                         Kemarin
-//                                     </p>
-//                                     <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection(getAllDaysInLast7Days())}>1 Minggu terakhir</p>
-//                                     <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection("Bulan Ini")}>Bulan ini</p>
-//                                 </div>
-//                                 <div style={{ width: "1px", height: "auto", backgroundColor: "#E3E3E3FF", margin: "10px 0" }}></div>
-//                                 {/* Kalender pembanding */}
-//                                 <div>
-//                                     <p>Tanggal Pembanding</p>
-//                                     <Calendar onChange={(date) => setComparatorDate(date)} value={comparatorDate} maxDate={comaparedDate || new Date(2100, 0, 1)} />
-//                                 </div>
-//                                 {/* Kalender dibanding */}
-//                                 <div>
-//                                     <p>Tanggal Dibanding</p>
-//                                     <Calendar onChange={(date) => setComaparedDate(date)} value={comaparedDate} minDate={comparatorDate || new Date()} />
-//                                 </div>
-//                                 {/* Confirm button for date range */}
-//                                 <div>
-//                                     <button
-//                                         onClick={handleComparisonDatesConfirm}
-//                                         disabled={!comparatorDate || !comaparedDate}
-//                                     >
-//                                         Terapkan
-//                                     </button>
-//                                 </div>
-//                             </div>
-//                         )}
-//                     </div>
-//                     {/* Matric filter */}
-//                     <div className="row">
-//                         {Object.keys(metrics).map((metricKey) => (
-//                             <div className="col-12">
-//                                 <div
-//                                     onClick={() => handleMetricFilter(metricKey)}
-//                                     style={handleStyleMatricButton(metricKey)}
-//                                     key={metricKey}
+//                             <div
+//                                 className="d-flex flex-column py-2 px-1"
+//                                 style={{ width: "130px", listStyleType: "none" }}
+//                             >
+//                                 <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection(new Date().toISOString().split("T")[0])}>Hari ini</p>
+//                                 <p style={{ cursor: "pointer" }}
+//                                     onClick={() => {
+//                                         const yesterday = new Date();
+//                                         yesterday.setDate(yesterday.getDate() - 1);
+//                                         handleDateSelection(yesterday.toISOString().split("T")[0]);
+//                                     }}
 //                                 >
-//                                     <h6>
-//                                         {metrics[metricKey].label}
-//                                     </h6>
-//                                     <span>
-//                                         {calculateTotalMetric(metricKey)}
+//                                     Kemarin
+//                                 </p>
+//                                 <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection(getAllDaysInLast7Days())}>1 Minggu terakhir</p>
+//                                 <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection("Bulan Ini")}>Bulan ini</p>
+//                             </div>
+//                             <div style={{ width: "1px", height: "auto", backgroundColor: "#E3E3E3FF", margin: "10px 0" }}></div>
+//                             {/* Kalender pembanding */}
+//                             <div>
+//                                 <p className="pt-2" style={{ textAlign: "center" }}>Tanggal Pembanding</p>
+//                                 <Calendar onChange={(date) => setComparatorDate(date)} value={comparatorDate} maxDate={comaparedDate || new Date(2100, 0, 1)} />
+//                             </div>
+//                             {/* Kalender dibanding */}
+//                             <div>
+//                                 <p className="pt-2" style={{ textAlign: "center" }}>Tanggal Dibanding</p>
+//                                 <Calendar onChange={(date) => setComaparedDate(date)} value={comaparedDate} minDate={comparatorDate || new Date()} />
+//                             </div>
+//                             {/* Confirm button for date range */}
+//                             <div className="d-flex align-items-end mb-1">
+//                                 <button
+//                                     className="btn btn-primary"
+//                                     onClick={handleComparisonDatesConfirm}
+//                                     disabled={!comparatorDate || !comaparedDate}
+//                                 >
+//                                     Terapkan
+//                                 </button>
+//                             </div>
+//                         </div>
+//                     )}
+//                 </div>
+//             </div>
+//             <div className="d-flex flex-column gap-3">
+//                 <div ref={chartRef}></div>
+//                 {/* Filter & Table */}
+//                 <div className="d-flex flex-column gap-2">
+//                     {/* Matric filter */}
+//                     <div id="custom-ads-container-filter-metric">
+//                         <span>Matric Produk</span>
+//                         <div className="custom-metric-filter-buttons-wrapper">
+//                             {Object.keys(metrics).map((metricKey) => (
+//                                 <div
+//                                     key={metricKey}
+//                                     style={handleStyleMatricButton(metricKey)}
+//                                     onClick={() => handleMetricFilter(metricKey)}
+//                                     className={handleClassisActiveMetricButton(metricKey)}
+//                                 >
+//                                     {metrics[metricKey].label}
+//                                     <span className="card-text fs-4 fw-bold">
+//                                         {/* tampilan untuk kalkulasi total dari suatu matrik yang dipilih */}
 //                                     </span>
 //                                 </div>
-//                             </div>
-//                         ))}
+//                             ))}
+//                         </div>
 //                     </div>
-//                     {/* Chart */}
-//                     <div ref={chartRef} style={{ width: "100%", height: "300px" }}></div>
-//                     {/* Table */}
-//                     <h5>Keywords</h5>
+//                     {/* Other filter*/}
+//                     <div className="d-flex flex-column mb-3 gap-2">
+//                         {/* search bar */}
+//                         <input
+//                             type="text"
+//                             className="form-control"
+//                             placeholder="Cari berdasarkan nama"
+//                             onChange={(e) => setSearchTerm(e.target.value)}
+//                         />
+//                         {/* and another filter below */}
+//                     </div>
 //                     <table className="table table-centered">
 //                         <thead className="table-light">
 //                             <tr>
@@ -470,24 +510,33 @@
 //                             </tr>
 //                         </thead>
 //                         <tbody>
-//                             {filteredData?.keyword_ads.map((entry, index) => (
+//                             {filteredData?.map((entry, index) => (
 //                                     <>
-//                                         <tr key={index}>
-//                                             {selectedColumns.includes("keywords") && (
+//                                         <tr key={entry.campaign.campaign_id}>
+//                                         {selectedColumns.includes("info_iklan") && (
+//                                             <td
+//                                                 style={{
+//                                                     color:
+//                                                     selectedProduct?.campaign.campaign_id === entry.campaign.campaign_id
+//                                                     ? "#F6881F"
+//                                                     : "",
+//                                                 }}
+//                                                 onClick={() => handleProductClick(entry)}
+//                                                 >
+//                                             </td>
+//                                         )}
+//                                             {selectedColumns.includes("biaya") && (
 //                                                 <td style={{ width: "200px" }}>
 //                                                     <span>
-//                                                         {entry.keyword}
+//                                                         Rp {convertBudgetToIDR(entry.campaign.daily_budget)}
 //                                                     </span>
 //                                                 </td>
 //                                             )}
-//                                             {selectedColumns.includes("cost_per_click") && (
+//                                             {selectedColumns.includes("iklan_dilihat") && (
 //                                                 <td style={{ width: "200px" }}>
-//                                                     <span>
-//                                                         {entry.cost_per_click}
-//                                                     </span>
+//                                                     <span>{entry.report.impression}</span>
 //                                                 </td>
 //                                             )}
-//                                             {/* dan kolom lainya dibawah */}
 //                                         </tr>
 //                                     </>
 //                                 ))
@@ -495,7 +544,9 @@
 //                         </tbody>
 //                     </table>
 //                 </div>
-//             </BaseLayout>
-//         </>
-//     )
+//             </div>
+//         </div>
+//     );
 // };
+
+// export default AdsTable;

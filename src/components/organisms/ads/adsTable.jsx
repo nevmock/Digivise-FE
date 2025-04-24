@@ -6,6 +6,7 @@ import * as echarts from "echarts";
 
 import useDebounce from "../../../hooks/useDebounce";
 
+
 const AdsTable = ({ data }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
@@ -28,6 +29,7 @@ const AdsTable = ({ data }) => {
   const [itemsPerPage, setItemsPerPage] = useState(20);
   const [paginatedData, setPaginatedData] = useState([]);
   const [totalPages, setTotalPages] = useState(1);
+  const [metricsTotals, setMetricsTotals] = useState({});
 
   // CUSTOM CHART WITH FILTER DATE, CLICK PRODUCT FEATURE
   // Define metrics with their display names and colors
@@ -71,20 +73,6 @@ const AdsTable = ({ data }) => {
     } else {
       setSelectedProduct(product);
     }
-  };
-
-  // Convert start_time to date format with epoch method
-  const convertEpochToDate = (epoch, mode = "daily") => {
-    const date = new Date(epoch * 1000);
-    // date.setMinutes(0, 0, 0);
-    
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    const hours = String(date.getHours()).padStart(2, "0");
-    const minutes = String(date.getMinutes()).padStart(2, "0");
-
-    return mode === "hourly" ? `${year}-${month}-${day} ${hours}:${minutes}` : `${year}-${month}-${day}`;
   };
 
   // Get all days in last 7 days in a month
@@ -423,6 +411,7 @@ const AdsTable = ({ data }) => {
     }, [chartData, selectedMetrics]);
 
 
+
   // FILTER COLUMNS FEATURE
   // Define all columns
   const allColumns = [
@@ -584,6 +573,7 @@ const AdsTable = ({ data }) => {
     );
   };
 
+
   // SALES CLASSIFICATION FEATURE
   // Define sales classification options
   const typeClasificationOptions = [
@@ -595,6 +585,7 @@ const AdsTable = ({ data }) => {
   const handleClassificationChange = (selectedOptions) => {
     setSelectedClassificationOption(selectedOptions);
   };
+
 
 
   // PLACEMENT FILTER FEATURE
@@ -612,6 +603,7 @@ const AdsTable = ({ data }) => {
   const isTypeManualProductSelected = selectedTypeAds.some(
     (option) => option.value === "product_manual"
   );
+
 
 
   // ADS FILTER FEATURE
@@ -705,6 +697,46 @@ const AdsTable = ({ data }) => {
 
   const handleClassisActiveMetricButton = (metricKey) => {
     return selectedMetrics.includes(metricKey) ? "" : "border border-secondary-subtle";
+  };
+
+  function calculateMetricTotals(filteredProducts) {
+    const totals = {};
+    
+    // Inisialisasi totals untuk setiap metrik yang ada
+    Object.keys(metrics).forEach(metricKey => {
+        totals[metricKey] = 0;
+    });
+    
+    // Hitung total untuk setiap metrik berdasarkan data yang sudah difilter
+    filteredProducts.forEach(product => {
+        // Untuk metrik daily_budget
+        if (product.campaign.daily_budget) {
+            totals.daily_budget += product.campaign.daily_budget;
+        }
+        
+        // Untuk metrik impression dan metrik lainnya yang ada di report
+        Object.keys(metrics).forEach(metricKey => {
+            const dataKey = metrics[metricKey].dataKey;
+            if (dataKey !== 'daily_budget' && product.report[dataKey]) {
+                totals[metricKey] += product.report[dataKey];
+            }
+        });
+    });
+    
+    return totals;
+  }
+
+  useEffect(() => {
+    // Hitung total metrik dari data yang sudah difilter
+    const totals = calculateMetricTotals(filteredData);
+    setMetricsTotals(totals);
+  }, [filteredData]);
+
+  const formatMetricValue = (metricKey, value) => {
+    if (metricKey === "daily_budget") {
+        return `Rp ${convertBudgetToIDR(value)}`;
+    }
+    return value?.toLocaleString() || "0";
   };
 
   return (
@@ -811,6 +843,9 @@ const AdsTable = ({ data }) => {
                     className={handleClassisActiveMetricButton(metricKey)}
                   >
                     {metrics[metricKey].label}
+                    <span className="card-text fs-4 fw-bold">
+                      {formatMetricValue(metricKey, metricsTotals[metricKey])}
+                    </span>
                   </div>
                 ))}
               </div>

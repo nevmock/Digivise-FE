@@ -13,6 +13,7 @@ const Navbar = () => {
     const dropdownRef = useRef(null);
     const modalRef = useRef(null);
     const navigate = useNavigate();
+    const [themeMode, setThemeMode] = useState(() => localStorage.getItem("themeModeData") || "light");
 
     const handleLogout = async () => {
         // try {
@@ -34,11 +35,20 @@ const Navbar = () => {
         , 2000);
     };
 
-
     const toggleDropdown = () => {
         setShowDropdown((prev) => !prev);
     };
+
     const closeModal = () => setShowModal(false);
+
+    useEffect(() => {
+        document.documentElement.setAttribute("data-bs-theme", themeMode);
+        localStorage.setItem("themeModeData", themeMode);
+    }, [themeMode]);
+
+    const toggleTheme = () => {
+        setThemeMode(prev => (prev === "light" ? "dark" : "light"));
+    };
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -129,18 +139,19 @@ const Navbar = () => {
                             </div>
 
                             {showModal &&
-                                    createPortal(
-                                        <MerchantModal onClose={closeModal} />,
-                                        document.body
-                                    )
+                                createPortal(
+                                    <MerchantModal onClose={closeModal} />,
+                                    document.body
+                                )
                             }
 
                             <div className="topbar-item">
-                                <button type="button" className="topbar-button" id="light-dark-mode">
-                                    <iconify-icon icon="solar:moon-outline"
-                                        className="fs-22 align-middle light-mode"></iconify-icon>
-                                    <iconify-icon icon="solar:sun-2-outline"
-                                        className="fs-22 align-middle dark-mode"></iconify-icon>
+                                <button type="button" className="topbar-button" id="light-dark-mode" onClick={toggleTheme}>
+                                    {themeMode === "light" ? (
+                                        <iconify-icon icon="solar:moon-outline" class="fs-22 align-middle light-mode" />
+                                    ) : (
+                                        <iconify-icon icon="solar:sun-2-outline" class="fs-22 align-middle dark-mode" />
+                                    )}
                                 </button>
                             </div>
 

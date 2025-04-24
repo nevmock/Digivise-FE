@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
+import{ useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Calendar from "react-calendar";
 import * as echarts from "echarts";
+
 import BaseLayout from "../../components/organisms/BaseLayout";
 import detailAdsJson from "../../api/detail-ads.json";
+
 
 export default function DetailAds() {
     const navigate = useNavigate();
@@ -553,7 +555,7 @@ export default function DetailAds() {
             return total + (keyword[metricKey] || 0);
         }, 0);
     };
-
+    
     return (
         <>
             <BaseLayout>
