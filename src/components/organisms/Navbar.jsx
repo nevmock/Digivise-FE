@@ -1,18 +1,43 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { useNavigate } from "react-router-dom";
 
+// import { useAuth } from "../../context/Auth";
 import MerchantModal from "../organisms/ModalAddMerchant";
 
 const Navbar = () => {
+    // const { logoutSuccess } = useAuth();
+    const [isLoading, setIsLoading] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
     const [showModal, setShowModal] = useState(false);
     const dropdownRef = useRef(null);
     const modalRef = useRef(null);
+    const navigate = useNavigate();
+
+    const handleLogout = async () => {
+        // try {
+        //     setIsLoading(true);
+        //     await logout();
+        //     logoutSuccess();
+        //     navigate("/");
+        // } catch (error) {
+        //     setIsLoading(false);
+        //     alert("Logout gagal");
+        //     console.error("Gagal logout: ", error);
+        // }
+
+        setTimeout(() => {  
+            setIsLoading(false);
+            alert("Logout berhasil");
+            navigate("/login");
+        }
+        , 2000);
+    };
+
 
     const toggleDropdown = () => {
         setShowDropdown((prev) => !prev);
     };
-
     const closeModal = () => setShowModal(false);
 
     useEffect(() => {
@@ -37,7 +62,8 @@ const Navbar = () => {
                             <div className="topbar-item">
                                 <button type="button" className="button-toggle-menu topbar-button">
                                     <iconify-icon icon="solar:hamburger-menu-outline"
-                                        className="fs-24 align-middle"></iconify-icon>
+                                        className="align-middle" 
+                                        style={{ fontSize: "22px", verticalAlign: "middle" }}></iconify-icon>
                                 </button>
                             </div>
                         </div>
@@ -135,11 +161,11 @@ const Navbar = () => {
 
                                     <div className="dropdown-divider my-1"></div>
 
-                                    <a className="dropdown-item text-danger d-flex align-items-center gap-1">
+                                    <button className="dropdown-item text-danger d-flex align-items-center gap-1" onClick={handleLogout} style={{ cursor: "pointer" }}>
                                         <iconify-icon icon="solar:logout-3-outline"
                                             className="align-middle fs-18"></iconify-icon><span
                                                 className="align-middle">Logout</span>
-                                    </a>
+                                    </button>
                                 </div>
                             </div>
                         </div>

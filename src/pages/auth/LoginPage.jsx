@@ -1,13 +1,28 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-export default function LoginPage() {
-    const [isLoading, setIsLoading] = useState(false);
-    const navigate = useNavigate();
+import { useAuth } from "../../context/Auth";
 
-    const handleSubmit = (e) => {
+
+export default function LoginPage() {
+    // const { loginSuccess } = useAuth();
+    const navigate = useNavigate();
+    const [username, setUsername] = useState("");
+    const [password, setPassword] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleSubmitLogin = async (e) => {
         e.preventDefault();
         setIsLoading(true);
+
+        // try {
+        //     await login(username, password);
+        //     loginSuccess();
+        //     navigate("/dashboard");
+        // } catch (err) {
+        //     alert("Login gagal");
+        //     console.error("Gagal login: ", error);
+        // };
 
         setTimeout(() => {
             setIsLoading(false);
@@ -27,7 +42,7 @@ export default function LoginPage() {
                                         <h1 className="fw-bold text-dark mb-2">Login</h1>
                                         <p className="text-muted">Sign in to continue to your account</p>
                                     </div>
-                                    <form className="mt-5" onSubmit={handleSubmit}>
+                                    <form className="mt-5" onSubmit={handleSubmitLogin}>
                                         <div className="mb-3">
                                             <label for="email" className="form-label">Email</label>
                                             <input type="email" className="form-control" id="email" name="email" placeholder="Enter your email" />

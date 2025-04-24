@@ -1,5 +1,5 @@
 import { Routes, Route } from "react-router-dom";
-import GlobalScripts from './assets/global';
+import GlobalJSScripts from './assets/global';
 import LoginPage from './pages/auth/LoginPage';
 import OtpPage from './pages/auth/OtpPage';
 import HomeDashboardPage from "./pages/index";
@@ -14,11 +14,14 @@ import NotFoundPage from "./pages/NotFound";
 function App() {
   return (
     <>
-      <GlobalScripts />
+      <GlobalJSScripts />
       <Routes>
+        {/* route login akan menjadi "/" jika sudah implmentasi api */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/verification-otp" element={<OtpPage />} />
+        {/* route dashboard akan menjadi "/dashboard" jika sudah implmentasi api */}
         <Route path="/" element={<HomeDashboardPage />} />
+        {/* route children dari dashboard akan menjadi "/dashboard/..." jika sudah implementasi api */}
         <Route path="/merchant-information" element={<MerchantInformationPage />} />
         <Route path="/merchant-kpi" element={<MerchantKPIPage />} />
         <Route path="/performance/ads" element={<PerformanceAdsPage />} />
