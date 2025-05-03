@@ -1,34 +1,42 @@
-import axios from "axios";
+import axiosRequest from "../../utils/request";
 const API_URL = import.meta.env.BE_API_URL;
 
 export const login = async (username, password) => {
-    const response = await axios.post(`${API_URL}/login`, { username, password });
-    const { token } = response.data;
-    localStorage.setItem("userToken", token);
-    return token;
+    const payload = { username, password };
+    try {
+        const response = await axiosRequest.post(`${API_URL}/v1/login`, payload);
+        if (response.status === 200) {
+            const { token } = response.data.token;
+            localStorage.setItem("userAppToken", token);
+            return token;
+        } else {
+            throw new Error("Login failed");
+        }
+    } catch (error) {    
+        throw error;
+    }
 };
 
 export const logout = async () => {
-    try {
-        const token = localStorage.getItem("userToken");
+    const token = localStorage.getItem("userAppToken");
+    if (!token) {
+        return;
+    }
 
-        if (token) {
-            await axios.post(`${API_URL}/logout`, {}, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-        }
-    } catch (err) {
-        alert("Terjadi masalah di server");
-        console.error("Error saat logout dari server:", err);
-    } finally {
-        localStorage.removeItem("userToken");
+    try {
+        await axiosRequest.post(`${API_URL}/v1/logout`, {}, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        localStorage.removeItem("userAppToken");
+    } catch (error) {
+        throw error;
     }
 };
 
 export const getToken = () => {
-    return localStorage.getItem("userToken");
+    return localStorage.getItem("userAppToken");
 };
 
 export const isAuthenticated = () => {

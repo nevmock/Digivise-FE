@@ -1,55 +1,46 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, use } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 
-// import { useAuth } from "../../context/Auth";
+import { useAuth } from "../../context/Auth";
+import { getMerchantList } from "../../resolver/merchant/merchant";
+import { logout } from "../../resolver/auth/authApp";
 import MerchantModal from "../organisms/ModalAddMerchant";
 
 const Navbar = () => {
-    // const { logoutSuccess } = useAuth();
+    const { logoutSuccess } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
     const [showModal, setShowModal] = useState(false);
     const dropdownRef = useRef(null);
     const modalRef = useRef(null);
     const navigate = useNavigate();
-    const [themeMode, setThemeMode] = useState(() => localStorage.getItem("themeModeData") || "light");
+    const [themeMode, setThemeMode] = useState(() => localStorage.getItem("appModeTheme") || "light");
+    const [merchantList, setMerchantList] = useState({});
 
-    const handleLogout = async () => {
-        // try {
-        //     setIsLoading(true);
-        //     await logout();
-        //     logoutSuccess();
-        //     navigate("/");
-        // } catch (error) {
-        //     setIsLoading(false);
-        //     alert("Logout gagal");
-        //     console.error("Gagal logout: ", error);
-        // }
+    useEffect(() => {
+        const response = getMerchantList();
+        setMerchantList(response);
+    });
 
-        setTimeout(() => {  
+    const handleClickLogout = async () => {
+        setIsLoading(true);
+        try {
+            await logout();
+            logoutSuccess();
+            navigate("/");
+        } catch (error) {
+            alert("Logout gagal, silahkan coba lagi");
+            console.error("Gagal logout, error pada server:", error);
+        } finally {
             setIsLoading(false);
-            alert("Logout berhasil");
-            navigate("/login");
         }
-        , 2000);
     };
 
     const toggleDropdown = () => {
         setShowDropdown((prev) => !prev);
     };
-
     const closeModal = () => setShowModal(false);
-
-    useEffect(() => {
-        document.documentElement.setAttribute("data-bs-theme", themeMode);
-        localStorage.setItem("themeModeData", themeMode);
-    }, [themeMode]);
-
-    const toggleTheme = () => {
-        setThemeMode(prev => (prev === "light" ? "dark" : "light"));
-    };
-
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (showModal && modalRef.current && !modalRef.current.contains(event.target)) {
@@ -62,6 +53,14 @@ const Navbar = () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
     }, []);
+
+    const toggleTheme = () => {
+        setThemeMode(prev => (prev === "light" ? "dark" : "light"));
+    };
+    useEffect(() => {
+        document.documentElement.setAttribute("data-bs-theme", themeMode);
+        localStorage.setItem("appModeTheme", themeMode);
+    }, [themeMode]);
 
     return (
         <>
@@ -172,7 +171,7 @@ const Navbar = () => {
 
                                     <div className="dropdown-divider my-1"></div>
 
-                                    <button className="dropdown-item text-danger d-flex align-items-center gap-1" onClick={handleLogout} style={{ cursor: "pointer" }}>
+                                    <button className="dropdown-item text-danger d-flex align-items-center gap-1" onClick={handleClickLogout} style={{ cursor: "pointer" }} disabled={{isLoading}} >
                                         <iconify-icon icon="solar:logout-3-outline"
                                             className="align-middle fs-18"></iconify-icon><span
                                                 className="align-middle">Logout</span>

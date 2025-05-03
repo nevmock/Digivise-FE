@@ -59,10 +59,10 @@ const AdsTable = ({ data }) => {
       color: "#C400BA",
       dataKey: "acos" 
     },
-    convertion: { 
-      label: "Convertion", 
-      color: "#D77600",
-      dataKey: "convertion" 
+    broad_order: { 
+      label: "CPC", 
+      color: "#AD5F00FF",
+      dataKey: "broad_order" 
     }
   };
 
@@ -133,6 +133,56 @@ const AdsTable = ({ data }) => {
     return dateArray;
   };
 
+  function filterDataByDate(dataList, selectedDate) {
+    let timeIntervals = [];
+    let isSingleDay = false;
+
+    if (comparatorDate && comaparedDate) {
+        const sameDay = comparatorDate.toDateString() === comaparedDate.toDateString();
+
+        if (sameDay) {
+            const dateStr = comparatorDate.toISOString().split('T')[0];
+            timeIntervals = getHourlyIntervals(dateStr);
+            isSingleDay = true;
+        } else {
+            timeIntervals = getDateRangeIntervals(comparatorDate, comaparedDate);
+        }
+    } else if (selectedDate === null || Array.isArray(selectedDate)) {
+        timeIntervals = getAllDaysInLast7Days();
+    } else if (selectedDate === "Bulan Ini") {
+        timeIntervals = getAllDaysInAMonth();
+    } else {
+        timeIntervals = getHourlyIntervals(selectedDate);
+        isSingleDay = true;
+    }
+
+    if (!timeIntervals || timeIntervals.length === 0) {
+        timeIntervals = [new Date().toISOString().split('T')[0]];
+    }
+
+    // Filter data berdasarkan tanggal
+    return dataList.filter(product => {
+        const productDate = new Date(product.campaign.start_time * 1000);
+        
+        if (isSingleDay) {
+            const productYear = productDate.getFullYear();
+            const productMonth = String(productDate.getMonth() + 1).padStart(2, "0");
+            const productDay = String(productDate.getDate()).padStart(2, "0");
+            const productHour = String(productDate.getHours()).padStart(2, "0");
+            const dateHourKey = `${productYear}-${productMonth}-${productDay} ${productHour}:00`;
+            
+            return timeIntervals.includes(dateHourKey);
+        } else {
+            const productYear = productDate.getFullYear();
+            const productMonth = String(productDate.getMonth() + 1).padStart(2, "0");
+            const productDay = String(productDate.getDate()).padStart(2, "0");
+            const dateDayKey = `${productYear}-${productMonth}-${productDay}`;
+            
+            return timeIntervals.includes(dateDayKey);
+        }
+    });
+  }
+
   function generateMultipleMetricsChartData(selectedDate = null, product = null, selectedMetrics = ["visitor"]) {
     let timeIntervals = [];
     let mode = "daily";
@@ -169,10 +219,36 @@ const AdsTable = ({ data }) => {
     result.isSingleDay = isSingleDay;
     result.series = [];
 
-    let filteredProducts = data.data.entry_list;
+     // Filter data berdasarkan tanggal terlebih dahulu
+    let dateFilteredData = filterDataByDate(data.data.entry_list, selectedDate);
+        
+    // Kemudian filter berdasarkan produk jika ada
+    let filteredProducts = dateFilteredData;
     if (product) {
-      filteredProducts = data.data.entry_list.filter((p) => p.campaign.campaign_id === product.campaign.campaign_id);
+        filteredProducts = dateFilteredData.filter((p) => p.campaign.campaign_id === product.campaign.campaign_id);
     }
+    // let filteredProducts = data.data.entry_list;
+    // if (product) {
+    //   filteredProducts = data.data.entry_list.filter((p) => p.campaign.campaign_id === product.campaign.campaign_id);
+    // }
+
+    // Calculate totals for each metric
+    const totals = {};
+    Object.keys(metrics).forEach(metricKey => {
+        totals[metricKey] = 0;
+        
+        filteredProducts.forEach(product => {
+            const dataKey = metrics[metricKey].dataKey;
+            if (dataKey === "daily_budget") {
+                totals[metricKey] += product.campaign[dataKey] || 0;
+            } else {
+                totals[metricKey] += product.report[dataKey] || 0;
+            }
+        });
+    });
+    
+    // Set totals to state
+    setMetricsTotals(totals);
 
     selectedMetrics?.forEach(metricKey => {
       const metric = metrics[metricKey];
@@ -421,6 +497,7 @@ const AdsTable = ({ data }) => {
     { key: "click", label: "Click" },
     { key: "ctr", label: "CTR" },
     { key: "acos", label: "ACOS" },
+    { key: "cpc", label: "CPC"},
     { key: "convertion", label: "Convertion" },
     { key: "classification", label: "Sales Clasification" },
     { key: "insight", label: "Insight" },
@@ -656,7 +733,7 @@ const AdsTable = ({ data }) => {
       border: `1px solid ${isActive ? metric.color : "rgb(179.4, 184.2, 189)"}`,
       color: isActive ? metric.color : "#666666",
       padding: "6px 12px",
-      borderRadius: "20px",
+      borderRadius: "8px",
       cursor: "pointer",
       fontSize: "12px",
       fontWeight: isActive ? "medium" : "normal",
@@ -668,7 +745,7 @@ const AdsTable = ({ data }) => {
   const checkTypeAds = (type) => {
     switch (type) {
       case "product_manual":
-        return "Iklan Product Manual";
+        return "Iklan Produk Manual";
       case "shop_auto":
         return "Iklan Toko Otomatis";
       case "shop_manual":
@@ -812,6 +889,26 @@ const AdsTable = ({ data }) => {
           </div>
         </div>
         <div className="d-flex flex-column gap-3">
+          {/* Matric filter */}
+          <div className="row g-3 justify-content-center">
+            {Object.keys(metrics).map((metricKey) => (
+                <div className="col-12 col-md-6 col-lg-2">
+                    <div
+                        className="card border-light shadow-sm h-100 p-2"
+                        style={handleStyleMatricButton(metricKey)}
+                        onClick={() => handleMetricFilter(metricKey)}
+                        key={metricKey}
+                    >
+                        <h6 className="card-title">
+                            {metrics[metricKey].label}
+                        </h6>
+                        <span className="card-text fs-4 fw-bold">
+                          {formatMetricValue(metricKey, metricsTotals[metricKey])}
+                        </span>
+                    </div>
+                </div>
+            ))}
+          </div>
           <div ref={chartRef} style={{ width: "100%", height: "300px" }}></div>
           {/* Filter & Table */}
           <div className="d-flex flex-column gap-2">
@@ -827,8 +924,7 @@ const AdsTable = ({ data }) => {
                 <span >Pilih minimal 1 metrik untuk menampilkan data</span>
               </div>
             )}
-            {/* Matric filter */}
-            <div
+            {/* <div
               id="custom-ads-container-filter-metric"
               className="d-flex align-items-center gap-2"
               style={{ width: "fit-content", listStyleType: "none" }}
@@ -849,7 +945,7 @@ const AdsTable = ({ data }) => {
                   </div>
                 ))}
               </div>
-            </div>
+            </div> */}
             {/* Status filter */}
             <div
               className="d-flex align-items-center gap-1 gap-md-2 flex-wrap"
@@ -1129,10 +1225,70 @@ const AdsTable = ({ data }) => {
                                 />
                               <div className="d-flex flex-column">
                                 <span>{entry.title}</span>
-                                <span className="text-secondary" style={{ fontSize: "12px" }}>
+                                {/* {
+                                  entry.type === "product_manual" ? (
+                                    <div className="d-flex flex-col">
+                                      <span className="text-secondary" style={{ fontSize: "12px" }}>
+                                      {checkTypeAds(entry.type)}
+                                      </span>
+                                      {entry.manual_product_ads != null ? (
+                                        <div className="d-flex gap-1 align-items-center">
+                                          <span style={{ fontSize: "11px" }}>Penempatan :</span>
+                                          <span style={{ fontSize: "11px" }}>
+                                            {
+                                              entry.manual_product_ads.product_placement === "search_product"
+                                                ? "Halaman Pencarian"
+                                                : entry.manual_product_ads.product_placement === "targeting"
+                                                ? "Halaman Rekomendasi"
+                                                : ""
+                                            }
+                                          </span>
+                                        </div>
+                                      ) : (
+                                        ""
+                                      )}
+                                    </div>
+      
+                                  ) : entry.type === "product_manual" ? (
+                                    entry?.manual_product_ads?.product_placement === "search_product" ? (
+                                      <Link to={"/performance/ads/details"}>
+                                        se
+                                        <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24"><path fill="currentColor" d="m16 8.4l-8.9 8.9q-.275.275-.7.275t-.7-.275t-.275-.7t.275-.7L14.6 7H7q-.425 0-.712-.288T6 6t.288-.712T7 5h10q.425 0 .713.288T18 6v10q0 .425-.288.713T17 17t-.712-.288T16 16z"></path></svg>
+                                      </Link>
+                                    ) : entry?.manual_product_ads?.product_placement === "targeting" ? (
+                                      <Link to={"/performance/ads/detail"}>
+                                        re
+                                        <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24"><path fill="currentColor" d="m16 8.4l-8.9 8.9q-.275.275-.7.275t-.7-.275t-.275-.7t.275-.7L14.6 7H7q-.425 0-.712-.288T6 6t.288-.712T7 5h10q.425 0 .713.288T18 6v10q0 .425-.288.713T17 17t-.712-.288T16 16z"></path></svg>
+                                      </Link>
+                                    ) : (
+                                      <span></span>
+                                    )
+                                  ) : (
+                                    <span></span>
+                                  )
+                                } */}
+                                {/* <span className="text-secondary" style={{ fontSize: "12px" }}>
                                   {checkTypeAds(entry.type)}
                                 </span>
-                                <span style={{ fontSize: "10px" }}>
+                                {
+                                  entry.manual_product_ads != null ? (
+                                    <div className="d-flex gap-1 align-items-center">
+                                      <span style={{ fontSize: "11px" }}>Penempatan :</span>
+                                      <span style={{ fontSize: "11px" }}>
+                                        {
+                                          entry.manual_product_ads.product_placement === "search_product"
+                                            ? "Halaman Pencarian"
+                                            : entry.manual_product_ads.product_placement === "targeting"
+                                            ? "Halaman Rekomendasi"
+                                            : ""
+                                        }
+                                      </span>
+                                    </div>
+                                  ) : (
+                                    ""
+                                  )
+                                } */}
+                                <span style={{ fontSize: "11px" }}>
                                   Tidak terbatas
                                 </span>
                                 <div className="d-flex gap-1 align-items-center">
@@ -1217,6 +1373,16 @@ const AdsTable = ({ data }) => {
                               </div>
                             </td>
                           )}
+                          {selectedColumns.includes("cpc") && (
+                            <td style={{ width: "200px" }}>
+                              <div className="d-flex flex-column">
+                                <span>{entry.report.cpc}</span>
+                                <span className="text-danger" style={{ fontSize: "10px" }}>
+                                  -102.7%
+                                </span>
+                              </div>
+                            </td>
+                          )}
                           {selectedColumns.includes("convertion") && (
                             <td style={{ width: "200px" }}>
                               <div className="d-flex flex-column">
@@ -1287,17 +1453,33 @@ const AdsTable = ({ data }) => {
                             </td>
                           )}
                           {selectedColumns.includes("detail") && (
-                            <td style={{ width: "200px" }}>
-                              {
-                                entry.type === "product_manual" && (
+                          <td style={{ width: "200px" }}>
+                            {
+                              entry.type === "product_gmv_max_roas" ? (
+                                <Link to={"/performance/ads/detailROAS"}>
+                                  roas
+                                  <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24"><path fill="currentColor" d="m16 8.4l-8.9 8.9q-.275.275-.7.275t-.7-.275t-.275-.7t.275-.7L14.6 7H7q-.425 0-.712-.288T6 6t.288-.712T7 5h10q.425 0 .713.288T18 6v10q0 .425-.288.713T17 17t-.712-.288T16 16z"></path></svg>
+                                </Link>
+                              ) : entry.type === "product_manual" ? (
+                                entry?.manual_product_ads?.product_placement === "search_product" ? (
                                   <Link to={"/performance/ads/detail"}>
+                                    se
                                     <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24"><path fill="currentColor" d="m16 8.4l-8.9 8.9q-.275.275-.7.275t-.7-.275t-.275-.7t.275-.7L14.6 7H7q-.425 0-.712-.288T6 6t.288-.712T7 5h10q.425 0 .713.288T18 6v10q0 .425-.288.713T17 17t-.712-.288T16 16z"></path></svg>
-                                    {/* <span style={{ color: "white", fontSize: "12px", backgroundColor: "#8042D4", padding: "8px 12px", borderRadius: "4px"}}>Cek detail</span> */}
                                   </Link>
+                                ) : entry?.manual_product_ads?.product_placement === "targeting" ? (
+                                  <Link to={"/performance/ads/detailRECOM"}>
+                                    re
+                                    <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24"><path fill="currentColor" d="m16 8.4l-8.9 8.9q-.275.275-.7.275t-.7-.275t-.275-.7t.275-.7L14.6 7H7q-.425 0-.712-.288T6 6t.288-.712T7 5h10q.425 0 .713.288T18 6v10q0 .425-.288.713T17 17t-.712-.288T16 16z"></path></svg>
+                                  </Link>
+                                ) : (
+                                  <span></span>
                                 )
-                              }
-                            </td>
-                          )}
+                              ) : (
+                                <span></span>
+                              )
+                            }
+                          </td>
+                        )}
                         </tr>
                       </>
                     ))

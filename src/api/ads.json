@@ -142,7 +142,7 @@
           "bidding_strategy": "manual",
           "cps": false,
           "item_id": 23027832914,
-          "product_placement": "search_product",
+          "product_placement": "targeting",
           "simple_roi_one_no_edit_timestamp": 0,
           "target_audience": null
         },
@@ -186,7 +186,7 @@
         "subtype": null,
         "title": "AMK Baju Koko Lengan Panjang KK Albani L/s Terracota [7]",
         "trait_list": [],
-        "type": "product_manual",
+        "type": "product_gmv_max_roas",
         "video_ads": null,
         "bidding": 6
       },

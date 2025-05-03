@@ -9,6 +9,8 @@ import PerformanceAdsPage from './pages/performance/AdsPage';
 import PerformanceProductPage from './pages/performance/ProductPage';
 import PerformanceStockPage from "./pages/performance/StockPage";
 import TetsDetailAdsPage from './pages/performance/DetailAds';
+// import TestDetailDuaAdsPage from './pages/performance/DetailDuaAds';
+// import TestDetailTigaAdsPage from './pages/performance/DetailTigaAds';
 import NotFoundPage from "./pages/NotFound";
 
 function App() {
@@ -28,6 +30,8 @@ function App() {
         <Route path="/performance/product" element={<PerformanceProductPage />} />
         <Route path="/performance/stock" element={<PerformanceStockPage />} />
         <Route path="/performance/ads/detail" element={<TetsDetailAdsPage />} />
+        {/* <Route path="/performance/ads/detailRECOM" element={<TestDetailDuaAdsPage />} />
+        <Route path="/performance/ads/detailROAS" element={<TestDetailTigaAdsPage />} /> */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </>

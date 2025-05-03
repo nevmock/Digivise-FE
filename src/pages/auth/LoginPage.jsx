@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { useAuth } from "../../context/Auth";
+// import { useAuth } from "../../context/Auth";
+import { login } from "../../resolver/auth/authApp";
 
 
 export default function LoginPage() {
@@ -15,19 +16,16 @@ export default function LoginPage() {
         e.preventDefault();
         setIsLoading(true);
 
-        // try {
-        //     await login(username, password);
-        //     loginSuccess();
-        //     navigate("/dashboard");
-        // } catch (err) {
-        //     alert("Login gagal");
-        //     console.error("Gagal login: ", error);
-        // };
-
-        setTimeout(() => {
+        try {
+            await login(username, password);
+            loginSuccess();
+            navigate("/dashboard");
+        } catch (error) {
+            alert("Login gagal, silahkan coba lagi");
+            console.error("Gagal login, error pada server:", error);
+        } finally {
             setIsLoading(false);
-            navigate("/verification-otp");
-        }, 2000);
+        }
     };
 
     return (
