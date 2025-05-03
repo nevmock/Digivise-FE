@@ -1,7 +1,7 @@
 import axios from "axios";
 const API_URL = import.meta.env.BE_API_URL;
 
-export default async function createMerchant(username, email, password, phone, sector_industry, office_address, factory_address) {
+export async function createMerchant(username, email, password, phone, sector_industry, office_address, factory_address) {
     try {
         const response = await axios.post(`${API_URL}/v1/createMerchant`, { username, email, password, phone, sector_industry, office_address, factory_address });
         return response.data;
@@ -32,7 +32,7 @@ export async function refreshTokenMerchant(token) {
     }
 };
 
-export default async function getMerchantList()  {
+export async function getMerchantList()  {
     try {
         const response = await axios.get(`${API_URL}/v1/allMerchant`);
         return response.data;
