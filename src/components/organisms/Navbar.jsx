@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 
 import { useAuth } from "../../context/Auth";
-import { getMerchantList } from "../../resolver/merchant/merchant";
 import { logout } from "../../resolver/auth/authApp";
 import CreateMerchantModal from "../organisms/ModalAddMerchant";
 import LoginMerchantModal from "../organisms/ModalLoginMerchant";
@@ -56,23 +55,6 @@ const Navbar = () => {
         localStorage.setItem("appModeTheme", themeMode);
     }, [themeMode]);
 
-    useEffect(() => {
-        const fetchMerchantList = async () => {
-            try {
-                const response = await axiosRequest.get("/api/merchants");
-                if (response != null && response.length != 0 && response != undefined) {
-                    setMerchantList(response.data);
-                } else {
-                    console.error("Gagal mendapatkan daftar merchant:", response);
-                }
-            } catch (error) {
-                // alert("Gagal mendapatkan daftar merchant:", error);
-                console.error("Gagal mendapatkan daftar merchant:", error);
-            }
-        };
-        fetchMerchantList();
-    }, []);
-
     const handleClickLogout = async () => {
         setIsLoading(true);
         try {
@@ -87,6 +69,23 @@ const Navbar = () => {
             setIsLoading(false);
         }
     };
+
+    const getMerchantList = async () => {
+        try {
+            const getUserData = localStorage.getItem("userDataApp");
+            const response = await axiosRequest.get(`/api/merchants/user/${JSON.parse(getUserData).userId}`);
+            if (response.status === 200) {
+                setMerchantList(response.data);
+            }
+        }
+        catch (error) {
+            console.error("Error saat mengambil daftar merchant:", error);
+        }
+    }
+
+    useEffect(() => {
+        getMerchantList();
+    }, []);
 
     return (
         <>
@@ -119,15 +118,14 @@ const Navbar = () => {
                                                             <div style={{ cursor: "pointer" }}>
                                                                 <div className="d-flex align-items-center">
                                                                     <img
-                                                                        src={merchant.image}
-                                                                        alt={merchant.name}
+                                                                        src={merchant.merchantLogo || "../../assets/images/users/avatar-1.jpg"}
                                                                         className="rounded-circle me-2"
                                                                         width="40"
                                                                         height="40"
                                                                     />
                                                                     <div>
-                                                                        <strong>{merchant.name}</strong>
-                                                                        <p className="mb-0 text-muted">{merchant.type}</p>
+                                                                        <strong>{merchant.merchantName}</strong>
+                                                                        <p className="mb-0 text-muted">{merchant.merchantShopeeId}</p>
                                                                     </div>
                                                                 </div>
                                                                 <label className="text-center pt-1" style={{ color: "#008D2FFF" }}>Session Active</label>
@@ -146,63 +144,6 @@ const Navbar = () => {
                                             Create Merchant
                                         </button>
                                     </>
-                                )}
-                                
-                                <button type="button" className="btn" style={{ backgroundColor: "#8042D4", color: "white" }} onClick={toggleDropdown}>
-                                    Switch Merchant
-                                </button>
-                                {showDropdown && (
-                                    <div className="dropdown-menu show position-absolute shadow p-2 rounded" style={{ width: "200px" }}>
-                                        <div style={{ cursor: "pointer" }}>
-                                            <div className="d-flex align-items-center">
-                                                <img
-                                                    src="../../assets/images/users/avatar-5.jpg"
-                                                    alt="User"
-                                                    className="rounded-circle me-2"
-                                                    width="40"
-                                                    height="40"
-                                                />
-                                                <div>
-                                                    <strong>Madam Lain</strong>
-                                                    <p className="mb-0 text-muted">Toko Pakaian</p>
-                                                </div>
-                                            </div>
-                                            <label className="text-center pt-1" style={{ color: "#008D2FFF" }}>Session Active</label>
-                                        </div>
-                                        <hr />
-                                        <div style={{ cursor: "pointer" }}>
-                                            <div className="d-flex align-items-center">
-                                                <img
-                                                    src="../../assets/images/users/avatar-3.jpg"
-                                                    alt="User"
-                                                    className="rounded-circle me-2"
-                                                    width="40"
-                                                    height="40"
-                                                />
-                                                <div>
-                                                    <strong>Sir Francisco</strong>
-                                                    <p className="mb-0 text-muted">Toko Mainan</p>
-                                                </div>
-                                            </div>
-                                            <div className="d-flex align-items-center gap-1">
-                                                <label className="text-danger text-center">Session Expired</label>
-                                                <div className="position-relative">
-                                                    <svg
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        style={{ cursor: "pointer" }}
-                                                        width="16"
-                                                        height="16"
-                                                        viewBox="0 0 24 24"
-                                                        title="Klik to refresh session"
-                                                    >
-                                                        <path fill="currentColor" d="M12 20q-3.35 0-5.675-2.325T4 12t2.325-5.675T12 4q1.725 0 3.3.712T18 6.75V4h2v7h-7V9h4.2q-.8-1.4-2.187-2.2T12 6Q9.5 6 7.75 7.75T6 12t1.75 4.25T12 18q1.925 0 3.475-1.1T17.65 14h2.1q-.7 2.65-2.85 4.325T12 20" />
-                                                    </svg>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <hr />
-                                        <button className="btn btn-outline-primary w-100 fs-5" onClick={() => setShowModalFormCreateMerchant(true)}>Add Merchant +</button>
-                                    </div>
                                 )}
                             </div>
 

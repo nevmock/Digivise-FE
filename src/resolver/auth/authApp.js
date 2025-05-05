@@ -6,6 +6,11 @@ export const login = async (username, password) => {
         const response = await axiosRequest.post("auth/login", payload);
         if (response.status === 200 && response.data) {
             const { accessToken } = response.data;
+            const userData = {
+                userId: response.data.userId,
+                username: response.data.username,
+            };
+            localStorage.setItem("userDataApp", JSON.stringify(userData));
             localStorage.setItem("userAppToken", accessToken);
             return accessToken;
         } else {
@@ -28,6 +33,7 @@ export const logout = async () => {
                 Authorization: `Bearer ${accessToken}`,
             },
         });
+        localStorage.removeItem("userDataApp");
         localStorage.removeItem("userAppToken");
     } catch (error) {
         throw error;

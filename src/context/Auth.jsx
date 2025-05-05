@@ -11,6 +11,7 @@ export const AuthProvider = ({ children }) => {
     const loginSuccess = () => setIsAuth(true);
     const logoutSuccess = () => {
         setIsAuth(false);
+        localStorage.removeItem("userDataApp");
         localStorage.removeItem("userAppToken");
     };
 
