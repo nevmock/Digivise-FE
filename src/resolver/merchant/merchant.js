@@ -1,5 +1,15 @@
 import axios from "axios";
-const API_URL = import.meta.env.BE_API_URL;
+const API_URL = import.meta.env.VITE_BE_API_URL;
+
+
+export async function getMerchantList()  {
+    try {
+        const response = await axios.get(`${API_URL}/v1/allMerchant`);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
 
 export async function createMerchant(username, email, password, phone, sector_industry, office_address, factory_address) {
     try {
@@ -10,14 +20,14 @@ export async function createMerchant(username, email, password, phone, sector_in
     }
 };
 
-export async function getMerchantById(id) {
+export async function getSessionTokenMerchant(idMerchant) {
     try {
-        const response = await axios.get(`${API_URL}/v1/merchant/${id}`);
+        const response = await axios.get(`${API_URL}/v1/getSessionTokenMerchant/${idMerchant}`);
         return response.data;
     } catch (error) {
         throw error;
     }
-};
+}
 
 export async function refreshTokenMerchant(token) {
     try {
@@ -26,15 +36,6 @@ export async function refreshTokenMerchant(token) {
                 Authorization: `Bearer ${token}`,
             },
         });
-        return response.data;
-    } catch (error) {
-        throw error;
-    }
-};
-
-export async function getMerchantList()  {
-    try {
-        const response = await axios.get(`${API_URL}/v1/allMerchant`);
         return response.data;
     } catch (error) {
         throw error;

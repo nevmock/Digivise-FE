@@ -1,13 +1,16 @@
 import axios from "axios";
-const API_URL = import.meta.env.BE_API_URL;
+const API_URL = import.meta.env.VITE_BE_API_URL;
+
+let unauthorizedHandler = null;
+export const setUnauthorizedHandler = (fn) => {
+    unauthorizedHandler = fn;
+};
 
 const apiAppSettingsInstance = axios.create({
     baseURL: API_URL,
     headers: {
         "Content-Type": "application/json",
     },
-    // if use cookie, set withCredentials: true
-    // withCredentials: true,
     timeout: 3000,
 });
 
@@ -29,9 +32,8 @@ apiAppSettingsInstance.interceptors.response.use(
         return response;
     },
     (error) => {
-        if (error.response.status === 401) {
-            localStorage.removeItem("userAppToken");
-            window.location.href = "/login";
+        if (error.response?.status === 401 && unauthorizedHandler) {
+            unauthorizedHandler();
         }
         return Promise.reject(error);
     }

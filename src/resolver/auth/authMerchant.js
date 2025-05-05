@@ -1,8 +1,8 @@
 import axios from "axios";
-const API_URL = import.meta.env.BE_API_URL;
+const API_URL = import.meta.env.VITE_BE_API_URL;
 
-export default async function loginMerchant(username, password) {
-    const payload = { username, password };
+export async function loginMerchant(noPhone, password) {
+    const payload = { noPhone, password };
     try {
         const response = await axios.post(`${API_URL}/v1/login-merchant`, payload, {
             headers: {

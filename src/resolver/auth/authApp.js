@@ -1,14 +1,13 @@
 import axiosRequest from "../../utils/request";
-const API_URL = import.meta.env.BE_API_URL;
 
 export const login = async (username, password) => {
     const payload = { username, password };
     try {
-        const response = await axiosRequest.post(`${API_URL}/v1/login`, payload);
-        if (response.status === 200) {
-            const { token } = response.data.token;
-            localStorage.setItem("userAppToken", token);
-            return token;
+        const response = await axiosRequest.post("auth/login", payload);
+        if (response.status === 200 && response.data) {
+            const { accessToken } = response.data;
+            localStorage.setItem("userAppToken", accessToken);
+            return accessToken;
         } else {
             throw new Error("Login failed");
         }
@@ -18,15 +17,15 @@ export const login = async (username, password) => {
 };
 
 export const logout = async () => {
-    const token = localStorage.getItem("userAppToken");
-    if (!token) {
+    const accessToken = localStorage.getItem("userAppToken");
+    if (!accessToken) {
         return;
     }
 
     try {
-        await axiosRequest.post(`${API_URL}/v1/logout`, {}, {
+        await axiosRequest.post("auth/logout", {}, {
             headers: {
-                Authorization: `Bearer ${token}`,
+                Authorization: `Bearer ${accessToken}`,
             },
         });
         localStorage.removeItem("userAppToken");

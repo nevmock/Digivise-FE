@@ -1,4 +1,9 @@
+import { useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
+
+import { useAuth } from "./context/Auth";
+import { setUnauthorizedHandler } from "./utils/request";
+import PrivateRoute from "./utils/protectRoutes";
 import GlobalJsScripts from './assets/global';
 import LoginPage from './pages/auth/LoginPage';
 import OtpPage from './pages/auth/OtpPage';
@@ -14,22 +19,31 @@ import TetsDetailAdsPage from './pages/performance/DetailAds';
 import NotFoundPage from "./pages/NotFound";
 
 function App() {
+  const { handleUnauthorized } = useAuth();
+
+  useEffect(() => {
+    setUnauthorizedHandler(handleUnauthorized);
+  }
+  , [handleUnauthorized]);
+
   return (
     <>
       <GlobalJsScripts />
       <Routes>
-        {/* route login akan menjadi "/" jika sudah implmentasi api */}
-        <Route path="/login" element={<LoginPage />} />
+        <Route path="/" element={<LoginPage />} />
         <Route path="/verification-otp" element={<OtpPage />} />
-        {/* route dashboard akan menjadi "/dashboard" jika sudah implmentasi api */}
-        <Route path="/" element={<HomeDashboardPage />} />
-        {/* route children dari dashboard akan menjadi "/dashboard/..." jika sudah implementasi api */}
-        <Route path="/merchant-information" element={<MerchantInformationPage />} />
-        <Route path="/merchant-kpi" element={<MerchantKPIPage />} />
-        <Route path="/performance/ads" element={<PerformanceAdsPage />} />
-        <Route path="/performance/product" element={<PerformanceProductPage />} />
-        <Route path="/performance/stock" element={<PerformanceStockPage />} />
-        <Route path="/performance/ads/detail" element={<TetsDetailAdsPage />} />
+        <Route path="/dashboard" element={
+          <PrivateRoute>
+            <HomeDashboardPage />
+          </PrivateRoute>
+          } 
+        />
+        <Route path="/dashboard/merchant-information" element={<MerchantInformationPage />} />
+        <Route path="/dashboard/merchant-kpi" element={<MerchantKPIPage />} />
+        <Route path="/dashboard/performance/ads" element={<PerformanceAdsPage />} />
+        <Route path="/dashboard/performance/product" element={<PerformanceProductPage />} />
+        <Route path="/dashboard/performance/stock" element={<PerformanceStockPage />} />
+        <Route path="/dashboard/performance/ads/detail" element={<TetsDetailAdsPage />} />
         {/* <Route path="/performance/ads/detailRECOM" element={<TestDetailDuaAdsPage />} />
         <Route path="/performance/ads/detailROAS" element={<TestDetailTigaAdsPage />} /> */}
         <Route path="*" element={<NotFoundPage />} />

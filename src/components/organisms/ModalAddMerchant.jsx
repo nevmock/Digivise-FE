@@ -1,5 +1,6 @@
 import React, { useState, useRef } from "react";
 
+
 const MerchantModal = ({ onClose }) => {
     const modalRef = useRef(null);
     const [formData, setFormData] = useState({
@@ -14,16 +15,46 @@ const MerchantModal = ({ onClose }) => {
 
     const [errors, setErrors] = useState({});
 
-    const validate = () => {
-        let newErrors = {};
+    const isEmpty = (value) => !value?.trim();
+    const isEmailValid = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    const isPhoneValid = (phone) => /^\d+$/.test(phone);
 
-        if (!formData.username) newErrors.username = "Username required";
-        if (!formData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) newErrors.email = "Email not valid";
-        if (formData.password.length < 6) newErrors.password = "Password must be at least 6 characters";
-        if (!formData.phone.match(/^\d+$/)) newErrors.phone = "Phone number must be a number";
-        if (!formData.sector_industry) newErrors.sector_industry = "Sector industry required";
-        if (!formData.office_address) newErrors.office_address = "Office address required";
-        if (!formData.factory_address) newErrors.factory_address = "Factory address required";
+    const validate = () => {
+        const newErrors = {};
+
+        if (isEmpty(formData.username)) {
+            newErrors.username = "Username is required";
+        }
+
+        if (isEmpty(formData.email)) {
+            newErrors.email = "Email is required";
+        } else if (!isEmailValid(formData.email)) {
+            newErrors.email = "Email is not valid";
+        }
+
+        if (isEmpty(formData.password)) {
+            newErrors.password = "Password is required";
+        } else if (formData.password.length < 6) {
+            newErrors.password = "Password must be at least 6 characters";
+        }
+
+        if (isEmpty(formData.phone)) {
+            newErrors.phone = "Phone number is required";
+        } else if (!isPhoneValid(formData.phone)) {
+            newErrors.phone = "Phone number must contain only digits";
+        }
+
+        if (isEmpty(formData.sector_industry)) {
+            newErrors.sector_industry = "Sector industry is required";
+        }
+
+        if (isEmpty(formData.office_address)) {
+            newErrors.office_address = "Office address is required";
+        }
+
+        if (isEmpty(formData.factory_address)) {
+            newErrors.factory_address = "Factory address is required";
+        }
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -50,6 +81,37 @@ const MerchantModal = ({ onClose }) => {
                 <h5 className="text-center">Add Merchant</h5>
                 <hr />
                 <form onSubmit={handleSubmit}>
+                    {[
+                        { name: "username", label: "Username", type: "text" },
+                        { name: "email", label: "Email", type: "email" },
+                        { name: "password", label: "Password", type: "password" },
+                        { name: "phone", label: "Phone number", type: "text" },
+                        { name: "sector_industry", label: "Sector Industry", type: "text" },
+                        { name: "office_address", label: "Office Address", type: "text" },
+                        { name: "factory_address", label: "Factory Address", type: "text" },
+                    ].map(({ name, label, type }) => (
+                        <div className="mb-2" key={name}>
+                            <label className="form-label">{label}</label>
+                            <input
+                                type={type}
+                                className={`form-control ${errors[name] ? "is-invalid" : ""}`}
+                                value={formData[name]}
+                                onChange={(e) =>
+                                    setFormData({ ...formData, [name]: e.target.value })
+                                }
+                            />
+                            <div className="invalid-feedback">{errors[name]}</div>
+                        </div>
+                    ))}
+
+                    <button type="submit" className="btn btn-primary w-100">
+                        Add Merchant
+                    </button>
+                    <button type="button" className="btn btn-secondary w-100 mt-2" onClick={onClose}>
+                        Cancel
+                    </button>
+                </form>
+                {/* <form onSubmit={handleSubmit}>
                     <div className="mb-2">
                         <label className="form-label">Username</label>
                         <input
@@ -129,7 +191,7 @@ const MerchantModal = ({ onClose }) => {
 
                     <button type="submit" className="btn btn-primary w-100">Add Merchant</button>
                     <button type="button" className="btn btn-secondary w-100 mt-2" onClick={onClose}>Cancel</button>
-                </form>
+                </form> */}
             </div>
         </div>
     );

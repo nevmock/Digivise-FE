@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-// import { useAuth } from "../../context/Auth";
+import { useAuth } from "../../context/Auth";
 import { login } from "../../resolver/auth/authApp";
 
 
 export default function LoginPage() {
-    // const { loginSuccess } = useAuth();
+    const { loginSuccess } = useAuth();
     const navigate = useNavigate();
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
@@ -42,14 +42,29 @@ export default function LoginPage() {
                                     </div>
                                     <form className="mt-5" onSubmit={handleSubmitLogin}>
                                         <div className="mb-3">
-                                            <label for="email" className="form-label">Email</label>
-                                            <input type="email" className="form-control" id="email" name="email" placeholder="Enter your email" />
+                                            <label htmlFor="username" className="form-label">username</label>
+                                            <input
+                                                type="test"
+                                                className="form-control"
+                                                id="username"
+                                                name="username"
+                                                value={username}
+                                                onChange={(e) => setUsername(e.target.value)}
+                                                placeholder="Enter your username"
+                                            />
                                         </div>
                                         <div className="mb-3">
                                             <div className="d-flex justify-content-between align-items-center">
-                                                <label for="password" className="form-label">Password</label>
+                                                <label htmlFor="password" className="form-label">Password</label>
                                             </div>
-                                            <input type="password" className="form-control" id="password" placeholder="Enter your password" />
+                                            <input
+                                                type="password"
+                                                className="form-control"
+                                                id="password"
+                                                value={password}
+                                                onChange={(e) => setPassword(e.target.value)}
+                                                placeholder="Enter your password"
+                                            />
                                         </div>
                                         <div className="d-grid mt-5">
                                             <button className="btn btn-dark btn-lg fw-medium" type="submit">

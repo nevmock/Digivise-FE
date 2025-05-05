@@ -3,25 +3,63 @@ import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../context/Auth";
-import { getMerchantList } from "../../resolver/merchant/merchant";
+import { getMerchantList, getSessionTokenMerchant } from "../../resolver/merchant/merchant";
 import { logout } from "../../resolver/auth/authApp";
-import MerchantModal from "../organisms/ModalAddMerchant";
+import CreateMerchantModal from "../organisms/ModalAddMerchant";
+import LoginMerchantModal from "../organisms/ModalLoginMerchant";
+
 
 const Navbar = () => {
     const { logoutSuccess } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
-    const [showModal, setShowModal] = useState(false);
+    const [showModalFormCreateMerchant, setShowModalFormCreateMerchant] = useState(false);
+    const [showModalFormLoginMerchant, setShowModalFormLoginMerchant] = useState(false);
     const dropdownRef = useRef(null);
     const modalRef = useRef(null);
     const navigate = useNavigate();
     const [themeMode, setThemeMode] = useState(() => localStorage.getItem("appModeTheme") || "light");
-    const [merchantList, setMerchantList] = useState({});
+    const [merchantList, setMerchantList] = useState([]);
+    
+    const toggleTheme = () => {
+        setThemeMode(prev => (prev === "light" ? "dark" : "light"));
+    };
+    const toggleDropdown = () => {
+        setShowDropdown((prev) => !prev);
+    };
+    const closeModalCreateMerchant = () => setShowModalFormCreateMerchant(false);
+    const closeModalLoginMerchant = () => setShowModalFormLoginMerchant(false);
+    
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (showModalFormCreateMerchant && modalRef.current && !modalRef.current.contains(event.target)) {
+                setShowModalFormCreateMerchant(false);
+            }  
+            if (showDropdown && dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setShowDropdown(false);
+            }   
+            if (showModalFormLoginMerchant && modalRef.current && !modalRef.current.contains(event.target)) {
+                setShowModalFormLoginMerchant(false);
+            }       
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
 
     useEffect(() => {
-        const response = getMerchantList();
-        setMerchantList(response);
-    });
+        document.documentElement.setAttribute("data-bs-theme", themeMode);
+        localStorage.setItem("appModeTheme", themeMode);
+    }, [themeMode]);
+
+    useEffect(() => {
+        const dataMerchant  = getMerchantList();
+        if (dataMerchant && dataMerchant.length > 0) {
+            setMerchantList(dataMerchant);
+        };
+    }, []);
 
     const handleClickLogout = async () => {
         setIsLoading(true);
@@ -36,31 +74,6 @@ const Navbar = () => {
             setIsLoading(false);
         }
     };
-
-    const toggleDropdown = () => {
-        setShowDropdown((prev) => !prev);
-    };
-    const closeModal = () => setShowModal(false);
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (showModal && modalRef.current && !modalRef.current.contains(event.target)) {
-                setShowModal(false);
-            }            
-        };
-
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => {
-            document.removeEventListener("mousedown", handleClickOutside);
-        };
-    }, []);
-
-    const toggleTheme = () => {
-        setThemeMode(prev => (prev === "light" ? "dark" : "light"));
-    };
-    useEffect(() => {
-        document.documentElement.setAttribute("data-bs-theme", themeMode);
-        localStorage.setItem("appModeTheme", themeMode);
-    }, [themeMode]);
 
     return (
         <>
@@ -79,6 +92,49 @@ const Navbar = () => {
 
                         <div className="d-flex align-items-center gap-2">
                             <div className="topbar-item position-relative" ref={dropdownRef}>
+                                {merchantList.length > 0 ? (
+                                    <>
+                                        <button type="button" className="btn" style={{ backgroundColor: "#8042D4", color: "white" }} onClick={toggleDropdown}>
+                                            Switch Merchant
+                                        </button>
+                                        
+                                        {showDropdown && (
+                                            <div className="dropdown-menu show position-absolute shadow p-2 rounded" style={{ width: "200px" }}>
+                                                {
+                                                    merchantList.map((merchant, index) => (
+                                                        <>
+                                                            <div style={{ cursor: "pointer" }}>
+                                                                <div className="d-flex align-items-center">
+                                                                    <img
+                                                                        src={merchant.image}
+                                                                        alt={merchant.name}
+                                                                        className="rounded-circle me-2"
+                                                                        width="40"
+                                                                        height="40"
+                                                                    />
+                                                                    <div>
+                                                                        <strong>{merchant.name}</strong>
+                                                                        <p className="mb-0 text-muted">{merchant.type}</p>
+                                                                    </div>
+                                                                </div>
+                                                                <label className="text-center pt-1" style={{ color: "#008D2FFF" }}>Session Active</label>
+                                                            </div>
+                                                            <hr />
+                                                        </>
+                                                    ))
+                                                }
+                                                <button className="btn btn-outline-primary w-100 fs-5" onClick={() => setShowModalFormCreateMerchant(true)}>Add Merchant +</button>
+                                            </div>
+                                        )}
+                                    </>
+                                ) : (
+                                    <>
+                                        <button type="button" className="btn" style={{ backgroundColor: "#8042D4", color: "white" }} onClick={() => setShowModalFormCreateMerchant(true)}>
+                                            Create Merchant
+                                        </button>
+                                    </>
+                                )}
+                                
                                 <button type="button" className="btn" style={{ backgroundColor: "#8042D4", color: "white" }} onClick={toggleDropdown}>
                                     Switch Merchant
                                 </button>
@@ -132,14 +188,21 @@ const Navbar = () => {
                                             </div>
                                         </div>
                                         <hr />
-                                        <button className="btn btn-outline-primary w-100 fs-5" onClick={() => setShowModal(true)}>Add Merchant +</button>
+                                        <button className="btn btn-outline-primary w-100 fs-5" onClick={() => setShowModalFormCreateMerchant(true)}>Add Merchant +</button>
                                     </div>
                                 )}
                             </div>
 
-                            {showModal &&
+                            {showModalFormCreateMerchant &&
                                 createPortal(
-                                    <MerchantModal onClose={closeModal} />,
+                                    <CreateMerchantModal onClose={closeModalCreateMerchant} />,
+                                    document.body
+                                )
+                            }
+                            
+                            {showModalFormLoginMerchant &&
+                                createPortal(
+                                    <LoginMerchantModal onClose={closeModalLoginMerchant} />,
                                     document.body
                                 )
                             }

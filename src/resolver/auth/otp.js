@@ -1,5 +1,5 @@
 import axiosRequest from "../../utils/request";
-const API_URL = import.meta.env.BE_API_URL;
+const API_URL = import.meta.env.VITE_BE_API_URL;
 
 export async function verifyOtp(otp) {
     try {
