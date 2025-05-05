@@ -1,20 +1,37 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast, Toaster } from "react-hot-toast";
 
 import { verifyOtp } from "../../resolver/auth/otp";
+
 
 export default function OtpPage() {
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
 
+    const validate = (otp) => {
+        const newErrors = {};
+        if (!otp.trim()) newErrors.otp = "OTP code required";
+        return Object.keys(newErrors).length === 0;
+    }
+
     const handleSubmitVerifyOTP = async (e) => {
         e.preventDefault();
+        const otp = e.target.otp.value.trim();
+        setIsLoading(true);
+
+        if (!validate(otp)) {
+            setIsLoading(false);
+            toast.error("OTP code is required");
+            return;
+        }
+
         try {
-            setIsLoading(true);
             await verifyOtp(otp);
+            toast.success("OTP berhasil diverifikasi!");
             navigate("/dashboard");
         } catch (error) {
-            alert("Verifikasi OTP gagal, silahkan coba lagi");
+            toast.error("Gagal verifikasi OTP, silakan coba lagi");
             console.error("Gagal verifikasi OTP, server error:", error);
         } finally {
             setIsLoading(false);

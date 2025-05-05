@@ -1,12 +1,14 @@
 import { useState, useRef, useEffect, use } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-hot-toast";
 
 import { useAuth } from "../../context/Auth";
-import { getMerchantList, getSessionTokenMerchant } from "../../resolver/merchant/merchant";
+import { getMerchantList } from "../../resolver/merchant/merchant";
 import { logout } from "../../resolver/auth/authApp";
 import CreateMerchantModal from "../organisms/ModalAddMerchant";
 import LoginMerchantModal from "../organisms/ModalLoginMerchant";
+import axiosRequest from "../../utils/request";
 
 
 const Navbar = () => {
@@ -55,10 +57,20 @@ const Navbar = () => {
     }, [themeMode]);
 
     useEffect(() => {
-        const dataMerchant  = getMerchantList();
-        if (dataMerchant && dataMerchant.length > 0) {
-            setMerchantList(dataMerchant);
+        const fetchMerchantList = async () => {
+            try {
+                const response = await axiosRequest.get("/api/merchants");
+                if (response != null && response.length != 0 && response != undefined) {
+                    setMerchantList(response.data);
+                } else {
+                    console.error("Gagal mendapatkan daftar merchant:", response);
+                }
+            } catch (error) {
+                // alert("Gagal mendapatkan daftar merchant:", error);
+                console.error("Gagal mendapatkan daftar merchant:", error);
+            }
         };
+        fetchMerchantList();
     }, []);
 
     const handleClickLogout = async () => {
@@ -66,9 +78,10 @@ const Navbar = () => {
         try {
             await logout();
             logoutSuccess();
+            toast.success("Logout berhasil!");
             navigate("/");
         } catch (error) {
-            alert("Logout gagal, silahkan coba lagi");
+            toast.error("Logout gagal, silakan coba lagi");
             console.error("Gagal logout, error pada server:", error);
         } finally {
             setIsLoading(false);
@@ -226,7 +239,7 @@ const Navbar = () => {
                                     </span>
                                 </a>
                                 <div className="dropdown-menu dropdown-menu-end">
-                                    <a className="dropdown-item d-flex align-items-center gap-1">
+                                    <a className="dropdown-item d-flex align-items-center gap-1 custom-cursor-pointer">
                                         <iconify-icon icon="solar:user-outline"
                                             className="align-middle fs-18"></iconify-icon><span className="align-middle">My
                                                 Account</span>
@@ -234,7 +247,7 @@ const Navbar = () => {
 
                                     <div className="dropdown-divider my-1"></div>
 
-                                    <button className="dropdown-item text-danger d-flex align-items-center gap-1" onClick={handleClickLogout} style={{ cursor: "pointer" }} disabled={{isLoading}} >
+                                    <button className="dropdown-item text-danger d-flex align-items-center gap-1 custom-cursor-pointer" onClick={handleClickLogout} >
                                         <iconify-icon icon="solar:logout-3-outline"
                                             className="align-middle fs-18"></iconify-icon><span
                                                 className="align-middle">Logout</span>

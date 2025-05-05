@@ -10,7 +10,7 @@ const Sidebar = () => {
                 <div className="scrollbar" data-simplebar>
                     <ul className="navbar-nav" id="navbar-nav">
                         <li className="nav-item">
-                            <a className="nav-link" href="/">
+                            <a className="nav-link" href="/dashboard">
                                 <span className="nav-icon">
                                     <iconify-icon icon="mingcute:home-3-line"></iconify-icon>
                                 </span>
@@ -29,10 +29,10 @@ const Sidebar = () => {
                             <div className="collapse" id="sidebarBaseUI">
                                 <ul className="nav sub-navbar-nav">
                                     <li className="sub-nav-item">
-                                        <a className="sub-nav-link" href="/merchant-information">Information</a>
+                                        <a className="sub-nav-link" href="/dashboard/merchant-information">Information</a>
                                     </li>
                                     <li className="sub-nav-item">
-                                        <a className="sub-nav-link" href="/merchant-kpi">Custom KPI</a>
+                                        <a className="sub-nav-link" href="/dashboard/merchant-kpi">Custom KPI</a>
                                     </li>
                                 </ul>
                             </div>
@@ -49,13 +49,13 @@ const Sidebar = () => {
                             <div className="collapse" id="sidebarMultiLevelDemo">
                                 <ul className="nav sub-navbar-nav">
                                     <li className="sub-nav-item">
-                                        <a className="sub-nav-link" href="/performance/stock">Stock</a>
+                                        <a className="sub-nav-link" href="/dashboard/performance/stock">Stock</a>
                                     </li>
                                     <li className="sub-nav-item">
-                                        <a className="sub-nav-link" href="/performance/product">Product</a>
+                                        <a className="sub-nav-link" href="/dashboard/performance/product">Product</a>
                                     </li>
                                     <li className="sub-nav-item">
-                                        <a className="sub-nav-link" href="/performance/ads">Ads</a>
+                                        <a className="sub-nav-link" href="/dashboard/performance/ads">Ads</a>
                                     </li>
                                 </ul>
                             </div>

@@ -17,7 +17,7 @@ export default function NotFound() {
                                                     <p className="text-muted mt-1 mb-4">The page you're trying to reach seems to have gone <br /> missing in the digital wilderness.</p>
 
                                                     <div className="text-center">
-                                                        <a href="/" className="btn btn-danger">Back to Home</a>
+                                                        <a href="/dashboard" className="btn btn-danger">Back to Home</a>
                                                     </div>
                                                 </div>
                                             </div>

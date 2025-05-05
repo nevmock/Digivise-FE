@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast, Toaster } from "react-hot-toast";
 
 import { useAuth } from "../../context/Auth";
 import { login } from "../../resolver/auth/authApp";
@@ -10,19 +11,35 @@ export default function LoginPage() {
     const navigate = useNavigate();
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
+    const [errors, setErrors] = useState({});
     const [isLoading, setIsLoading] = useState(false);
+
+    const validate = () => {
+        const newErrors = {};
+        if (!username.trim()) newErrors.username = "Username required";
+        if (!password.trim()) newErrors.password = "Password required";
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
 
     const handleSubmitLogin = async (e) => {
         e.preventDefault();
         setIsLoading(true);
 
+        if (!validate()) {
+            setIsLoading(false);
+            return;
+        }
+
         try {
             await login(username, password);
             loginSuccess();
+            toast.success("Login berhasil!");
             navigate("/dashboard");
         } catch (error) {
-            alert("Login gagal, silahkan coba lagi");
-            console.error("Gagal login, error pada server:", error);
+            toast.error("Login gagal, silakan coba lagi");
+            console.error("Gagal login:", error);
         } finally {
             setIsLoading(false);
         }
@@ -30,6 +47,7 @@ export default function LoginPage() {
 
     return (
         <>
+            <Toaster position="top-center" />
             <div className="account-pages py-5 bg-white vh-100 d-flex justify-content-center align-items-center">
                 <div className="container">
                     <div className="row justify-content-center">
@@ -42,39 +60,46 @@ export default function LoginPage() {
                                     </div>
                                     <form className="mt-5" onSubmit={handleSubmitLogin}>
                                         <div className="mb-3">
-                                            <label htmlFor="username" className="form-label">username</label>
+                                            <label htmlFor="username" className="form-label">Username</label>
                                             <input
-                                                type="test"
-                                                className="form-control"
+                                                type="text"
+                                                className={`form-control ${errors.username ? "is-invalid" : ""}`}
                                                 id="username"
-                                                name="username"
                                                 value={username}
                                                 onChange={(e) => setUsername(e.target.value)}
                                                 placeholder="Enter your username"
                                             />
+                                            {errors.username && (
+                                                <div className="invalid-feedback">{errors.username}</div>
+                                            )}
                                         </div>
                                         <div className="mb-3">
-                                            <div className="d-flex justify-content-between align-items-center">
-                                                <label htmlFor="password" className="form-label">Password</label>
-                                            </div>
+                                            <label htmlFor="password" className="form-label">Password</label>
                                             <input
                                                 type="password"
-                                                className="form-control"
+                                                className={`form-control ${errors.password ? "is-invalid" : ""}`}
                                                 id="password"
                                                 value={password}
                                                 onChange={(e) => setPassword(e.target.value)}
                                                 placeholder="Enter your password"
                                             />
+                                            {errors.password && (
+                                                <div className="invalid-feedback">{errors.password}</div>
+                                            )}
                                         </div>
                                         <div className="d-grid mt-5">
-                                            <button className="btn btn-dark btn-lg fw-medium" type="submit">
-                                            {isLoading ? (
-                                                <div className="spinner-border spinner-border-sm" role="status">
-                                                    <span className="visually-hidden ">Loading...</span>
-                                                </div>
-                                            ) : (
-                                                "Login"
-                                            )}
+                                            <button
+                                                className="btn btn-dark btn-lg fw-medium"
+                                                type="submit"
+                                                disabled={isLoading}
+                                            >
+                                                {isLoading ? (
+                                                    <div className="spinner-border spinner-border-sm" role="status">
+                                                        <span className="visually-hidden">Loading...</span>
+                                                    </div>
+                                                ) : (
+                                                    "Login"
+                                                )}
                                             </button>
                                         </div>
                                     </form>
@@ -85,5 +110,5 @@ export default function LoginPage() {
                 </div>
             </div>
         </>
-    )
+    );
 };
