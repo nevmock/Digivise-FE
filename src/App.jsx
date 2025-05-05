@@ -44,8 +44,8 @@ function App() {
         <Route path="/dashboard/performance/product" element={<PerformanceProductPage />} />
         <Route path="/dashboard/performance/stock" element={<PerformanceStockPage />} />
         <Route path="/dashboard/performance/ads/detail" element={<TetsDetailAdsPage />} />
-        <Route path="/performance/ads/detailRECOM" element={<TestDetailDuaAdsPage />} />
-        <Route path="/performance/ads/detailROAS" element={<TestDetailTigaAdsPage />} />
+        <Route path="/dashboard/performance/ads/detailRECOM" element={<TestDetailDuaAdsPage />} />
+        <Route path="/dashboard/performance/ads/detailROAS" element={<TestDetailTigaAdsPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </>
