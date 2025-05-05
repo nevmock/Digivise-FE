@@ -1,6 +1,7 @@
 import BaseLayout from "../../components/organisms/BaseLayout";
 
 export default function MerchantInformationPage() {
+  const dataMerchant = localStorage.getItem("userDataApp");
   return (
     <>
       <BaseLayout>  
@@ -15,7 +16,7 @@ export default function MerchantInformationPage() {
                 <img
                   id="custom-image-profile-merchant-information"
                   className="rounded-circle"
-                  width="100"
+                  width="100" 
                   src="../../assets/images/users/avatar-1.jpg"
                   alt="avatar-3"
                 />
@@ -23,14 +24,14 @@ export default function MerchantInformationPage() {
               <div className="d-flex flex-column gap-1">
                 <div className="d-flex flex-column">
                   <span>Nama Toko</span>
-                  <h4>Merchant Official Shop</h4>
+                  <h3>
+                    {dataMerchant && JSON.parse(dataMerchant).merchants[0].merchantName}
+                  </h3>
                 </div>
                 <div>
                   <span>Deskripsi Toko</span>
                   <p>
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                    Integer nec odio. Praesent libero. Sed cursus ante
-                    dapibus diam. Sed nisi.
+                    {dataMerchant && JSON.parse(dataMerchant).merchants[0].merchantShopeeId}
                   </p>
                 </div>
               </div>

@@ -1,5 +1,4 @@
 import axiosRequest from "../../utils/request";
-const API_URL = import.meta.env.VITE_BE_API_URL;
 
 
 export async function getMerchantListById()  {
@@ -13,25 +12,43 @@ export async function getMerchantListById()  {
 
 export async function createMerchant(username, email, password, phone, sector_industry, office_address, factory_address) {
     try {
-        const response = await axios.post(`${API_URL}/createMerchant`, { username, email, password, phone, sector_industry, office_address, factory_address });
+        const response = await axios.post(`/createMerchant`, { username, email, password, phone, sector_industry, office_address, factory_address });
         return response.data;
     } catch (error) {
         throw error;
     }
 };
 
-export async function getSessionTokenMerchant(idMerchant) {
+export async function loginMerchant(email, password) {
     try {
-        const response = await axios.get(`${API_URL}/getSessionTokenMerchant/${idMerchant}`);
+        const response = await axios.post(`/login-merchant`, { email, password });
         return response.data;
     } catch (error) {
         throw error;
     }
-}
+};
+
+export async function requestOtpMerchant(email) {
+    try {
+        const response = await axios.post(`/request-otp-merchant`, { email });
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export async function verifyOtpMerchant(email, otp) {
+    try {
+        const response = await axios.post(`/verify-otp-merchant`, { email, otp });
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
 
 export async function refreshTokenMerchant(token) {
     try {
-        const response = await axios.post(`${API_URL}/refresh-token-merchant`, {}, {
+        const response = await axios.post(`/refresh-token-merchant`, {}, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
