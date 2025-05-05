@@ -1,33 +1,76 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { toast, Toaster } from "react-hot-toast";
 import BaseLayout from "../../components/organisms/BaseLayout";
 import KpiSection from "../../components/organisms/kpi/KpiSection";
+import { getKpiData } from "../../resolver/kpi/index";
+import { se } from "date-fns/locale";
 
 export default function MerchantKpiPage() {
-  const defaultKpiData = [
-    { name: "CPC", value: 0, newValue: 0, category: "efeciency" },
-    { name: "ACOS", value: 0, newValue: 0, category: "efeciency" },
-    { name: "Faktor Skala", value: 0, newValue: 0, category: "efeciency" },
-    { name: "Max Adjustment", value: 0, newValue: 0, category: "efeciency" },
-    { name: "Min Adjustment", value: 0, newValue: 0, category: "efeciency" },
-    { name: "Minimum Klik", value: 0, newValue: 0, category: "efeciency" },
-    { name: "Max Klik", value: 0, newValue: 0, category: "efeciency" },
-    { name: "Min Bid Search", value: 0, newValue: 0, category: "efeciency" },
-    { name: "Min Bid Reco", value: 0, newValue: 0, category: "efeciency" },
-    { name: "CPC", value: 0, newValue: 0, category: "scaleup" },
-    { name: "ACOS", value: 0, newValue: 0, category: "scaleup" },
-    { name: "Faktor Skala", value: 0, newValue: 0, category: "scaleup" },
-    { name: "Max Adjustment", value: 0, newValue: 0, category: "scaleup" },
-    { name: "Min Adjustment", value: 0, newValue: 0, category: "scaleup" },
-    { name: "Minimum Klik", value: 0, newValue: 0, category: "scaleup" },
-    { name: "Max Klik", value: 0, newValue: 0, category: "scaleup" },
-    { name: "Min Bid Search", value: 0, newValue: 0, category: "scaleup" },
-    { name: "Min Bid Reco", value: 0, newValue: 0, category: "scaleup" },
-  ];
+  const [kpiData, setKpiData] = useState([]);
+  const [kpiId, setKpiId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  
+  const transformApiDataToKpiList = (apiData) => {
+    return [
+      { name: "CPC", key: "maxCpc", value: apiData.maxCpc, category: "efeciency" },
+      { name: "ACOS", key: "maxAcos", value: apiData.maxAcos, category: "efeciency" },
+      { name: "Faktor Skala", key: "cpcScaleFactor", value: apiData.cpcScaleFactor, category: "efeciency" },
+      { name: "Max Adjustment", key: "maxAdjustment", value: apiData.maxAdjustment, category: "efeciency" },
+      { name: "Min Adjustment", key: "minAdjustment", value: apiData.minAdjustment, category: "efeciency" },
+      { name: "Minimum Klik", key: "minKlik", value: apiData.minKlik, category: "efeciency" },
+      { name: "Max Klik", key: "maxKlik", value: apiData.maxKlik, category: "efeciency" },
+      { name: "Min Bid Search", key: "minBidSearch", value: apiData.minBidSearch, category: "efeciency" },
+      { name: "Min Bid Reco", key: "minBidReco", value: apiData.minBidReco, category: "efeciency" },
+      { name: "Faktor Skala ACOS", key: "acosScaleFactor", value: apiData.acosScaleFactor, category: "scaleup" },
+      { name: "Multiplier", key: "multiplier", value: apiData.multiplier, category: "scaleup" },
+    ];
+  };
 
-  const [kpiData, setKpiData] = useState(() => {
-    const stored = localStorage.getItem("kpiData");
-    return stored ? JSON.parse(stored) : defaultKpiData;
-  });
+  const transformKpiListToApiPayload = (listKpiData) => {
+    const payload = {};
+    listKpiData.forEach(item => {
+      payload[item.key] = Number(item.newValue ?? item.value);
+    });
+    return payload;
+  };
+
+  const fetchKPIData = async () => {
+    try {
+      setLoading(true);
+      const userData = JSON.parse(localStorage.getItem("userDataApp"));
+      const merchantId = userData?.activeMerchant?.id || userData?.merchants[0]?.id;
+      if (!merchantId) throw new Error("No merchant found");
+
+      const response = await getKpiData(merchantId);
+      if (response) {
+        const transformed = transformApiDataToKpiList(response);
+        setKpiData(transformed);
+        setKpiId(response.id);
+      }
+    } catch (error) {
+      console.error("Gagal mengambli KPI data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdate = async () => {
+    try {
+      const payload = transformKpiListToApiPayload(kpiData);
+      console.log("test", payload);
+      await updateKpiData(kpiId, payload);
+      toast.success("Data KPI berhasil diperbarui");
+    } catch (error) {
+      toast.error("Gagal memperbarui data KPI");
+      console.error("Gagal update KPI, kesalahan pada server:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchKPIData();
+  }, []);
+
+  if (loading) return <p>Loading...</p>;
 
   return (
     <BaseLayout>
@@ -54,6 +97,11 @@ export default function MerchantKpiPage() {
                 setGlobalKpiData={setKpiData}
               />
             </div>
+          </div>
+          <div className="d-flex justify-content-end mt-3">
+            <button className="btn btn-primary" onClick={handleUpdate}>
+              Simpan
+            </button>
           </div>
         </div>
       </div>

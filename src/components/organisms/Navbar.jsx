@@ -71,15 +71,18 @@ const Navbar = () => {
     };
 
     const getMerchantList = async () => {
+        setIsLoading(true);
         try {
             const getUserData = localStorage.getItem("userDataApp");
             const response = await axiosRequest.get(`/api/merchants/user/${JSON.parse(getUserData).userId}`);
-            if (response.status === 200) {
+            if (response.status === 200 || response.data) {
                 setMerchantList(response.data);
             }
         }
         catch (error) {
             console.error("Error saat mengambil daftar merchant:", error);
+        } finally {
+            setIsLoading(false);
         }
     }
 

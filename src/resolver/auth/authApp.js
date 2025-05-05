@@ -5,13 +5,15 @@ export const login = async (username, password) => {
     try {
         const response = await axiosRequest.post("auth/login", payload);
         if (response.status === 200 && response.data) {
-            const { accessToken } = response.data;
+            const { accessToken, userId, username, merchants = [] } = response.data;
             const userData = {
-                userId: response.data.userId,
-                username: response.data.username,
+                userId,
+                username,
+                merchants,
             };
             localStorage.setItem("userDataApp", JSON.stringify(userData));
             localStorage.setItem("userAppToken", accessToken);
+            
             return accessToken;
         } else {
             throw new Error("Login failed");

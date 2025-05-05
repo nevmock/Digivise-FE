@@ -8,33 +8,28 @@ export default function KpiSection({ title, category, globalKpiData, setGlobalKp
             .filter((item) => item.category === category)
             .map((item) => ({
                 ...item,
-                newValue: item.newValue || item.value,
+                newValue: item.newValue ?? item.value,
             }));
         setLocalData(filtered);
     }, [globalKpiData, category]);
 
     const handleInputChange = (index, newValue) => {
         const updated = [...localData];
-        updated[index].newValue = newValue || "";
-        setLocalData(updated);
-    };
+        updated[index].newValue = newValue;
 
-    const handleUpdate = () => {
-        const updatedLocal = localData.map((item) => ({
-            ...item,
-            value: item.newValue === "" ? 0 : Number(item.newValue),
-            newValue: item.newValue === "" ? 0 : Number(item.newValue),
-        }));
+        setLocalData(updated);
 
         const updatedGlobal = globalKpiData.map((item) => {
-            const match = updatedLocal.find(
-                (u) => u.name === item.name && u.category === item.category
-            );
-            return match ? match : item;
+            if (
+                item.category === category &&
+                item.name === updated[index].name
+            ) {
+                return { ...item, newValue };
+            }
+            return item;
         });
 
         setGlobalKpiData(updatedGlobal);
-        localStorage.setItem("kpiData", JSON.stringify(updatedGlobal));
     };
 
     const formatValue = (name, value) => {
@@ -49,10 +44,10 @@ export default function KpiSection({ title, category, globalKpiData, setGlobalKp
                 <div className="table-responsive" style={{ borderRadius: "0.2rem" }}>
                     <table className="table table-centered">
                         <thead className="table-dark">
-                            <tr style={{ borderRadius: "2rem" }}>
-                                <th scope="col">Name</th>
-                                <th scope="col">Value</th>
-                                <th scope="col">New Value</th>
+                            <tr>
+                                <th>Name</th>
+                                <th>Value</th>
+                                <th>New Value</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -74,22 +69,15 @@ export default function KpiSection({ title, category, globalKpiData, setGlobalKp
                                             }}
                                             type="number"
                                             value={item.newValue}
-                                            onChange={(e) => handleInputChange(index, e.target.value)}
+                                            onChange={(e) =>
+                                                handleInputChange(index, e.target.value)
+                                            }
                                         />
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
-                </div>
-                <div className="w-full d-flex justify-content-end">
-                    <button
-                        className="fw-semibold btn btn-primary responsive-button"
-                        type="submit"
-                        onClick={handleUpdate}
-                    >
-                        Update
-                    </button>
                 </div>
             </div>
         </div>
