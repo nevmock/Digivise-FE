@@ -7,10 +7,11 @@ import * as echarts from "echarts";
 import useDebounce from "../../../hooks/useDebounce";
 
 
-const AdsTable = ({ data }) => {
+const AdsTable = ({ data, datas }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [filteredData, setFilteredData] = useState(data.data.entry_list);
+  const [filteredDataV2, setFilteredDataV2] = useState(datas);
   const [statusProductFilter, setStatusProductFilter] = useState("all");
   const [selectedClassificationOption, setSelectedClassificationOption] = useState([]);
   const [selectedOptionPlacement, setSelectedOptionPlacement] = useState(null);
@@ -30,6 +31,21 @@ const AdsTable = ({ data }) => {
   const [paginatedData, setPaginatedData] = useState([]);
   const [totalPages, setTotalPages] = useState(1);
   const [metricsTotals, setMetricsTotals] = useState({});
+
+  console.log("Tipe data?", Array.isArray(filteredDataV2) ? "Array" : typeof filteredDataV2);
+  
+  // Cek panjang array jika memang array
+  if (Array.isArray(filteredDataV2)) {
+    console.log("Cek tot item array:", filteredDataV2.length + 233619);
+    
+    // Cek struktur data dengan lebih detail
+    // console.log("Sample item [0]:", filteredDataV2[0]);
+    // console.log("Sample item [100]:", filteredDataV2[100]);
+  }
+
+  // console.table(filteredDataV2.slice(0, 10));
+
+  // console.log("Data sebagai string:", JSON.stringify(filteredDataV2).substring(0, 500) + "...");
 
   // CUSTOM CHART WITH FILTER DATE, CLICK PRODUCT FEATURE
   // Define metrics with their display names and colors
@@ -108,6 +124,7 @@ const AdsTable = ({ data }) => {
     });
   };
 
+  // Get all days in a date range
   function getDateRangeIntervals(startDate, endDate) {
     const start = startDate instanceof Date ? new Date(startDate) : new Date(startDate);
     const end = endDate instanceof Date ? new Date(endDate) : new Date(endDate);
@@ -160,7 +177,6 @@ const AdsTable = ({ data }) => {
         timeIntervals = [new Date().toISOString().split('T')[0]];
     }
 
-    // Filter data berdasarkan tanggal
     return dataList.filter(product => {
         const productDate = new Date(product.campaign.start_time * 1000);
         
@@ -181,8 +197,9 @@ const AdsTable = ({ data }) => {
             return timeIntervals.includes(dateDayKey);
         }
     });
-  }
+  };
 
+  // Generate chart data for multiple metrics
   function generateMultipleMetricsChartData(selectedDate = null, product = null, selectedMetrics = ["visitor"]) {
     let timeIntervals = [];
     let mode = "daily";
@@ -770,10 +787,6 @@ const AdsTable = ({ data }) => {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(convertedBudget);
-  };
-
-  const handleClassisActiveMetricButton = (metricKey) => {
-    return selectedMetrics.includes(metricKey) ? "" : "border border-secondary-subtle";
   };
 
   function calculateMetricTotals(filteredProducts) {

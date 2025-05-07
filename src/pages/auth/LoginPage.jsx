@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast, Toaster } from "react-hot-toast";
+import { toast } from "react-hot-toast";
 
 import { useAuth } from "../../context/Auth";
 import { login } from "../../resolver/auth/authApp";
@@ -47,7 +47,6 @@ export default function LoginPage() {
 
     return (
         <>
-            <Toaster position="top-center" />
             <div className="account-pages py-5 bg-white vh-100 d-flex justify-content-center align-items-center">
                 <div className="container">
                     <div className="row justify-content-center">

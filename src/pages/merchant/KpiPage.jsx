@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
-import { toast, Toaster } from "react-hot-toast";
+import { toast } from "react-hot-toast";
+
+import { getKpiData } from "../../resolver/kpi/index";
+import axiosRequest from "../../utils/request";
 import BaseLayout from "../../components/organisms/BaseLayout";
 import KpiSection from "../../components/organisms/kpi/KpiSection";
-import { getKpiData } from "../../resolver/kpi/index";
-import { se } from "date-fns/locale";
+
 
 export default function MerchantKpiPage() {
   const [kpiData, setKpiData] = useState([]);
-  const [kpiId, setKpiId] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
   
   const transformApiDataToKpiList = (apiData) => {
     return [
@@ -36,41 +38,65 @@ export default function MerchantKpiPage() {
 
   const fetchKPIData = async () => {
     try {
-      setLoading(true);
+      setIsLoading(true);
       const userData = JSON.parse(localStorage.getItem("userDataApp"));
       const merchantId = userData?.activeMerchant?.id || userData?.merchants[0]?.id;
-      if (!merchantId) throw new Error("No merchant found");
+      if (!merchantId) throw new Error("Data unik dari merchant tidak ditemukan");
 
       const response = await getKpiData(merchantId);
       if (response) {
         const transformed = transformApiDataToKpiList(response);
         setKpiData(transformed);
-        setKpiId(response.id);
       }
     } catch (error) {
       console.error("Gagal mengambli KPI data:", error);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   const handleUpdate = async () => {
     try {
-      const payload = transformKpiListToApiPayload(kpiData);
-      console.log("test", payload);
-      await updateKpiData(kpiId, payload);
-      toast.success("Data KPI berhasil diperbarui");
+      setIsUpdating(true);
+      const userDataStr = localStorage.getItem("userDataApp");
+      if (!userDataStr) {
+        throw new Error("Data pengguna tidak ditemukan di localStorage. Silakan login kembali.");
+      }
+      
+      const userData = JSON.parse(userDataStr);
+      if (!userData) {
+        throw new Error("Data pengguna tidak valid");
+      }
+      
+      const merchantId = userData?.merchants?.[0]?.id;
+      const userId = userData?.userId;
+      
+      if (!merchantId || !userId) {
+        throw new Error("Data unik dari merchant dan user tidak ditemukan");
+      }
+  
+      const payload = {
+        ...transformKpiListToApiPayload(kpiData),
+        merchantId: merchantId,
+        id: userId,
+      }
+  
+      const response = await axiosRequest.put("/api/kpis", payload);
+      if (response?.status === 200 && response) {
+        toast.success("Data KPI berhasil diperbarui");
+        await fetchKPIData(); 
+      }
     } catch (error) {
-      toast.error("Gagal memperbarui data KPI");
-      console.error("Gagal update KPI, kesalahan pada server:", error);
+      toast.error(`Gagal memperbarui data KPI: ${error.message || "Kesalahan pada server"}`);
+      console.error("Gagal update KPI:", error);
+    } finally {
+      setIsUpdating(false);
     }
   };
 
   useEffect(() => {
     fetchKPIData();
   }, []);
-
-  if (loading) return <p>Loading...</p>;
 
   return (
     <BaseLayout>
@@ -82,25 +108,49 @@ export default function MerchantKpiPage() {
           <h5 className="text-left">Merchant Key Performance Indicator (KPI)</h5>
           <div className="row row-cols-1 row-cols-md-2 g-3">
             <div className="col">
-              <KpiSection
-                title="Efeceiency Uptumize KPI Metrics"
-                category="efeciency"
-                globalKpiData={kpiData}
-                setGlobalKpiData={setKpiData}
-              />
+              {
+                isLoading ? (
+                  <div className="spinner-border spinner-border-sm" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
+                ) : (
+                  <KpiSection
+                    title="Efeceiency Uptumize KPI Metrics"
+                    category="efeciency"
+                    globalKpiData={kpiData}
+                    setGlobalKpiData={setKpiData}
+                  />
+                )
+              }
             </div>
             <div className="col">
-              <KpiSection
-                title="Scale up KPI Metrics"
-                category="scaleup"
-                globalKpiData={kpiData}
-                setGlobalKpiData={setKpiData}
-              />
+              {
+                isLoading ? (
+                  <div className="spinner-border spinner-border-sm" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
+                ) : (
+                  <KpiSection
+                    title="Scale Up KPI Metrics"
+                    category="scaleup"
+                    globalKpiData={kpiData}
+                    setGlobalKpiData={setKpiData}
+                  />
+                )
+              }
             </div>
           </div>
           <div className="d-flex justify-content-end mt-3">
-            <button className="btn btn-primary" onClick={handleUpdate}>
-              Simpan
+            <button type="submit" className="btn btn-primary" onClick={handleUpdate} disabled={isUpdating}>
+              {
+                isUpdating ? (
+                  <div className="spinner-border spinner-border-sm" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                </div>
+                ) : (
+                  "Update"
+                )
+              }
             </button>
           </div>
         </div>

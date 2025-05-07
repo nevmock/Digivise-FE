@@ -1,8 +1,15 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
+
 import { useAuth } from "../context/Auth";
 
-export default function PrivateRoute({ children }) {
+
+export default function PrivateRoute() {
     const { isAuth } = useAuth();
 
-    return isAuth ? children : <Navigate to="/" replace />;
+    if (!isAuth) {
+        return <Navigate to="/" replace />;
+    }
+
+    // Render children routes jika terautentikasi
+    return <Outlet />;
 };
