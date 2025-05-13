@@ -93,14 +93,14 @@ const Navbar = () => {
                         </div>
                         <div className="d-flex align-items-center gap-2">
                             <div className="topbar-item position-relative" ref={dropdownRef}>
-                                {userData?.merchants && userData.merchants.length > 0  ? (
+                                {userData?.merchants && userData.merchants.length > 0 ? (
                                     <>
                                         <button type="button" className="btn btn-primary" onClick={toggleDropdown}>
                                             Switch Merchant
                                         </button>
                                         
                                         {showDropdown && (
-                                        <div className="dropdown-menu show position-absolute shadow p-2 rounded" style={{ width: "180px" }}>
+                                            <div className="dropdown-menu show position-absolute shadow p-2 rounded" style={{ width: "180px" }}>
                                                 {userData.merchants.map((merchant, index) => (
                                                     <div 
                                                         key={index} 
@@ -123,6 +123,7 @@ const Navbar = () => {
                                                                 type="button"
                                                                 onClick={() => handleOpenLoginModal(merchant)}
                                                                 className="btn btn-outline-primary fs-5 mt-1"
+                                                                style={{ padding: "0.4rem 0rem" }}
                                                             >
                                                                 Login
                                                             </button>
@@ -136,7 +137,7 @@ const Navbar = () => {
                                     </>
                                 ) : (
                                     <>
-                                        <button type="button" className="btn" style={{ backgroundColor: "#8042D4", color: "white" }} onClick={() => setShowModalFormCreateMerchant(true)}>
+                                        <button type="button" className="btn btn-success" onClick={() => setShowModalFormCreateMerchant(true)}>
                                             Create Merchant
                                         </button>
                                     </>

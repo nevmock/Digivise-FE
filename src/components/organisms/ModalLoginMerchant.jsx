@@ -114,7 +114,7 @@ const MerchantModalLogin = ({ onClose, merchant}) => {
                         <div className="invalid-feedback">{errors.password}</div>
                     </div>
 
-                    <button type="submit" className="btn btn-primary w-100" disabled={isLoading}>
+                    <button type="submit" className="btn btn-success w-100" disabled={isLoading}>
                         {isLoading ? (
                             <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                         ) : (

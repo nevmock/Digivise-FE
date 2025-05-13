@@ -58,9 +58,9 @@ const Sidebar = () => {
                     <ul className="navbar-nav" id="navbar-nav">
                         {
                             MenuSidebar.map((menu, index) => {
-                                if (menu.requireMerchant && !activeMerchant) {
-                                    return null;
-                                }
+                                // if (menu.requireMerchant && !activeMerchant) {
+                                //     return null;
+                                // }
 
                                 const hasSubMenu = menu.subMenu.length > 0 && menu.subMenu !== null;
                                 return (
@@ -68,13 +68,13 @@ const Sidebar = () => {
                                         <a 
                                             className={`nav-link ${hasSubMenu ? "menu-arrow" : ""}`} 
                                             href={
-                                                hasSubMenu ? "#sidebarMultiLevelDemo" : menu.path
+                                                hasSubMenu ? menu.name === "Merchant" ? "#sidebarMultiLevelDemo" : menu.name === "Performance" ? "#sidebarBaseUI" : "" : menu.path
                                             }
                                             {...(menu.name !== "Dashboard" && {
                                                 "data-bs-toggle": "collapse",
                                                 role: "button",
                                                 "aria-expanded": "false",
-                                                "aria-controls": "sidebarBaseUI",
+                                                "aria-controls": menu.name === "Merchant" ? "sidebarMultiLevelDemo" : menu.name === "Performance" ? "sidebarBaseUI" : "",
                                             })}
                                         >
                                             <span className="nav-icon">
@@ -84,7 +84,7 @@ const Sidebar = () => {
                                         </a>
                                         {
                                             menu.subMenu.length > 0 && (
-                                                <div className="collapse" id="sidebarBaseUI">
+                                                <div className="collapse" id={menu.name === "Merchant" ? "sidebarMultiLevelDemo" : menu.name === "Performance" ? "sidebarBaseUI" : ""}>
                                                     <ul className="nav sub-navbar-nav">
                                                         {
                                                             menu.subMenu.map((subMenu, subIndex) => (

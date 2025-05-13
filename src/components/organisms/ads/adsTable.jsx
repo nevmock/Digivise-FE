@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
 import Select from "react-select";
 import Calendar from "react-calendar";
 import * as echarts from "echarts";
@@ -8,7 +7,8 @@ import axiosRequest from "../../../utils/request";
 import useDebounce from "../../../hooks/useDebounce";
 
 
-const AdsTable = ({ data, datas }) => {
+// const AdsTable = ({ data, datas }) => {
+const AdsTable = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [filteredData, setFilteredData] = useState([]);
@@ -32,7 +32,7 @@ const AdsTable = ({ data, datas }) => {
   const [paginatedData, setPaginatedData] = useState([]);
   const [totalPages, setTotalPages] = useState(1);
   const [metricsTotals, setMetricsTotals] = useState({});
-  const [loading, setLoading] = useState(false);
+  const [isloading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
 
@@ -74,7 +74,7 @@ const AdsTable = ({ data, datas }) => {
   const shopId = userData?.merchants[0]?.merchantShopeeId;
 
   const fetchData = async (fromDate, toDate) => {
-    setLoading(true);
+    setIsLoading(true);
     setError(null);
 
     try {
@@ -107,7 +107,7 @@ const AdsTable = ({ data, datas }) => {
       setError('Error fetching data: ' + err.message);
       return [];
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -1385,7 +1385,7 @@ const AdsTable = ({ data, datas }) => {
   return (
     <div className="card">
       <div className="card-body">
-        {loading && <div className="text-center my-3">Loading...</div>}
+        {isloading && <div className="text-center my-3">Loading...</div>}
         {error && <div className="alert alert-danger my-3">{error}</div>}
         {/* Header & Date Filter */}
         <div className="d-flex justify-content-between align-items-start pb-3">
