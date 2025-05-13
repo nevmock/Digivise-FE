@@ -1,7 +1,17 @@
+// import React, { useState, useEffect, useRef } from "react";
+// import { Link } from "react-router-dom";
+// import Select from "react-select";
+// import Calendar from "react-calendar";
+// import * as echarts from "echarts";
+
+// import useDebounce from "../../../hooks/useDebounce";
+
+
 // const AdsTable = ({ data }) => {
 //     const [searchTerm, setSearchTerm] = useState("");
 //     const debouncedSearchTerm = useDebounce(searchTerm, 300);
 //     const [filteredData, setFilteredData] = useState(data.data.entry_list);
+//     const [selectedClassificationOption, setSelectedClassificationOption] = useState([]);
 //     const [chartData, setChartData] = useState([]);
 //     const [comparatorDate, setComparatorDate] = useState(null);
 //     const [comaparedDate, setComaparedDate] = useState(null);
@@ -10,8 +20,13 @@
 //     const chartRef = useRef(null);
 //     const [selectedProduct, setSelectedProduct] = useState(null);
 //     const [selectedMetrics, setSelectedMetrics] = useState(["daily_budget"]);
+//     const [currentPage, setCurrentPage] = useState(1);
+//     const [itemsPerPage, setItemsPerPage] = useState(20);
+//     const [paginatedData, setPaginatedData] = useState([]);
+//     const [totalPages, setTotalPages] = useState(1);
+//     const [metricsTotals, setMetricsTotals] = useState({});
 
-//     // CUSTOM CHART WITH FILTER DATE, CLICK PRODUCT FEATURE
+
 //     // Define metrics with their display names and colors
 //     const metrics = {
 //         daily_budget: {
@@ -23,7 +38,12 @@
 //             label: "Iklan Dilihat",
 //             color: "#D50000",
 //             dataKey: "impression"
-//         }
+//         },
+//         click: {
+//             label: "Click",
+//             color: "#00B800",
+//             dataKey: "click"
+//         },
 //     };
 
 //     // Handle product click by clicking the product in name column
@@ -68,6 +88,7 @@
 //         });
 //     };
 
+//     // Get all days in a date range
 //     function getDateRangeIntervals(startDate, endDate) {
 //         const start = startDate instanceof Date ? new Date(startDate) : new Date(startDate);
 //         const end = endDate instanceof Date ? new Date(endDate) : new Date(endDate);
@@ -93,6 +114,56 @@
 //         return dateArray;
 //     };
 
+//     function filterDataByDate(dataList, selectedDate) {
+//         let timeIntervals = [];
+//         let isSingleDay = false;
+
+//         if (comparatorDate && comaparedDate) {
+//             const sameDay = comparatorDate.toDateString() === comaparedDate.toDateString();
+
+//             if (sameDay) {
+//                 const dateStr = comparatorDate.toISOString().split('T')[0];
+//                 timeIntervals = getHourlyIntervals(dateStr);
+//                 isSingleDay = true;
+//             } else {
+//                 timeIntervals = getDateRangeIntervals(comparatorDate, comaparedDate);
+//             }
+//         } else if (selectedDate === null || Array.isArray(selectedDate)) {
+//             timeIntervals = getAllDaysInLast7Days();
+//         } else if (selectedDate === "Bulan Ini") {
+//             timeIntervals = getAllDaysInAMonth();
+//         } else {
+//             timeIntervals = getHourlyIntervals(selectedDate);
+//             isSingleDay = true;
+//         }
+
+//         if (!timeIntervals || timeIntervals.length === 0) {
+//             timeIntervals = [new Date().toISOString().split('T')[0]];
+//         }
+
+//         return dataList.filter(product => {
+//             const productDate = new Date(product.campaign.start_time * 1000);
+
+//             if (isSingleDay) {
+//                 const productYear = productDate.getFullYear();
+//                 const productMonth = String(productDate.getMonth() + 1).padStart(2, "0");
+//                 const productDay = String(productDate.getDate()).padStart(2, "0");
+//                 const productHour = String(productDate.getHours()).padStart(2, "0");
+//                 const dateHourKey = `${productYear}-${productMonth}-${productDay} ${productHour}:00`;
+
+//                 return timeIntervals.includes(dateHourKey);
+//             } else {
+//                 const productYear = productDate.getFullYear();
+//                 const productMonth = String(productDate.getMonth() + 1).padStart(2, "0");
+//                 const productDay = String(productDate.getDate()).padStart(2, "0");
+//                 const dateDayKey = `${productYear}-${productMonth}-${productDay}`;
+
+//                 return timeIntervals.includes(dateDayKey);
+//             }
+//         });
+//     };
+
+//     // Generate chart data for multiple metrics
 //     function generateMultipleMetricsChartData(selectedDate = null, product = null, selectedMetrics = ["visitor"]) {
 //         let timeIntervals = [];
 //         let mode = "daily";
@@ -129,10 +200,36 @@
 //         result.isSingleDay = isSingleDay;
 //         result.series = [];
 
-//         let filteredProducts = data.data.entry_list;
+//         // Filter data berdasarkan tanggal terlebih dahulu
+//         let dateFilteredData = filterDataByDate(data.data.entry_list, selectedDate);
+
+//         // Kemudian filter berdasarkan produk jika ada
+//         let filteredProducts = dateFilteredData;
 //         if (product) {
-//             filteredProducts = data.data.entry_list.filter((p) => p.campaign.campaign_id === product.campaign.campaign_id);
+//             filteredProducts = dateFilteredData.filter((p) => p.campaign.campaign_id === product.campaign.campaign_id);
 //         }
+//         // let filteredProducts = data.data.entry_list;
+//         // if (product) {
+//         //   filteredProducts = data.data.entry_list.filter((p) => p.campaign.campaign_id === product.campaign.campaign_id);
+//         // }
+
+//         // Calculate totals for each metric
+//         const totals = {};
+//         Object.keys(metrics).forEach(metricKey => {
+//             totals[metricKey] = 0;
+
+//             filteredProducts.forEach(product => {
+//                 const dataKey = metrics[metricKey].dataKey;
+//                 if (dataKey === "daily_budget") {
+//                     totals[metricKey] += product.campaign[dataKey] || 0;
+//                 } else {
+//                     totals[metricKey] += product.report[dataKey] || 0;
+//                 }
+//             });
+//         });
+
+//         // Set totals to state
+//         setMetricsTotals(totals);
 
 //         selectedMetrics?.forEach(metricKey => {
 //             const metric = metrics[metricKey];
@@ -322,7 +419,7 @@
 //                     formatter: function (params) {
 //                         let result = params[0].axisValue + '<br/>';
 //                         params.forEach(param => {
-//                             result += `<span style="background-color:${param.color};"></span> ${param.seriesName}: ${param.value}<br/>`;
+//                             result += `<span style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background-color:${param.color};"></span> ${param.seriesName}: ${param.value}<br/>`;
 //                         });
 //                         return result;
 //                     }
@@ -371,14 +468,21 @@
 //     }, [chartData, selectedMetrics]);
 
 
+
 //     // FILTER COLUMNS FEATURE
 //     // Define all columns
 //     const allColumns = [
 //         { key: "info_iklan", label: "Info iklan" },
 //         { key: "biaya", label: " Biaya" },
 //         { key: "iklan_dilihat", label: "Iklan Dilihat" },
-//         // dan colom lainnya dibawah
+//         { key: "click", label: "Click" },
+//         { key: "ctr", label: "CTR" },
 //     ];
+
+//     // Initialize selected columns state
+//     const [selectedColumns, setSelectedColumns] = useState(
+//         allColumns.map((col) => col.key)
+//     );
 
 //     useEffect(() => {
 //         let filtered = data.data.entry_list;
@@ -388,6 +492,7 @@
 //                 entry.title.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
 //             );
 //         };
+
 //         setCurrentPage(1);
 //         setFilteredData(filtered);
 //     }, [
@@ -395,155 +500,297 @@
 //         data.data.entry_list,
 //     ]);
 
+//     useEffect(() => {
+//         const calculateTotalPages = Math.ceil(filteredData.length / itemsPerPage);
+//         setTotalPages(calculateTotalPages || 1);
+
+//         if (currentPage > calculateTotalPages && calculateTotalPages > 0) {
+//             setCurrentPage(calculateTotalPages);
+//         }
+
+//         const startIndex = (currentPage - 1) * itemsPerPage;
+//         const endIndex = startIndex + itemsPerPage;
+//         setPaginatedData(filteredData.slice(startIndex, endIndex));
+//     }, [filteredData, currentPage, itemsPerPage]);
+
+//     const handleItemsPerPageChange = (e) => {
+//         const newItemsPerPage = parseInt(e.target.value, 10);
+//         setItemsPerPage(newItemsPerPage);
+//         setCurrentPage(1);
+//     };
+
+//     const handlePageChange = (pageNumber) => {
+//         if (pageNumber >= 1 && pageNumber <= totalPages) {
+//             setCurrentPage(pageNumber);
+//         }
+//     };
+
+//     const getPageNumbers = () => {
+//         const pageNumbers = [];
+//         for (let i = 1; i <= totalPages; i++) {
+//             pageNumbers.push(i);
+//         }
+//         return pageNumbers;
+//     };
+
+//     const renderPagination = () => {
+//         const pageNumbers = getPageNumbers();
+//         return (
+//             <div className="d-flex justify-content-between align-items-center mt-3">
+//                 {/* Items per page dropdown */}
+//                 <nav aria-label="Page navigation">
+//                     <ul className="pagination mb-0">
+//                         {/* Previous button */}
+//                         {/* Page numbers */}
+//                         {/* Next button */}
+//                     </ul>
+//                 </nav>
+//             </div>
+//         );
+//     };
+
+
+//     // SALES CLASSIFICATION FEATURE
+//     // Define sales classification options
+//     const typeClasificationOptions = [
+//         { value: "best_seller", label: "Best Seller" },
+//         { value: "middle_moving", label: "Middle Moving" },
+//         { value: "slow_moving", label: "Slow Moving" },
+//     ];
+
+//     const handleClassificationChange = (selectedOptions) => {
+//         setSelectedClassificationOption(selectedOptions);
+//     };
 
 //     // Handle style for matric filter button
 //     const handleStyleMatricButton = (metricKey) => {
+//         const isActive = selectedMetrics.includes(metricKey);
+//         const metric = metrics[metricKey];
+
 //         return {
 //             backgroundColor: "#ffffff00",
+//             border: `1px solid ${isActive ? metric.color : "rgb(179.4, 184.2, 189)"}`,
+//             color: isActive ? metric.color : "#666666",
+//             padding: "6px 12px",
+//             borderRadius: "8px",
+//             cursor: "pointer",
+//             fontSize: "12px",
+//             fontWeight: isActive ? "medium" : "normal",
+//             transition: "all 0.3s ease"
 //         };
 //     };
 
+//     function calculateMetricTotals(filteredProducts) {
+//         const totals = {};
+
+//         // Inisialisasi totals untuk setiap metrik yang ada
+//         Object.keys(metrics).forEach(metricKey => {
+//             totals[metricKey] = 0;
+//         });
+
+//         // Hitung total untuk setiap metrik berdasarkan data yang sudah difilter
+//         filteredProducts.forEach(product => {
+//             // Untuk metrik daily_budget
+//             if (product.campaign.daily_budget) {
+//                 totals.daily_budget += product.campaign.daily_budget;
+//             }
+
+//             // Untuk metrik impression dan metrik lainnya yang ada di report
+//             Object.keys(metrics).forEach(metricKey => {
+//                 const dataKey = metrics[metricKey].dataKey;
+//                 if (dataKey !== 'daily_budget' && product.report[dataKey]) {
+//                     totals[metricKey] += product.report[dataKey];
+//                 }
+//             });
+//         });
+
+//         return totals;
+//     }
+
+//     useEffect(() => {
+//         // Hitung total metrik dari data yang sudah difilter
+//         const totals = calculateMetricTotals(filteredData);
+//         setMetricsTotals(totals);
+//     }, [filteredData]);
+
+//     const formatMetricValue = (metricKey, value) => {
+//         if (metricKey === "daily_budget") {
+//             return `Rp ${convertBudgetToIDR(value)}`;
+//         }
+//         return value?.toLocaleString() || "0";
+//     };
+
 //     return (
-//         <div className="card">
-//             {/* Header & Date Filter */}
-//             <div className="d-flex justify-content-between">
-//                 <div style={{ position: "relative" }}>
-//                     <button
-//                         onClick={() => setShowCalendar(!showCalendar)}
+//         <div className="card-body">
+//             {/* Date Filter */}
+//             <div style={{ position: "relative" }}>
+//                 <button
+//                     onClick={() => setShowCalendar(!showCalendar)}
+//                     className="btn btn-secondary"
+//                     style={{ backgroundColor: "#8042D4", border: "none" }}
+//                 >
+//                     {comparatorDate && comaparedDate
+//                         ? `${comparatorDate.toLocaleDateString("id-ID")} - ${comaparedDate.toLocaleDateString("id-ID")}`
+//                         : (typeof date === 'string' ? date : (Array.isArray(date) ? "1 Minggu terakhir" : "Pilih Tanggal"))}
+//                 </button>
+//                 {showCalendar && (
+//                     <div
+//                         className="d-flex"
 //                     >
-//                         {comparatorDate && comaparedDate
-//                             ? `${comparatorDate.toLocaleDateString("id-ID")} - ${comaparedDate.toLocaleDateString("id-ID")}`
-//                             : (typeof date === 'string' ? date : (Array.isArray(date) ? "1 Minggu terakhir" : "Pilih Tanggal"))}
-//                     </button>
-//                     {showCalendar && (
-//                         <div
-//                             className="d-flex"
-//                         >
-//                             <div
-//                                 className="d-flex flex-column py-2 px-1"
-//                                 style={{ width: "130px", listStyleType: "none" }}
+//                         <div>
+//                             <p onClick={() => handleDateSelection(new Date().toISOString().split("T")[0])}>Hari ini</p>
+//                             <p
+//                                 onClick={() => {
+//                                     const yesterday = new Date();
+//                                     yesterday.setDate(yesterday.getDate() - 1);
+//                                     handleDateSelection(yesterday.toISOString().split("T")[0]);
+//                                 }}
 //                             >
-//                                 <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection(new Date().toISOString().split("T")[0])}>Hari ini</p>
-//                                 <p style={{ cursor: "pointer" }}
-//                                     onClick={() => {
-//                                         const yesterday = new Date();
-//                                         yesterday.setDate(yesterday.getDate() - 1);
-//                                         handleDateSelection(yesterday.toISOString().split("T")[0]);
-//                                     }}
-//                                 >
-//                                     Kemarin
-//                                 </p>
-//                                 <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection(getAllDaysInLast7Days())}>1 Minggu terakhir</p>
-//                                 <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection("Bulan Ini")}>Bulan ini</p>
-//                             </div>
-//                             <div style={{ width: "1px", height: "auto", backgroundColor: "#E3E3E3FF", margin: "10px 0" }}></div>
-//                             {/* Kalender pembanding */}
-//                             <div>
-//                                 <p className="pt-2" style={{ textAlign: "center" }}>Tanggal Pembanding</p>
-//                                 <Calendar onChange={(date) => setComparatorDate(date)} value={comparatorDate} maxDate={comaparedDate || new Date(2100, 0, 1)} />
-//                             </div>
-//                             {/* Kalender dibanding */}
-//                             <div>
-//                                 <p className="pt-2" style={{ textAlign: "center" }}>Tanggal Dibanding</p>
-//                                 <Calendar onChange={(date) => setComaparedDate(date)} value={comaparedDate} minDate={comparatorDate || new Date()} />
-//                             </div>
-//                             {/* Confirm button for date range */}
-//                             <div className="d-flex align-items-end mb-1">
-//                                 <button
-//                                     className="btn btn-primary"
-//                                     onClick={handleComparisonDatesConfirm}
-//                                     disabled={!comparatorDate || !comaparedDate}
-//                                 >
-//                                     Terapkan
-//                                 </button>
-//                             </div>
+//                                 Kemarin
+//                             </p>
+//                             <p onClick={() => handleDateSelection(getAllDaysInLast7Days())}>1 Minggu terakhir</p>
+//                             <p onClick={() => handleDateSelection("Bulan Ini")}>Bulan ini</p>
 //                         </div>
-//                     )}
-//                 </div>
-//             </div>
-//             <div className="d-flex flex-column gap-3">
-//                 <div ref={chartRef}></div>
-//                 {/* Filter & Table */}
-//                 <div className="d-flex flex-column gap-2">
-//                     {/* Matric filter */}
-//                     <div id="custom-ads-container-filter-metric">
-//                         <span>Matric Produk</span>
-//                         <div className="custom-metric-filter-buttons-wrapper">
-//                             {Object.keys(metrics).map((metricKey) => (
-//                                 <div
-//                                     key={metricKey}
-//                                     style={handleStyleMatricButton(metricKey)}
-//                                     onClick={() => handleMetricFilter(metricKey)}
-//                                     className={handleClassisActiveMetricButton(metricKey)}
-//                                 >
-//                                     {metrics[metricKey].label}
-//                                     <span className="card-text fs-4 fw-bold">
-//                                         {/* tampilan untuk kalkulasi total dari suatu matrik yang dipilih */}
-//                                     </span>
-//                                 </div>
-//                             ))}
+//                         <div style={{ width: "1px", height: "auto", backgroundColor: "#E3E3E3FF", margin: "10px 0" }}></div>
+//                         {/* Kalender pembanding */}
+//                         <div>
+//                             <p>Tanggal Pembanding</p>
+//                             <Calendar onChange={(date) => setComparatorDate(date)} value={comparatorDate} maxDate={comaparedDate || new Date(2100, 0, 1)} />
+//                         </div>
+//                         {/* Kalender dibanding */}
+//                         <div>
+//                             <p>Tanggal Dibanding</p>
+//                             <Calendar onChange={(date) => setComaparedDate(date)} value={comaparedDate} minDate={comparatorDate || new Date()} />
+//                         </div>
+//                         {/* Confirm button for date range */}
+//                         <div className="d-flex align-items-end mb-1">
+//                             <button
+//                                 className="btn btn-primary"
+//                                 onClick={handleComparisonDatesConfirm}
+//                                 disabled={!comparatorDate || !comaparedDate}
+//                             >
+//                                 Terapkan
+//                             </button>
 //                         </div>
 //                     </div>
-//                     {/* Other filter*/}
-//                     <div className="d-flex flex-column mb-3 gap-2">
-//                         {/* search bar */}
+//                 )}
+//             </div>
+//             <div className="d-flex flex-column gap-3">
+//                 {/* Matric filter */}
+//                 <div className="row g-3 justify-content-center">
+//                     {Object.keys(metrics).map((metricKey) => (
+//                         <div className="col-12 col-md-6 col-lg-2">
+//                             <div
+//                                 className="card border-light shadow-sm h-100 p-2"
+//                                 style={handleStyleMatricButton(metricKey)}
+//                                 onClick={() => handleMetricFilter(metricKey)}
+//                                 key={metricKey}
+//                             >
+//                                 <h6 className="card-title">
+//                                     {metrics[metricKey].label}
+//                                 </h6>
+//                                 <span className="card-text fs-4 fw-bold">
+//                                     {formatMetricValue(metricKey, metricsTotals[metricKey])}
+//                                 </span>
+//                             </div>
+//                         </div>
+//                     ))}
+//                 </div>
+//                 <div ref={chartRef} style={{ width: "100%", height: "300px" }}></div>
+//                 {/* Other filter*/}
+//                 <div className="d-flex flex-column mb-3 gap-2">
+//                     {/* search bar */}
+//                     <div className="custom-filter-search">
 //                         <input
 //                             type="text"
 //                             className="form-control"
 //                             placeholder="Cari berdasarkan nama"
 //                             onChange={(e) => setSearchTerm(e.target.value)}
 //                         />
-//                         {/* and another filter below */}
 //                     </div>
-//                     <table className="table table-centered">
-//                         <thead className="table-light">
-//                             <tr>
-//                                 {allColumns
-//                                     .filter((col) => selectedColumns.includes(col.key))
-//                                     .map((col) => (
-//                                         <th key={col.key}>
-//                                             <div className="d-flex justify-content-start align-items-center">
-//                                                 {col.label}
-//                                             </div>
-//                                         </th>
-//                                     ))}
-//                             </tr>
-//                         </thead>
-//                         <tbody>
-//                             {filteredData?.map((entry, index) => (
-//                                     <>
-//                                         <tr key={entry.campaign.campaign_id}>
+//                     {/* clasification filter */}
+//                     <div className="custom-filter-salesClassification">
+//                         <Select
+//                             isMulti
+//                             options={typeClasificationOptions}
+//                             value={selectedClassificationOption}
+//                             onChange={handleClassificationChange}
+//                         />
+//                     </div>
+//                 </div>
+//                 <table className="table table-centered">
+//                     <thead className="table-light">
+//                         <tr>
+//                             {filteredData.length !== 0 && filteredData !== null && <th scope="col">No</th>}
+//                             {allColumns
+//                                 .filter((col) => selectedColumns.includes(col.key))
+//                                 .map((col) => (
+//                                     <th key={col.key}>
+//                                         <div className="d-flex justify-content-start align-items-center">
+//                                             {col.label}
+//                                         </div>
+//                                     </th>
+//                                 ))}
+//                         </tr>
+//                     </thead>
+//                     <tbody>
+//                         {paginatedData.length !== 0 && paginatedData !== null ? (
+//                             paginatedData?.map((entry, index) => (
+//                                 <>
+//                                     <tr key={entry.campaign.campaign_id}>
+//                                         {filteredData.length > 0 && filteredData !== null && (
+//                                             <td>{index + 1}</td>
+//                                         )}
 //                                         {selectedColumns.includes("info_iklan") && (
 //                                             <td
+//                                                 className="d-flex gap-2"
 //                                                 style={{
 //                                                     color:
-//                                                     selectedProduct?.campaign.campaign_id === entry.campaign.campaign_id
-//                                                     ? "#F6881F"
-//                                                     : "",
+//                                                         selectedProduct?.campaign.campaign_id === entry.campaign.campaign_id
+//                                                             ? "#F6881F"
+//                                                             : "",
 //                                                 }}
 //                                                 onClick={() => handleProductClick(entry)}
-//                                                 >
+//                                             >
+//                                                 <div className="d-flex flex-column">
+//                                                     <span>{entry.title}</span>
+//                                                 </div>
 //                                             </td>
 //                                         )}
-//                                             {selectedColumns.includes("biaya") && (
-//                                                 <td style={{ width: "200px" }}>
+//                                         {selectedColumns.includes("biaya") && (
+//                                             <td style={{ width: "200px" }}>
+//                                                 <div className="d-flex flex-column">
 //                                                     <span>
 //                                                         Rp {convertBudgetToIDR(entry.campaign.daily_budget)}
 //                                                     </span>
-//                                                 </td>
-//                                             )}
-//                                             {selectedColumns.includes("iklan_dilihat") && (
-//                                                 <td style={{ width: "200px" }}>
+//                                                     <span className="text-success" style={{ fontSize: "10px" }}>
+//                                                         +12.7%
+//                                                     </span>
+//                                                 </div>
+//                                             </td>
+//                                         )}
+//                                         {selectedColumns.includes("iklan_dilihat") && (
+//                                             <td style={{ width: "200px" }}>
+//                                                 <div className="d-flex flex-column">
 //                                                     <span>{entry.report.impression}</span>
-//                                                 </td>
-//                                             )}
-//                                         </tr>
-//                                     </>
-//                                 ))
-//                             }
-//                         </tbody>
-//                     </table>
-//                 </div>
+//                                                     <span className="text-danger" style={{ fontSize: "10px" }}>
+//                                                         -102.7%
+//                                                     </span>
+//                                                 </div>
+//                                             </td>
+//                                         )},
+//                                         DAN DATA LAINNYA DIBAWAH
+//                                     </tr>
+//                                 </>
+//                             ))
+//                         ) : (
+//                             <div className="w-100 d-flex justify-content-center">
+//                                 <span>Data tidak tersedia</span>
+//                             </div>
+//                         )}
+//                     </tbody>
+//                 </table>
+//                 {filteredData.length > 0 && filteredData !== null && renderPagination()}
 //             </div>
 //         </div>
 //     );

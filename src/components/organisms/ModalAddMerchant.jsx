@@ -1,8 +1,16 @@
-import React, { useState, useRef } from "react";
+import { useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-hot-toast";
+
+import { useAuth } from "../../context/Auth";
 
 
-const MerchantModal = ({ onClose }) => {
+const MerchantModalCreate = ({ onClose }) => {
+    const { createMerchant } = useAuth();
+    const navigate = useNavigate();
     const modalRef = useRef(null);
+    const [errors, setErrors] = useState({});
+    const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState({
         username: "",
         email: "",
@@ -11,15 +19,16 @@ const MerchantModal = ({ onClose }) => {
         sector_industry: "",
         office_address: "",
         factory_address: "",
+        merchantName: "",
+        sessionPath: "merchant",
+        MerchantShoopeId: "",
     });
-
-    const [errors, setErrors] = useState({});
 
     const isEmpty = (value) => !value?.trim();
     const isEmailValid = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     const isPhoneValid = (phone) => /^\d+$/.test(phone);
 
-    const validate = () => {
+    const validatevalueformdata = () => {
         const newErrors = {};
 
         if (isEmpty(formData.username)) {
@@ -42,6 +51,20 @@ const MerchantModal = ({ onClose }) => {
             newErrors.phone = "Phone number is required";
         } else if (!isPhoneValid(formData.phone)) {
             newErrors.phone = "Phone number must contain only digits";
+        } else if (formData.phone.length < 10) {
+            newErrors.phone = "Phone number must be at least 10 digits";
+        }
+
+        if (isEmpty(formData.merchantName)) {
+            newErrors.merchantName = "Merchant name is required";
+        }
+
+        if (isEmpty(formData.MerchantShoopeId)) {
+            newErrors.MerchantShoopeId = "Merchant Shoope ID is required";
+        }
+
+        if (isEmpty(formData.sessionPath)) {
+            newErrors.sessionPath = "Session path is required";
         }
 
         if (isEmpty(formData.sector_industry)) {
@@ -60,15 +83,40 @@ const MerchantModal = ({ onClose }) => {
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        if (!validate()) return;
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData((prevData) => ({ ...prevData, [name]: value }));
 
-        setTimeout(() => {
-            alert("Merchant added successfully!");
+        if (errors[name]) {
+            setErrors((prevErrors) => ({ ...prevErrors, [name]: "" }));
+        }
+    };
+
+    const handleSubmitFormData = async (e) => {
+        e.preventDefault();
+        if (!validatevalueformdata()) return;
+
+        setIsLoading(true);
+        
+        try {
+            await createMerchant(formData);
+            setFormData({
+                username: "",
+                email: "",
+                password: "",
+                passwordConfirmation: "",
+                address: "",
+                phoneNumber: ""
+            });
             onClose();
-            window.location.href = "/";
-        }, 1000);
+            navigate("/dashboard", { replace: true });
+            toast.success("Merchant berhasil dibuat");
+        } catch (error) {
+            toast.error("Gagal membuat merchant");
+            console.error("Error saat membuat merchant, kesalahan pada server", error);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -80,121 +128,51 @@ const MerchantModal = ({ onClose }) => {
             <div className="bg-white p-4 rounded shadow-lg" style={{ width: "400px", maxHeight: "90vh", overflowY: "auto" }} ref={modalRef} onClick={(e) => e.stopPropagation()}>
                 <h5 className="text-center">Add Merchant</h5>
                 <hr />
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleSubmitFormData}>
                     {[
                         { name: "username", label: "Username", type: "text" },
                         { name: "email", label: "Email", type: "email" },
                         { name: "password", label: "Password", type: "password" },
                         { name: "phone", label: "Phone number", type: "text" },
+                        { name: "merchantName", label: "Merchant Name", type: "text" },
+                        { name: "MerchantShoopeId", label: "Merchant Shoope Id", type: "text" },
+                        { name: "sessionPath", label: "Session Path", type: "text" },
                         { name: "sector_industry", label: "Sector Industry", type: "text" },
                         { name: "office_address", label: "Office Address", type: "text" },
                         { name: "factory_address", label: "Factory Address", type: "text" },
                     ].map(({ name, label, type }) => (
                         <div className="mb-2" key={name}>
-                            <label className="form-label">{label}</label>
+                            <label className="form-label" htmlFor={name}>
+                                {label}
+                            </label>
                             <input
                                 type={type}
                                 className={`form-control ${errors[name] ? "is-invalid" : ""}`}
+                                name={name}
                                 value={formData[name]}
-                                onChange={(e) =>
-                                    setFormData({ ...formData, [name]: e.target.value })
-                                }
+                                onChange={handleInputChange}
+                                style={{
+                                    paddingLeft: "0.25rem !important",
+                                }}
                             />
                             <div className="invalid-feedback">{errors[name]}</div>
                         </div>
                     ))}
 
-                    <button type="submit" className="btn btn-primary w-100">
-                        Add Merchant
+                    <button type="submit" className="btn btn-primary w-100" disabled={isLoading}>
+                        {isLoading ? (
+                            <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        ) : (
+                            "Add Merchant"
+                        )}
                     </button>
-                    <button type="button" className="btn btn-secondary w-100 mt-2" onClick={onClose}>
+                    <button type="button" className="btn btn-secondary w-100 mt-2" onClick={onClose} disabled={isLoading}>
                         Cancel
                     </button>
                 </form>
-                {/* <form onSubmit={handleSubmit}>
-                    <div className="mb-2">
-                        <label className="form-label">Username</label>
-                        <input
-                            type="text"
-                            className={`form-control ${errors.username ? "is-invalid" : ""}`}
-                            value={formData.username}
-                            onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                        />
-                        <div className="invalid-feedback">{errors.username}</div>
-                    </div>
-
-                    <div className="mb-2">
-                        <label className="form-label">Email</label>
-                        <input
-                            type="email"
-                            className={`form-control ${errors.email ? "is-invalid" : ""}`}
-                            value={formData.email}
-                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        />
-                        <div className="invalid-feedback">{errors.email}</div>
-                    </div>
-
-                    <div className="mb-2">
-                        <label className="form-label">Password</label>
-                        <input
-                            type="password"
-                            className={`form-control ${errors.password ? "is-invalid" : ""}`}
-                            value={formData.password}
-                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        />
-                        <div className="invalid-feedback">{errors.password}</div>
-                    </div>
-
-                    <div className="mb-2">
-                        <label className="form-label">Phone number</label>
-                        <input
-                            type="text"
-                            className={`form-control ${errors.phone ? "is-invalid" : ""}`}
-                            value={formData.phone}
-                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        />
-                        <div className="invalid-feedback">{errors.phone}</div>
-                    </div>
-
-                    <div className="mb-2">
-                        <label className="form-label">Sector Industry</label>
-                        <input
-                            type="text"
-                            className={`form-control ${errors.sector_industry ? "is-invalid" : ""}`}
-                            value={formData.sector_industry}
-                            onChange={(e) => setFormData({ ...formData, sector_industry: e.target.value })}
-                        />
-                        <div className="invalid-feedback">{errors.sector_industry}</div>
-                    </div>
-
-                    <div className="mb-2">
-                        <label className="form-label">Office Address</label>
-                        <input
-                            type="text"
-                            className={`form-control ${errors.office_address ? "is-invalid" : ""}`}
-                            value={formData.office_address}
-                            onChange={(e) => setFormData({ ...formData, office_address: e.target.value })}
-                        />
-                        <div className="invalid-feedback">{errors.office_address}</div>
-                    </div>
-
-                    <div className="mb-2">
-                        <label className="form-label">Factory Address</label>
-                        <input
-                            type="text"
-                            className={`form-control ${errors.factory_address ? "is-invalid" : ""}`}
-                            value={formData.factory_address}
-                            onChange={(e) => setFormData({ ...formData, factory_address: e.target.value })}
-                        />
-                        <div className="invalid-feedback">{errors.factory_address}</div>
-                    </div>
-
-                    <button type="submit" className="btn btn-primary w-100">Add Merchant</button>
-                    <button type="button" className="btn btn-secondary w-100 mt-2" onClick={onClose}>Cancel</button>
-                </form> */}
             </div>
         </div>
     );
 };
 
-export default MerchantModal;
+export default MerchantModalCreate;

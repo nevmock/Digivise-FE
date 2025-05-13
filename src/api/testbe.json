@@ -1,0 +1,51 @@
+{
+    "content": [
+        {
+            "campaignId": 121828260,
+            "shopeeMerchantId": "252234165",
+            "acos": 10.0,
+            "cpc": 40.0,
+            "from": "1736960400",
+            "to": "1737046799",
+            "title": "Iklan Toko 09-01-2025",
+            "image": "sg-11134201-7rbk0-louxtq64h8mw49"
+        },
+        {
+            "campaignId": 315516327,
+            "shopeeMerchantId": "252234165",
+            "acos": 0.0,
+            "cpc": 0.0,
+            "from": "1736960400",
+            "to": "1737046799",
+            "createdAt": "2025-03-13T01:12:28.635",
+            "id": "67d1c07c201dcfff79a93ae9",
+            "title": "AMK Baju Koko Kurta Lengan Panjang KK Raafiq L/s Coklat Muda [5]",
+            "image": "id-11134207-7qula-lf0pwq6qmqm583"
+        }
+    ],
+    "pageable": {
+        "pageNumber": 0,
+        "pageSize": 10,
+        "sort": {
+            "sorted": false,
+            "empty": true,
+            "unsorted": true
+        },
+        "offset": 0,
+        "paged": true,
+        "unpaged": false
+    },
+    "totalPages": 155,
+    "totalElements": 1546,
+    "last": false,
+    "size": 10,
+    "number": 0,
+    "sort": {
+        "sorted": false,
+        "empty": true,
+        "unsorted": true
+    },
+    "numberOfElements": 10,
+    "first": true,
+    "empty": false
+}

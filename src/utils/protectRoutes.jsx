@@ -4,12 +4,11 @@ import { useAuth } from "../context/Auth";
 
 
 export default function PrivateRoute() {
-    const { isAuth } = useAuth();
+    const { isAuth, isChecking } = useAuth();
 
-    if (!isAuth) {
-        return <Navigate to="/" replace />;
+    if (isChecking) {
+        return <div>Loading...</div>;
     }
 
-    // Render children routes jika terautentikasi
-    return <Outlet />;
+    return isAuth ? <Outlet /> : <Navigate to="/" replace />;
 };

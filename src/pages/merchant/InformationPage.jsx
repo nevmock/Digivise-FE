@@ -1,10 +1,23 @@
+import { useAuth } from "../../context/Auth";
 import BaseLayout from "../../components/organisms/BaseLayout";
 
 export default function MerchantInformationPage() {
-  const dataMerchant = localStorage.getItem("userDataApp");
+  const { userData, activeMerchant } = useAuth();
+  const merchantData = activeMerchant || (userData?.merchants && userData.merchants[0]);
+
+  if (!merchantData) {
+    return (
+        <BaseLayout>
+            <div className="alert alert-warning">
+                Tidak ada merchant aktif. Pilih merchant di navbar atau buat merchant baru terlebih dahulu.
+            </div>
+        </BaseLayout>
+    );
+  };
+  // const dataMerchant = localStorage.getItem("userDataApp");
   return (
     <>
-      <BaseLayout>  
+      <BaseLayout>
         <div className="d-flex align-items-center">
           <h3>Merchant</h3>
         </div>
@@ -16,12 +29,35 @@ export default function MerchantInformationPage() {
                 <img
                   id="custom-image-profile-merchant-information"
                   className="rounded-circle"
-                  width="100" 
+                  width="100"
                   src="../../assets/images/users/avatar-1.jpg"
-                  alt="avatar-3"
+                  alt="image-profile-merchant"
+                  onError={(e) => {
+                      e.target.src = "https://via.placeholder.com/100";
+                  }}
                 />
               </span>
               <div className="d-flex flex-column gap-1">
+                <div className="d-flex flex-column">
+                    <span>Nama Toko</span>
+                    <h3>
+                        {merchantData.merchantName}
+                    </h3>
+                </div>
+                <div>
+                    <span>ID Shopee</span>
+                    <p>
+                        {merchantData.merchantShopeeId}
+                    </p>
+                </div>
+                <div>
+                    <span>Merchant ID</span>
+                    <p>
+                        {merchantData.id}
+                    </p>
+                </div>
+              </div>
+              {/* <div className="d-flex flex-column gap-1">
                 <div className="d-flex flex-column">
                   <span>Nama Toko</span>
                   <h3>
@@ -34,7 +70,7 @@ export default function MerchantInformationPage() {
                     {dataMerchant && JSON.parse(dataMerchant).merchants[0].merchantShopeeId}
                   </p>
                 </div>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>
@@ -45,7 +81,6 @@ export default function MerchantInformationPage() {
               <div className="card-header">
                 <h5 className="card-title mb-0">Matrix Peforma Toko</h5>
               </div>
-
               <div className="card-body">
                 <div>
                   <div>
@@ -74,13 +109,11 @@ export default function MerchantInformationPage() {
               </div>
             </div>
           </div>
-
           <div className="col-12 col-md-6">
             <div className="card">
               <div className="card-header">
                 <h5 className="card-title mb-0">Matrix Iklan</h5>
               </div>
-
               <div className="card-body">
                 <div>
                   <div>

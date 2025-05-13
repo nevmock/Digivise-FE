@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import adsJsonData from "../../api/ads.json";
 import BaseLayout from "../../components/organisms/BaseLayout";
 import AdsTable from "../../components/organisms/ads/adsTable";
-import { getAdsData } from "../../resolver/ads/index";
+import { getAllAdsData } from "../../resolver/ads/index";
 
 
 export default function PerformanceAdsPage() {
@@ -14,7 +14,7 @@ export default function PerformanceAdsPage() {
         const fetchAdsData = async () => {
             try {
                 setIsLoading(true);
-                const data = await getAdsData();
+                const data = await getAllAdsData();
                 setAdsData(data);
             } catch (error) {
                 console.error("Error saat mengambil data iklan:", error);

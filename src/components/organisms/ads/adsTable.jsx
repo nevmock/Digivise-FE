@@ -4,14 +4,15 @@ import Select from "react-select";
 import Calendar from "react-calendar";
 import * as echarts from "echarts";
 
+import axiosRequest from "../../../utils/request";
 import useDebounce from "../../../hooks/useDebounce";
 
 
 const AdsTable = ({ data, datas }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
-  const [filteredData, setFilteredData] = useState(data.data.entry_list);
-  const [filteredDataV2, setFilteredDataV2] = useState(datas);
+  const [filteredData, setFilteredData] = useState([]);
+  const [rawData, setRawData] = useState([]);
   const [statusProductFilter, setStatusProductFilter] = useState("all");
   const [selectedClassificationOption, setSelectedClassificationOption] = useState([]);
   const [selectedOptionPlacement, setSelectedOptionPlacement] = useState(null);
@@ -31,76 +32,94 @@ const AdsTable = ({ data, datas }) => {
   const [paginatedData, setPaginatedData] = useState([]);
   const [totalPages, setTotalPages] = useState(1);
   const [metricsTotals, setMetricsTotals] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  console.log("Tipe data?", Array.isArray(filteredDataV2) ? "Array" : typeof filteredDataV2);
-  
-  // Cek panjang array jika memang array
-  if (Array.isArray(filteredDataV2)) {
-    console.log("Cek tot item array:", filteredDataV2.length + 233619);
-    
-    // Cek struktur data dengan lebih detail
-    // console.log("Sample item [0]:", filteredDataV2[0]);
-    // console.log("Sample item [100]:", filteredDataV2[100]);
-  }
 
-  // console.table(filteredDataV2.slice(0, 10));
-
-  // console.log("Data sebagai string:", JSON.stringify(filteredDataV2).substring(0, 500) + "...");
-
-  // CUSTOM CHART WITH FILTER DATE, CLICK PRODUCT FEATURE
   // Define metrics with their display names and colors
   const metrics = {
-    daily_budget: { 
-      label: "Biaya", 
-      color: "#00B69A", 
-      dataKey: "daily_budget" 
+    daily_budget: {
+      label: "Biaya",
+      color: "#00B69A",
+      dataKey: "daily_budget"
     },
-    impression: { 
-      label: "Iklan Dilihat", 
-      color: "#D50000", 
-      dataKey: "impression" 
+    impression: {
+      label: "Iklan Dilihat",
+      color: "#D50000",
+      dataKey: "impression"
     },
-    click: { 
-      label: "Click", 
+    click: {
+      label: "Click",
       color: "#00B800",
-      dataKey: "click" 
+      dataKey: "click"
     },
-    ctr: { 
-      label: "CTR", 
+    ctr: {
+      label: "CTR",
       color: "#DFC100",
-      dataKey: "ctr" 
+      dataKey: "ctr"
     },
-    acos: { 
-      label: "ACOS", 
+    acos: {
+      label: "ACOS",
       color: "#C400BA",
-      dataKey: "acos" 
+      dataKey: "acos"
     },
-    broad_order: { 
-      label: "CPC", 
+    broad_order: {
+      label: "CPC",
       color: "#AD5F00FF",
-      dataKey: "broad_order" 
+      dataKey: "broad_order"
     }
   };
 
-  // Handle product click by clicking the product in name column
-  const handleProductClick = (product) => {
-    if (selectedProduct?.campaign.campaign_id === product.campaign.campaign_id) {
-      setSelectedProduct(null);
-    } else {
-      setSelectedProduct(product);
+  const userData = JSON.parse(localStorage.getItem("userDataApp"));
+  const shopId = userData?.merchants[0]?.merchantShopeeId;
+
+  const fetchData = async (fromDate, toDate) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const fromISO = fromDate instanceof Date
+        ? fromDate.toISOString()
+        : new Date(fromDate).toISOString();
+
+      const toISO = toDate instanceof Date
+        ? toDate.toISOString()
+        : new Date(toDate).toISOString();
+
+      
+      // const response = await axiosRequest.get(`/api/product-ads?shopId=${shopId}&from=${fromISO}&to=${toISO}`);
+      const response = await axiosRequest.get(`/api/product-ads?shopId=252234165&from=2025-03-12T17:12:28.635&to=2025-03-22T10:20:27.255`);
+      if (!response) {
+        throw new Error('Failed to fetch data');
+      }
+
+      const data = await response.data;
+      setRawData(data.content);
+      setFilteredData(data.content);
+      setTotalPages(data.totalPages);
+
+      const totals = calculateMetricTotals(data.content);
+      setMetricsTotals(totals);
+
+      return data.content;
+    } catch (err) {
+      console.error('Error fetching data:', err);
+      setError('Error fetching data: ' + err.message);
+      return [];
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Get all days in last 7 days in a month
+  // Date utility functions
   function getAllDaysInLast7Days() {
     return Array.from({ length: 7 }, (_, i) => {
       const d = new Date();
       d.setDate(d.getDate() - i);
       return d.toISOString().split("T")[0];
     }).reverse();
-  };
+  }
 
-  // Get all days in a month
   function getAllDaysInAMonth() {
     const today = new Date();
     const year = today.getFullYear();
@@ -110,204 +129,159 @@ const AdsTable = ({ data, datas }) => {
       { length: days },
       (_, i) => `${year}-${String(month).padStart(2, "0")}-${String(i + 1).padStart(2, "0")}`
     );
-  };
+  }
 
-  // Get all hours in a day
   function getHourlyIntervals(selectedDate) {
-    const datePart = selectedDate.includes(" ") 
-    ? selectedDate.split(" ")[0] 
-    : selectedDate;
-    
+    const datePart = selectedDate.includes(" ")
+      ? selectedDate.split(" ")[0]
+      : selectedDate;
+
     return Array.from({ length: 24 }, (_, i) => {
       const hour = String(i).padStart(2, "0");
       return `${datePart} ${hour}:00`;
     });
-  };
+  }
 
-  // Get all days in a date range
   function getDateRangeIntervals(startDate, endDate) {
     const start = startDate instanceof Date ? new Date(startDate) : new Date(startDate);
     const end = endDate instanceof Date ? new Date(endDate) : new Date(endDate);
-    
+
     start.setHours(0, 0, 0, 0);
     end.setHours(23, 59, 59, 999);
-    
+
     const dateArray = [];
-    
+
     const diffTime = Math.abs(end - start);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays <= 1) {
       return getHourlyIntervals(start.toISOString().split('T')[0]);
     }
-    
+
     let currentDate = new Date(start);
     while (currentDate <= end) {
       dateArray.push(currentDate.toISOString().split('T')[0]);
       currentDate.setDate(currentDate.getDate() + 1);
     }
-    
+
     return dateArray;
-  };
+  }
 
-  function filterDataByDate(dataList, selectedDate) {
-    let timeIntervals = [];
-    let isSingleDay = false;
-
-    if (comparatorDate && comaparedDate) {
-        const sameDay = comparatorDate.toDateString() === comaparedDate.toDateString();
-
-        if (sameDay) {
-            const dateStr = comparatorDate.toISOString().split('T')[0];
-            timeIntervals = getHourlyIntervals(dateStr);
-            isSingleDay = true;
-        } else {
-            timeIntervals = getDateRangeIntervals(comparatorDate, comaparedDate);
-        }
-    } else if (selectedDate === null || Array.isArray(selectedDate)) {
-        timeIntervals = getAllDaysInLast7Days();
-    } else if (selectedDate === "Bulan Ini") {
-        timeIntervals = getAllDaysInAMonth();
-    } else {
-        timeIntervals = getHourlyIntervals(selectedDate);
-        isSingleDay = true;
-    }
-
-    if (!timeIntervals || timeIntervals.length === 0) {
-        timeIntervals = [new Date().toISOString().split('T')[0]];
-    }
-
-    return dataList.filter(product => {
-        const productDate = new Date(product.campaign.start_time * 1000);
-        
-        if (isSingleDay) {
-            const productYear = productDate.getFullYear();
-            const productMonth = String(productDate.getMonth() + 1).padStart(2, "0");
-            const productDay = String(productDate.getDate()).padStart(2, "0");
-            const productHour = String(productDate.getHours()).padStart(2, "0");
-            const dateHourKey = `${productYear}-${productMonth}-${productDay} ${productHour}:00`;
-            
-            return timeIntervals.includes(dateHourKey);
-        } else {
-            const productYear = productDate.getFullYear();
-            const productMonth = String(productDate.getMonth() + 1).padStart(2, "0");
-            const productDay = String(productDate.getDate()).padStart(2, "0");
-            const dateDayKey = `${productYear}-${productMonth}-${productDay}`;
-            
-            return timeIntervals.includes(dateDayKey);
-        }
-    });
-  };
-
-  // Generate chart data for multiple metrics
-  function generateMultipleMetricsChartData(selectedDate = null, product = null, selectedMetrics = ["visitor"]) {
+  function generateMultipleMetricsChartData(selectedDate = null, product = null, selectedMetrics = ["acos"]) {
     let timeIntervals = [];
     let mode = "daily";
     let result = {};
     let isSingleDay = false;
+    let fromDate, toDate;
 
     if (comparatorDate && comaparedDate) {
       const sameDay = comparatorDate.toDateString() === comaparedDate.toDateString();
-      
+
       if (sameDay) {
         const dateStr = comparatorDate.toISOString().split('T')[0];
         timeIntervals = getHourlyIntervals(dateStr);
         mode = "hourly";
         isSingleDay = true;
+        fromDate = comparatorDate;
+        toDate = new Date(comparatorDate.getTime() + 24 * 60 * 60 * 1000);
       } else {
         timeIntervals = getDateRangeIntervals(comparatorDate, comaparedDate);
         mode = timeIntervals.length <= 24 ? "hourly" : "daily";
+        fromDate = comparatorDate;
+        toDate = comaparedDate;
       }
     } else if (selectedDate === null || Array.isArray(selectedDate)) {
       timeIntervals = getAllDaysInLast7Days();
+      fromDate = new Date(timeIntervals[0]);
+      toDate = new Date();
+      toDate.setHours(23, 59, 59, 999);
     } else if (selectedDate === "Bulan Ini") {
       timeIntervals = getAllDaysInAMonth();
+      const today = new Date();
+      fromDate = new Date(today.getFullYear(), today.getMonth(), 1);
+      toDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+      toDate.setHours(23, 59, 59, 999);
     } else {
+      // Single day selected
       timeIntervals = getHourlyIntervals(selectedDate);
       mode = "hourly";
       isSingleDay = true;
+      fromDate = new Date(selectedDate);
+      toDate = new Date(selectedDate);
+      toDate.setHours(23, 59, 59, 999);
     }
 
     if (!timeIntervals || timeIntervals.length === 0) {
       timeIntervals = [new Date().toISOString().split('T')[0]];
+      fromDate = new Date();
+      toDate = new Date();
+      toDate.setHours(23, 59, 59, 999);
     }
-  
+
     result.timeIntervals = timeIntervals;
     result.isSingleDay = isSingleDay;
     result.series = [];
 
-     // Filter data berdasarkan tanggal terlebih dahulu
-    let dateFilteredData = filterDataByDate(data.data.entry_list, selectedDate);
-        
-    // Kemudian filter berdasarkan produk jika ada
-    let filteredProducts = dateFilteredData;
+    // Filter data based on selected product
+    let filteredProducts = rawData;
     if (product) {
-        filteredProducts = dateFilteredData.filter((p) => p.campaign.campaign_id === product.campaign.campaign_id);
+      filteredProducts = rawData.filter((p) => p.campaignId === product.campaignId);
     }
-    // let filteredProducts = data.data.entry_list;
-    // if (product) {
-    //   filteredProducts = data.data.entry_list.filter((p) => p.campaign.campaign_id === product.campaign.campaign_id);
-    // }
+
+    // Set time-based filtered data for current chart
+    const dateFilteredData = filteredProducts;
 
     // Calculate totals for each metric
     const totals = {};
     Object.keys(metrics).forEach(metricKey => {
-        totals[metricKey] = 0;
-        
-        filteredProducts.forEach(product => {
-            const dataKey = metrics[metricKey].dataKey;
-            if (dataKey === "daily_budget") {
-                totals[metricKey] += product.campaign[dataKey] || 0;
-            } else {
-                totals[metricKey] += product.report[dataKey] || 0;
-            }
-        });
+      totals[metricKey] = 0;
+
+      dateFilteredData.forEach(product => {
+        const dataKey = metrics[metricKey].dataKey;
+        totals[metricKey] += product[dataKey] || 0;
+      });
     });
-    
+
     // Set totals to state
     setMetricsTotals(totals);
 
+    // Generate time-based data series for each selected metric
     selectedMetrics?.forEach(metricKey => {
       const metric = metrics[metricKey];
       if (!metric) return;
 
       const dataKey = metric.dataKey;
       let dataMap = {};
-      
+
       timeIntervals.forEach((time) => {
         dataMap[time] = 0;
       });
 
-      filteredProducts?.forEach((product) => {
-        const productDate = new Date(product.campaign.start_time * 1000);
-        
+      // Group data by time intervals for chart display
+      dateFilteredData?.forEach((product) => {
+        // Convert timestamps to Date objects
+        const fromTimestamp = parseInt(product.from);
+        const productDate = new Date(fromTimestamp * 1000);
+
         if (isSingleDay) {
           const hourKey = String(productDate.getHours()).padStart(2, "0");
-          
+
           const productYear = productDate.getFullYear();
           const productMonth = String(productDate.getMonth() + 1).padStart(2, "0");
           const productDay = String(productDate.getDate()).padStart(2, "0");
           const dateHourKey = `${productYear}-${productMonth}-${productDay} ${hourKey}:00`;
-          
+
           if (timeIntervals.includes(dateHourKey)) {
-            if (dataKey === "daily_budget") {
-              dataMap[dateHourKey] += product.campaign[dataKey] || 0;
-            } else {
-              dataMap[dateHourKey] += product.report[dataKey] || 0;
-            }
+            dataMap[dateHourKey] += product[dataKey] || 0;
           }
         } else {
           const productYear = productDate.getFullYear();
           const productMonth = String(productDate.getMonth() + 1).padStart(2, "0");
           const productDay = String(productDate.getDate()).padStart(2, "0");
           const dateDayKey = `${productYear}-${productMonth}-${productDay}`;
-          
+
           if (timeIntervals.includes(dateDayKey)) {
-            if (dataKey === "daily_budget") {
-              dataMap[dateDayKey] += product.campaign[dataKey] || 0;
-            } else {
-              dataMap[dateDayKey] += product.report[dataKey] || 0;
-            }
+            dataMap[dateDayKey] += product[dataKey] || 0;
           }
         }
       });
@@ -320,188 +294,690 @@ const AdsTable = ({ data, datas }) => {
 
       result.series.push(seriesData);
     });
-    
+
     return result;
-  };
+  }
 
   function handleMetricFilter(metricKey) {
     setSelectedMetrics(prev => {
       if (prev.includes(metricKey)) {
         return prev.filter(m => m !== metricKey);
-      } 
+      }
       else if (prev.length < 4) {
         return [...prev, metricKey];
-      } 
+      }
       else {
         setShowAlert(true);
-        setTimeout(() => setShowAlert(false), 2000); 
+        setTimeout(() => setShowAlert(false), 2000);
         return prev;
       }
     });
-  };
-  
+  }
+
+  // Handle date selection
   function handleDateSelection(selectedDateOption) {
     setComparatorDate(null);
     setComaparedDate(null);
     setDate(selectedDateOption);
-  };
+  }
 
+  // Handle comparison date confirmation
   function handleComparisonDatesConfirm() {
     if (comparatorDate && comaparedDate) {
       setDate(null);
       setShowCalendar(false);
+
+      // Fetch data for the new date range
+      fetchData(comparatorDate, comaparedDate);
+    }
+  }
+
+  // Handle product click
+  const handleProductClick = (product) => {
+    if (selectedProduct?.campaignId === product.campaignId) {
+      setSelectedProduct(null);
+    } else {
+      setSelectedProduct(product);
     }
   };
 
+  function calculateMetricTotals(products) {
+    const totals = {};
+
+    Object.keys(metrics).forEach(metricKey => {
+      totals[metricKey] = 0;
+    });
+
+    products.forEach(product => {
+      Object.keys(metrics).forEach(metricKey => {
+        const dataKey = metrics[metricKey].dataKey;
+        if (product[dataKey] !== undefined) {
+          totals[metricKey] += product[dataKey];
+        }
+      });
+    });
+
+    return totals;
+  }
+
+  function calculateMetricTotals(products) {
+    const totals = {};
+
+    Object.keys(metrics).forEach(metricKey => {
+      totals[metricKey] = 0;
+    });
+
+    products.forEach(product => {
+      Object.keys(metrics).forEach(metricKey => {
+        const dataKey = metrics[metricKey].dataKey;
+        if (product[dataKey] !== undefined) {
+          totals[metricKey] += product[dataKey];
+        }
+      });
+    });
+
+    return totals;
+  }
+
+
+
+  // Handle product click by clicking the product in name column
+  // const handleProductClick = (product) => {
+  //   if (selectedProduct?.campaign_id === product.campaign_id) {
+  //     setSelectedProduct(null);
+  //   } else {
+  //     setSelectedProduct(product);
+  //   }
+  // };
+
+  // // Get all days in last 7 days in a month
+  // function getAllDaysInLast7Days() {
+  //   return Array.from({ length: 7 }, (_, i) => {
+  //     const d = new Date();
+  //     d.setDate(d.getDate() - i);
+  //     return d.toISOString().split("T")[0];
+  //   }).reverse();
+  // };
+
+  // // Get all days in a month
+  // function getAllDaysInAMonth() {
+  //   const today = new Date();
+  //   const year = today.getFullYear();
+  //   const month = today.getMonth() + 1;
+  //   const days = new Date(year, month, 0).getDate();
+  //   return Array.from(
+  //     { length: days },
+  //     (_, i) => `${year}-${String(month).padStart(2, "0")}-${String(i + 1).padStart(2, "0")}`
+  //   );
+  // };
+
+  // // Get all hours in a day
+  // function getHourlyIntervals(selectedDate) {
+  //   const datePart = selectedDate.includes(" ") 
+  //   ? selectedDate.split(" ")[0] 
+  //   : selectedDate;
+
+  //   return Array.from({ length: 24 }, (_, i) => {
+  //     const hour = String(i).padStart(2, "0");
+  //     return `${datePart} ${hour}:00`;
+  //   });
+  // };
+
+  // Get all days in a date range
+  // function getDateRangeIntervals(startDate, endDate) {
+  //   const start = startDate instanceof Date ? new Date(startDate) : new Date(startDate);
+  //   const end = endDate instanceof Date ? new Date(endDate) : new Date(endDate);
+
+  //   start.setHours(0, 0, 0, 0);
+  //   end.setHours(23, 59, 59, 999);
+
+  //   const dateArray = [];
+
+  //   const diffTime = Math.abs(end - start);
+  //   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  //   if (diffDays <= 1) {
+  //     return getHourlyIntervals(start.toISOString().split('T')[0]);
+  //   }
+
+  //   let currentDate = new Date(start);
+  //   while (currentDate <= end) {
+  //     dateArray.push(currentDate.toISOString().split('T')[0]);
+  //     currentDate.setDate(currentDate.getDate() + 1);
+  //   }
+
+  //   return dateArray;
+  // };
+
+  // Filtering by filter selectedDate to dataAds
+  // function filterDataByDate(dataAdsList, selectedDate) {
+  //   let timeIntervals = [];
+  //   let isSingleDay = false;
+
+  //   if (comparatorDate && comaparedDate) {
+  //       const isSameDay = comparatorDate.toDateString() === comaparedDate.toDateString();
+
+  //       if (isSameDay) {
+  //           const dateStr = comparatorDate.toISOString().split('T')[0];
+  //           timeIntervals = getHourlyIntervals(dateStr);
+  //           isSingleDay = true;
+  //       } else {
+  //           timeIntervals = getDateRangeIntervals(comparatorDate, comaparedDate);
+  //       }
+  //   } else if (selectedDate === null || Array.isArray(selectedDate)) {
+  //       timeIntervals = getAllDaysInLast7Days();
+  //   } else if (selectedDate === "Bulan Ini") {
+  //       timeIntervals = getAllDaysInAMonth();
+  //   } else {
+  //       timeIntervals = getHourlyIntervals(selectedDate);
+  //       isSingleDay = true;
+  //   }
+
+  //   // If no time intervals are found, default to today
+  //   if (!timeIntervals || timeIntervals.length === 0) {
+  //       timeIntervals = [new Date().toISOString().split('T')[0]];
+  //   }
+
+  //   return dataAdsList.filter(product => {
+  //       const productDate = new Date(product.from * 1000);
+
+  //       // Check if isSingleDay is true by filterDataByDate
+  //       if (isSingleDay) {
+  //           const productYear = productDate.getFullYear();
+  //           const productMonth = String(productDate.getMonth() + 1).padStart(2, "0");
+  //           const productDay = String(productDate.getDate()).padStart(2, "0");
+  //           const productHour = String(productDate.getHours()).padStart(2, "0");
+  //           const setTemplateProductDateSingle = `${productYear}-${productMonth}-${productDay} ${productHour}:00`;
+
+  //           // return for each data in timeIntervals includes in setTemplateProductDateSingle
+  //           return timeIntervals.includes(setTemplateProductDateSingle);
+  //       } else {
+  //           const productYear = productDate.getFullYear();
+  //           const productMonth = String(productDate.getMonth() + 1).padStart(2, "0");
+  //           const productDay = String(productDate.getDate()).padStart(2, "0");
+  //           const setTemplateProductDateNotSingle = `${productYear}-${productMonth}-${productDay}`;
+
+  //           // return for each data in timeIntervals includes in setTemplateProductDateNotSingle
+  //           return timeIntervals.includes(setTemplateProductDateNotSingle);
+  //       }
+  //   });
+  // };
+
+  // Generate chart data for multiple metrics
+  // function generateMultipleMetricsChartData(selectedDate = null, product = null, selectedMetrics = ["visitor"]) {
+  //   let timeIntervals = [];
+  //   let mode = "daily";
+  //   let result = {};
+  //   let isSingleDay = false;
+
+  //   if (comparatorDate && comaparedDate) {
+  //     const isSameDay = comparatorDate.toDateString() === comaparedDate.toDateString();
+
+  //     if (isSameDay) {
+  //       const dateStr = comparatorDate.toISOString().split('T')[0];
+  //       timeIntervals = getHourlyIntervals(dateStr);
+  //       mode = "hourly";
+  //       isSingleDay = true;
+  //     } else {
+  //       timeIntervals = getDateRangeIntervals(comparatorDate, comaparedDate);
+  //       mode = timeIntervals.length <= 24 ? "hourly" : "daily";
+  //     }
+  //   } else if (selectedDate === null || Array.isArray(selectedDate)) {
+  //     timeIntervals = getAllDaysInLast7Days();
+  //   } else if (selectedDate === "Bulan Ini") {
+  //     timeIntervals = getAllDaysInAMonth();
+  //   } else {
+  //     timeIntervals = getHourlyIntervals(selectedDate);
+  //     mode = "hourly";
+  //     isSingleDay = true;
+  //   }
+
+  //   if (!timeIntervals || timeIntervals.length === 0) {
+  //     timeIntervals = [new Date().toISOString().split('T')[0]];
+  //   }
+
+  //   result.timeIntervals = timeIntervals;
+  //   result.isSingleDay = isSingleDay;
+  //   result.series = [];
+
+  //    // Filter data berdasarkan tanggal terlebih dahulu
+  //   let dateFilteredData = filterDataByDate(data.content, selectedDate);
+  //   // let dateFilteredData = filterDataByDate(data.data.entry_list, selectedDate);
+
+  //   // Kemudian filter berdasarkan produk jika ada
+  //   let filteredProducts = dateFilteredData;
+  //   if (product) {
+  //       filteredProducts = dateFilteredData.filter((p) => p.campaign.campaign_id === product.campaign.campaign_id);
+  //   }
+  //   // let filteredProducts = data.data.entry_list;
+  //   // if (product) {
+  //   //   filteredProducts = data.data.entry_list.filter((p) => p.campaign.campaign_id === product.campaign.campaign_id);
+  //   // }
+
+  //   // Calculate totals for each metric
+  //   const totals = {};
+  //   Object.keys(metrics).forEach(metricKey => {
+  //       totals[metricKey] = 0;
+
+  //       filteredProducts.forEach(product => {
+  //           const dataKey = metrics[metricKey].dataKey;
+  //           if (dataKey === "daily_budget") {
+  //               totals[metricKey] += product.campaign[dataKey] || 0;
+  //           } else {
+  //               totals[metricKey] += product.report[dataKey] || 0;
+  //           }
+  //       });
+  //   });
+
+  //   // Set totals to state
+  //   setMetricsTotals(totals);
+
+  //   selectedMetrics?.forEach(metricKey => {
+  //     const metric = metrics[metricKey];
+  //     if (!metric) return;
+
+  //     const dataKey = metric.dataKey;
+  //     let dataMap = {};
+
+  //     timeIntervals.forEach((time) => {
+  //       dataMap[time] = 0;
+  //     });
+
+  //     filteredProducts?.forEach((product) => {
+  //       const productDate = new Date(product.campaign.start_time * 1000);
+
+  //       if (isSingleDay) {
+  //         const hourKey = String(productDate.getHours()).padStart(2, "0");
+
+  //         const productYear = productDate.getFullYear();
+  //         const productMonth = String(productDate.getMonth() + 1).padStart(2, "0");
+  //         const productDay = String(productDate.getDate()).padStart(2, "0");
+  //         const setTemplateProductDateSingle = `${productYear}-${productMonth}-${productDay} ${hourKey}:00`;
+
+  //         if (timeIntervals.includes(setTemplateProductDateSingle)) {
+  //           if (dataKey === "daily_budget") {
+  //             dataMap[setTemplateProductDateSingle] += product.campaign[dataKey] || 0;
+  //           } else {
+  //             dataMap[setTemplateProductDateSingle] += product.report[dataKey] || 0;
+  //           }
+  //         }
+  //       } else {
+  //         const productYear = productDate.getFullYear();
+  //         const productMonth = String(productDate.getMonth() + 1).padStart(2, "0");
+  //         const productDay = String(productDate.getDate()).padStart(2, "0");
+  //         const setTemplateProductDateNotSingle = `${productYear}-${productMonth}-${productDay}`;
+
+  //         if (timeIntervals.includes(setTemplateProductDateNotSingle)) {
+  //           if (dataKey === "daily_budget") {
+  //             dataMap[setTemplateProductDateNotSingle] += product.campaign[dataKey] || 0;
+  //           } else {
+  //             dataMap[setTemplateProductDateNotSingle] += product.report[dataKey] || 0;
+  //           }
+  //         }
+  //       }
+  //     });
+
+  //     const seriesData = {
+  //       name: metric.label,
+  //       data: timeIntervals.map((time) => dataMap[time] || 0),
+  //       color: metric.color
+  //     };
+
+  //     result.series.push(seriesData);
+  //   });
+
+  //   return result;
+  // };
+
+  function handleMetricFilter(metricKey) {
+    setSelectedMetrics(prev => {
+      if (prev.includes(metricKey)) {
+        return prev.filter(m => m !== metricKey);
+      }
+      else if (prev.length < 4) {
+        return [...prev, metricKey];
+      }
+      else {
+        setShowAlert(true);
+        setTimeout(() => setShowAlert(false), 2000);
+        return prev;
+      }
+    });
+  };
+
+  // function handleDateSelection(selectedDateOption) {
+  //   setComparatorDate(null);
+  //   setComaparedDate(null);
+  //   setDate(selectedDateOption);
+  // };
+
+  // function handleComparisonDatesConfirm() {
+  //   if (comparatorDate && comaparedDate) {
+  //     setDate(null);
+  //     setShowCalendar(false);
+  //   }
+  // };
+
+  useEffect(() => {
+    // Determine date range based on current selection
+    let fromDate, toDate;
+
+    if (comparatorDate && comaparedDate) {
+      fromDate = comparatorDate;
+      toDate = comaparedDate;
+    } else if (Array.isArray(date)) {
+      // Last 7 days
+      fromDate = new Date(date[0]);
+      toDate = new Date(date[date.length - 1]);
+      toDate.setHours(23, 59, 59, 999);
+    } else if (date === "Bulan Ini") {
+      // Current month
+      const today = new Date();
+      fromDate = new Date(today.getFullYear(), today.getMonth(), 1);
+      toDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+      toDate.setHours(23, 59, 59, 999);
+    } else if (date) {
+      // Single day
+      fromDate = new Date(date);
+      toDate = new Date(date);
+      toDate.setHours(23, 59, 59, 999);
+    } else {
+      // Default to last 7 days
+      const today = new Date();
+      fromDate = new Date();
+      fromDate.setDate(today.getDate() - 7);
+      toDate = today;
+    }
+
+    fetchData(fromDate, toDate);
+  }, []);
+
+  // Generate chart data when relevant state changes
   useEffect(() => {
     const chartData = generateMultipleMetricsChartData(date, selectedProduct, selectedMetrics);
     setChartData(chartData);
-  }, [date, selectedProduct, selectedMetrics, comparatorDate, comaparedDate, data.data.entry_list]);
+  }, [rawData, date, selectedProduct, selectedMetrics]);
 
   useEffect(() => {
-      if (chartRef.current) {
-        const chartInstance = echarts.init(chartRef.current);
-          
-        const series = chartData.series?.map(s => ({
-          name: s.name,
-          type: 'line',
-          smooth: true,
-          showSymbol: false,
-          emphasis: { focus: 'series' },
-          data: s.data,
-          lineStyle: {
-            color: s.color
-          },
-          itemStyle: {
-            color: s.color
-          }
-        })) || [];
-  
-        const hasData = series.some(s => s.data && s.data.some(value => value > 0));
-  
-        let leftGrid;
-        if (selectedMetrics.length == 1 && (selectedMetrics.includes("daily_budget") || selectedMetrics.includes("impression"))) {
-          leftGrid = 80;
-        } else if (selectedMetrics.length > 1 && selectedMetrics.includes("impression")) {
-          leftGrid = 80;
-        } else {
-          leftGrid = 50;
-        }
-  
-        let xAxisData = chartData?.timeIntervals || [];
-        const isSingleDay = chartData?.isSingleDay || false;
-        
-        if (isSingleDay) {
-          // Extract only the time portion (HH:00) for hourly view
-          xAxisData = xAxisData.map(interval => {
-            if (!interval) return "";
-            if (interval.includes(" ")) {
-              return interval.split(" ")[1]; // Return only the time part
-            }
-            return interval;
-          });
-        } else {
-          // For multi-day view, normalize date formats first
-          xAxisData = xAxisData.map(date => {
-            if (!date) return "";
-            // If it contains a space (has time component), take only the date part
-            if (date.includes(" ")) {
-              return date.split(" ")[0];
-            }
-            return date;
-          });
-          
-          // Format multi-day dates to show just month-day
-          xAxisData = xAxisData.map(data => {
-            if (!data) return "";
-            const parts = data.split("-");
-            if (parts.length >= 3) {
-              return `${parts[1]}-${parts[2]}`;  // month-day format
-            }
-            return data;
-          });
-        };
-        
-        let rotateAxisLabel = 0;
-        if (!isSingleDay) {
-          if (xAxisData?.length > 7 && xAxisData?.length <= 20) {
-            rotateAxisLabel = 30;
-          } else if (xAxisData?.length > 20) {
-            rotateAxisLabel = 40;
-          }
-        };
+    if (chartRef.current) {
+      const chartInstance = echarts.init(chartRef.current);
 
-        for (let i = 0; i < series.length; i++) {
-          if (series[i].name == "Biaya") {
-            series[i].data = series[i].data.map((value) => {
-              if (value > 0) {
-                return value / 100000;
-              }
-              return 0;
-            });
-          }
-        };
-  
-        const option = {
-          toolbox: { feature: { saveAsImage: {} } },
-          grid: { 
-            left: leftGrid,
-            right: 50, 
-            bottom: 50, 
-            containLabel: false 
-          },
-          tooltip: { 
-            trigger: "axis",
-            formatter: function(params) {
-              let result = params[0].axisValue + '<br/>';
-              params.forEach(param => {
-                result += `<span style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background-color:${param.color};"></span> ${param.seriesName}: ${param.value}<br/>`;
-              });
-              return result;
-            }
-          },
-          legend: {
-            data: chartData.series?.map(s => s.name) || [],
-            bottom: 0
-          },
-          xAxis: { 
-            name: isSingleDay ? "Time" : "Date", 
-            type: "category", 
-            data: xAxisData || [], 
-            boundaryGap: false,
-            axisLabel: { 
-              rotate: rotateAxisLabel,
-              interval: 0,
-            },
-          },
-          yAxis: { 
-            name: selectedMetrics.length === 1 ? metrics[selectedMetrics[0]]?.label : "Total",
-            type: "value", 
-            splitLine: { show: true },
-          },
-          series: series
-        };
-        
-        if (!hasData && (comparatorDate && comaparedDate)) {
-          option.graphic = [
-            {
-              type: 'text',
-              left: 'center',
-              top: 'middle',
-              style: {
-                text: 'Tidak ada data untuk rentang waktu yang dipilih',
-                fontSize: 16,
-                fill: '#999',
-                fontWeight: 'bold'
-              }
-            }
-          ];
+      const series = chartData.series?.map(s => ({
+        name: s.name,
+        type: 'line',
+        smooth: true,
+        showSymbol: false,
+        emphasis: { focus: 'series' },
+        data: s.data,
+        lineStyle: {
+          color: s.color
+        },
+        itemStyle: {
+          color: s.color
         }
-        
-        chartInstance.setOption(option);
-        return () => chartInstance.dispose();
+      })) || [];
+
+      const hasData = series.some(s => s.data && s.data.some(value => value > 0));
+
+      let leftGrid = 50;
+      if (selectedMetrics.length > 1 || selectedMetrics.includes("cpc")) {
+        leftGrid = 80;
       }
-    }, [chartData, selectedMetrics]);
+
+      let xAxisData = chartData?.timeIntervals || [];
+      const isSingleDay = chartData?.isSingleDay || false;
+
+      if (isSingleDay) {
+        // Extract only the time portion (HH:00) for hourly view
+        xAxisData = xAxisData.map(interval => {
+          if (!interval) return "";
+          if (interval.includes(" ")) {
+            return interval.split(" ")[1]; // Return only the time part
+          }
+          return interval;
+        });
+      } else {
+        // For multi-day view, normalize date formats first
+        xAxisData = xAxisData.map(date => {
+          if (!date) return "";
+          // If it contains a space (has time component), take only the date part
+          if (date.includes(" ")) {
+            return date.split(" ")[0];
+          }
+          return date;
+        });
+
+        // Format multi-day dates to show just month-day
+        xAxisData = xAxisData.map(data => {
+          if (!data) return "";
+          const parts = data.split("-");
+          if (parts.length >= 3) {
+            return `${parts[1]}-${parts[2]}`;  // month-day format
+          }
+          return data;
+        });
+      }
+
+      let rotateAxisLabel = 0;
+      if (!isSingleDay) {
+        if (xAxisData?.length > 7 && xAxisData?.length <= 20) {
+          rotateAxisLabel = 30;
+        } else if (xAxisData?.length > 20) {
+          rotateAxisLabel = 40;
+        }
+      }
+
+      const option = {
+        toolbox: { feature: { saveAsImage: {} } },
+        grid: {
+          left: leftGrid,
+          right: 50,
+          bottom: 50,
+          containLabel: false
+        },
+        tooltip: {
+          trigger: "axis",
+          formatter: function (params) {
+            let result = params[0].axisValue + '<br/>';
+            params.forEach(param => {
+              result += `<span style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background-color:${param.color};"></span> ${param.seriesName}: ${param.value}<br/>`;
+            });
+            return result;
+          }
+        },
+        legend: {
+          data: chartData.series?.map(s => s.name) || [],
+          bottom: 0
+        },
+        xAxis: {
+          name: isSingleDay ? "Time" : "Date",
+          type: "category",
+          data: xAxisData || [],
+          boundaryGap: false,
+          axisLabel: {
+            rotate: rotateAxisLabel,
+            interval: 0,
+          },
+        },
+        yAxis: {
+          name: selectedMetrics.length === 1 ? metrics[selectedMetrics[0]]?.label : "Total",
+          type: "value",
+          splitLine: { show: true },
+        },
+        series: series
+      };
+
+      if (!hasData && (comparatorDate && comaparedDate)) {
+        option.graphic = [
+          {
+            type: 'text',
+            left: 'center',
+            top: 'middle',
+            style: {
+              text: 'Tidak ada data untuk rentang waktu yang dipilih',
+              fontSize: 16,
+              fill: '#999',
+              fontWeight: 'bold'
+            }
+          }
+        ];
+      }
+
+      chartInstance.setOption(option);
+      return () => chartInstance.dispose();
+    }
+  }, [chartData, selectedMetrics]);
+
+
+  // useEffect(() => {
+  //   const chartData = generateMultipleMetricsChartData(date, selectedProduct, selectedMetrics);
+  //   setChartData(chartData);
+  // }, [date, selectedProduct, selectedMetrics, comparatorDate, comaparedDate, data.data.entry_list]);
+
+  // useEffect(() => {
+  //     if (chartRef.current) {
+  //       const chartInstance = echarts.init(chartRef.current);
+
+  //       const series = chartData.series?.map(s => ({
+  //         name: s.name,
+  //         type: 'line',
+  //         smooth: true,
+  //         showSymbol: false,
+  //         emphasis: { focus: 'series' },
+  //         data: s.data,
+  //         lineStyle: {
+  //           color: s.color
+  //         },
+  //         itemStyle: {
+  //           color: s.color
+  //         }
+  //       })) || [];
+
+  //       const hasData = series.some(s => s.data && s.data.some(value => value > 0));
+
+  //       let leftGrid;
+  //       if (selectedMetrics.length == 1 && (selectedMetrics.includes("daily_budget") || selectedMetrics.includes("impression"))) {
+  //         leftGrid = 80;
+  //       } else if (selectedMetrics.length > 1 && selectedMetrics.includes("impression")) {
+  //         leftGrid = 80;
+  //       } else {
+  //         leftGrid = 50;
+  //       }
+
+  //       let xAxisData = chartData?.timeIntervals || [];
+  //       const isSingleDay = chartData?.isSingleDay || false;
+
+  //       if (isSingleDay) {
+  //         // Extract only the time portion (HH:00) for hourly view
+  //         xAxisData = xAxisData.map(interval => {
+  //           if (!interval) return "";
+  //           if (interval.includes(" ")) {
+  //             return interval.split(" ")[1]; // Return only the time part
+  //           }
+  //           return interval;
+  //         });
+  //       } else {
+  //         // For multi-day view, normalize date formats first
+  //         xAxisData = xAxisData.map(date => {
+  //           if (!date) return "";
+  //           // If it contains a space (has time component), take only the date part
+  //           if (date.includes(" ")) {
+  //             return date.split(" ")[0];
+  //           }
+  //           return date;
+  //         });
+
+  //         // Format multi-day dates to show just month-day
+  //         xAxisData = xAxisData.map(data => {
+  //           if (!data) return "";
+  //           const parts = data.split("-");
+  //           if (parts.length >= 3) {
+  //             return `${parts[1]}-${parts[2]}`;  // month-day format
+  //           }
+  //           return data;
+  //         });
+  //       };
+
+  //       let rotateAxisLabel = 0;
+  //       if (!isSingleDay) {
+  //         if (xAxisData?.length > 7 && xAxisData?.length <= 20) {
+  //           rotateAxisLabel = 30;
+  //         } else if (xAxisData?.length > 20) {
+  //           rotateAxisLabel = 40;
+  //         }
+  //       };
+
+  //       for (let i = 0; i < series.length; i++) {
+  //         if (series[i].name == "Biaya") {
+  //           series[i].data = series[i].data.map((value) => {
+  //             if (value > 0) {
+  //               return value / 100000;
+  //             }
+  //             return 0;
+  //           });
+  //         }
+  //       };
+
+  //       const option = {
+  //         toolbox: { feature: { saveAsImage: {} } },
+  //         grid: { 
+  //           left: leftGrid,
+  //           right: 50, 
+  //           bottom: 50, 
+  //           containLabel: false 
+  //         },
+  //         tooltip: { 
+  //           trigger: "axis",
+  //           formatter: function(params) {
+  //             let result = params[0].axisValue + '<br/>';
+  //             params.forEach(param => {
+  //               result += `<span style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background-color:${param.color};"></span> ${param.seriesName}: ${param.value}<br/>`;
+  //             });
+  //             return result;
+  //           }
+  //         },
+  //         legend: {
+  //           data: chartData.series?.map(s => s.name) || [],
+  //           bottom: 0
+  //         },
+  //         xAxis: { 
+  //           name: isSingleDay ? "Time" : "Date", 
+  //           type: "category", 
+  //           data: xAxisData || [], 
+  //           boundaryGap: false,
+  //           axisLabel: { 
+  //             rotate: rotateAxisLabel,
+  //             interval: 0,
+  //           },
+  //         },
+  //         yAxis: { 
+  //           name: selectedMetrics.length === 1 ? metrics[selectedMetrics[0]]?.label : "Total",
+  //           type: "value", 
+  //           splitLine: { show: true },
+  //         },
+  //         series: series
+  //       };
+
+  //       if (!hasData && (comparatorDate && comaparedDate)) {
+  //         option.graphic = [
+  //           {
+  //             type: 'text',
+  //             left: 'center',
+  //             top: 'middle',
+  //             style: {
+  //               text: 'Tidak ada data untuk rentang waktu yang dipilih',
+  //               fontSize: 16,
+  //               fill: '#999',
+  //               fontWeight: 'bold'
+  //             }
+  //           }
+  //         ];
+  //       }
+
+  //       chartInstance.setOption(option);
+  //       return () => chartInstance.dispose();
+  //     }
+  //   }, [chartData, selectedMetrics]);
 
 
 
@@ -514,7 +990,7 @@ const AdsTable = ({ data, datas }) => {
     { key: "click", label: "Click" },
     { key: "ctr", label: "CTR" },
     { key: "acos", label: "ACOS" },
-    { key: "cpc", label: "CPC"},
+    { key: "cpc", label: "CPC" },
     { key: "convertion", label: "Convertion" },
     { key: "classification", label: "Sales Clasification" },
     { key: "insight", label: "Insight" },
@@ -537,41 +1013,75 @@ const AdsTable = ({ data, datas }) => {
   };
 
   useEffect(() => {
-    let filtered = data.data.entry_list;
+    let filtered = rawData;
+
     // Filter by search term
     if (debouncedSearchTerm !== "") {
-      filtered = data.data.entry_list.filter((entry) =>
+      filtered = rawData.filter((entry) =>
         entry.title.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
       );
-    };
+    }
 
-    // Filter by status
     if (statusProductFilter !== "all") {
-      filtered = filtered.filter((entry) => entry.state === statusProductFilter);
+      filtered = rawData.filter((entry) => entry.state === statusProductFilter);
+    }
+
+    const selectedAdValues = selectedTypeAds.map((ad) => ad.value);
+    if (!selectedAdValues.includes("all")) {
+      filtered = rawData.filter((entry) => selectedAdValues.includes(entry.type));
     };
 
-    // Filter by ads type (exclude "all" from filtering logic)
-    const selectedAdValues = selectedTypeAds.map((ad) => ad.value);
-    // Only filter if "all" is not selected
-    if (!selectedAdValues.includes("all")) {
-      filtered = filtered.filter((entry) => selectedAdValues.includes(entry.type));
-    };
 
     // Filter by placement (if a placement is selected and not "all")
-    if (selectedOptionPlacement && selectedOptionPlacement.value !== "all") {
-      filtered = filtered.filter((entry) => entry?.manual_product_ads?.product_placement === selectedOptionPlacement.value);
-    };
+    // if (selectedOptionPlacement && selectedOptionPlacement.value !== "all") {
+    //   filtered = filtered.filter((entry) => entry?.manual_product_ads?.product_placement === selectedOptionPlacement.value);
+    // };
 
     setCurrentPage(1);
     setFilteredData(filtered);
-  }, [
-    debouncedSearchTerm,
-    statusProductFilter,
-    selectedOptionPlacement,
-    selectedTypeAds,
-    data.data.entry_list,
+  }, [debouncedSearchTerm, rawData, statusProductFilter, selectedTypeAds
+    // selectedOptionPlacement
   ]);
 
+  // useEffect(() => {
+  //   let filtered = datas.content;
+  //   // Filter by search term
+  //   if (debouncedSearchTerm !== "") {
+  //     filtered = datas.content.filter((entry) =>
+  //       entry.title.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+  //     );
+  //   };
+
+  //   // Filter by status
+  //   if (statusProductFilter !== "all") {
+  //     filtered = filtered.filter((entry) => entry.state === statusProductFilter);
+  //   };
+
+  //   // Filter by ads type (exclude "all" from filtering logic)
+  //   const selectedAdValues = selectedTypeAds.map((ad) => ad.value);
+  //   // Only filter if "all" is not selected
+  //   if (!selectedAdValues.includes("all")) {
+  //     filtered = filtered.filter((entry) => selectedAdValues.includes(entry.type));
+  //   };
+
+  //   // Filter by placement (if a placement is selected and not "all")
+  //   // if (selectedOptionPlacement && selectedOptionPlacement.value !== "all") {
+  //   //   filtered = filtered.filter((entry) => entry?.manual_product_ads?.product_placement === selectedOptionPlacement.value);
+  //   // };
+
+  //   setCurrentPage(1);
+  //   setFilteredData(filtered);
+  // }, [
+  //   debouncedSearchTerm,
+  //   statusProductFilter,
+  //   selectedOptionPlacement,
+  //   selectedTypeAds,
+  //   datas.content,
+  // ]);
+
+
+
+  // PAGINATION FEATURE
   useEffect(() => {
     const calculateTotalPages = Math.ceil(filteredData.length / itemsPerPage);
     setTotalPages(calculateTotalPages || 1);
@@ -607,15 +1117,15 @@ const AdsTable = ({ data, datas }) => {
 
   const renderPagination = () => {
     const pageNumbers = getPageNumbers();
-    
+
     return (
       <div className="d-flex justify-content-between align-items-center mt-3">
         {/* Items per page dropdown */}
         <div className="d-flex align-items-center gap-2">
           <span>Tampilan</span>
-          <select 
+          <select
             className="form-select"
-            value={itemsPerPage} 
+            value={itemsPerPage}
             onChange={handleItemsPerPageChange}
             style={{ width: "80px" }}
           >
@@ -625,36 +1135,36 @@ const AdsTable = ({ data, datas }) => {
           </select>
           <span>data per halaman</span>
         </div>
-        
+
         <nav aria-label="Page navigation">
           <ul className="pagination mb-0">
             {/* Previous button */}
             <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-              <button 
-                className="page-link" 
+              <button
+                className="page-link"
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1}
               >
                 &laquo;
               </button>
             </li>
-            
+
             {/* Page numbers */}
             {pageNumbers.map(number => (
               <li key={number} className={`page-item ${currentPage === number ? 'active' : ''}`}>
-                <button 
-                  className="page-link" 
+                <button
+                  className="page-link"
                   onClick={() => handlePageChange(number)}
                 >
                   {number}
                 </button>
               </li>
             ))}
-            
+
             {/* Next button */}
             <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
-              <button 
-                className="page-link" 
+              <button
+                className="page-link"
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
               >
@@ -666,6 +1176,7 @@ const AdsTable = ({ data, datas }) => {
       </div>
     );
   };
+
 
 
   // SALES CLASSIFICATION FEATURE
@@ -717,25 +1228,25 @@ const AdsTable = ({ data, datas }) => {
     // Check if "all" is selected
     const hasAll = selectedOptions.some(option => option.value === "all");
     const hadAll = selectedTypeAds.some(option => option.value === "all");
-    
+
     // If "all" is newly selected, remove all other options
     if (hasAll && !hadAll) {
       setSelectedTypeAds([{ value: "all", label: "Semua Tipe" }]);
       return;
     }
-    
+
     // If any other options are selected and "all" is already there, remove "all"
     if (selectedOptions.length > 1 && hasAll) {
       setSelectedTypeAds(selectedOptions.filter(option => option.value !== "all"));
       return;
     }
-    
+
     // If no options are selected, set back to "all"
     if (selectedOptions.length === 0) {
       setSelectedTypeAds([{ value: "all", label: "Semua Tipe" }]);
       return;
     }
-    
+
     // Normal case, set selected options
     setSelectedTypeAds(selectedOptions);
   };
@@ -744,7 +1255,7 @@ const AdsTable = ({ data, datas }) => {
   const handleStyleMatricButton = (metricKey) => {
     const isActive = selectedMetrics.includes(metricKey);
     const metric = metrics[metricKey];
-    
+
     return {
       backgroundColor: "#ffffff00",
       border: `1px solid ${isActive ? metric.color : "rgb(179.4, 184.2, 189)"}`,
@@ -759,24 +1270,24 @@ const AdsTable = ({ data, datas }) => {
   };
 
   // Covert type ads to ui string
-  const checkTypeAds = (type) => {
-    switch (type) {
-      case "product_manual":
-        return "Iklan Produk Manual";
-      case "shop_auto":
-        return "Iklan Toko Otomatis";
-      case "shop_manual":
-        return "Iklan Toko Manual";
-      case "product_gmv_max_roas":
-        return "Iklan Produk GMV Max ROAS";
-      case "product_gmv_max_auto":
-        return "Iklan Produk GMV Max Auto";
-      case "product_auto":
-        return "Iklan Produk Otomatis";
-      default:
-        return "No Detected";
-    }
-  };
+  // const checkTypeAds = (type) => {
+  //   switch (type) {
+  //     case "product_manual":
+  //       return "Iklan Produk Manual";
+  //     case "shop_auto":
+  //       return "Iklan Toko Otomatis";
+  //     case "shop_manual":
+  //       return "Iklan Toko Manual";
+  //     case "product_gmv_max_roas":
+  //       return "Iklan Produk GMV Max ROAS";
+  //     case "product_gmv_max_auto":
+  //       return "Iklan Produk GMV Max Auto";
+  //     case "product_auto":
+  //       return "Iklan Produk Otomatis";
+  //     default:
+  //       return "No Detected";
+  //   }
+  // };
 
   // Convert budget to IDR
   const convertBudgetToIDR = (budget) => {
@@ -789,61 +1300,105 @@ const AdsTable = ({ data, datas }) => {
     }).format(convertedBudget);
   };
 
+
+
+  // CALCULATE METRIC TOTALS FEATURE
+  // Function to calculate totals for each metric based on filtered data
   function calculateMetricTotals(filteredProducts) {
     const totals = {};
-    
+
     // Inisialisasi totals untuk setiap metrik yang ada
     Object.keys(metrics).forEach(metricKey => {
-        totals[metricKey] = 0;
+      totals[metricKey] = 0;
     });
-    
+
     // Hitung total untuk setiap metrik berdasarkan data yang sudah difilter
     filteredProducts.forEach(product => {
-        // Untuk metrik daily_budget
-        if (product.campaign.daily_budget) {
-            totals.daily_budget += product.campaign.daily_budget;
+      Object.keys(metrics).forEach(metricKey => {
+        const dataKey = metrics[metricKey].dataKey;
+        if (product[dataKey] !== undefined) {
+          totals[metricKey] += product[dataKey];
         }
-        
-        // Untuk metrik impression dan metrik lainnya yang ada di report
-        Object.keys(metrics).forEach(metricKey => {
-            const dataKey = metrics[metricKey].dataKey;
-            if (dataKey !== 'daily_budget' && product.report[dataKey]) {
-                totals[metricKey] += product.report[dataKey];
-            }
-        });
+      });
     });
-    
+
     return totals;
-  }
+
+  };
 
   useEffect(() => {
-    // Hitung total metrik dari data yang sudah difilter
     const totals = calculateMetricTotals(filteredData);
     setMetricsTotals(totals);
   }, [filteredData]);
 
+  // Function to format metric values for display ui
   const formatMetricValue = (metricKey, value) => {
     if (metricKey === "daily_budget") {
-        return `Rp ${convertBudgetToIDR(value)}`;
+      return `Rp ${convertBudgetToIDR(value)}`;
     }
     return value?.toLocaleString() || "0";
   };
 
+  const getStateStyle = (state) => {
+  const stateMap = {
+    ongoing: {
+      backgroundColor: "#00EB3FFF",
+      textColor: "#00D138FF",
+      label: "Berjalan",
+      isAnimated: true,
+    },
+    pause: {
+      backgroundColor: "#F6881F",
+      textColor: "#F6881F",
+      label: "Jeda",
+      isAnimated: false,
+    },
+    ended: {
+      backgroundColor: "#F6881F",
+      textColor: "#F6881F",
+      label: "Selesai",
+      isAnimated: false,
+    },
+    deleted: {
+      backgroundColor: "#F6881F",
+      textColor: "#F6881F",
+      label: "Dihapus",
+      isAnimated: false,
+    },
+    schejul: {
+      backgroundColor: "#F6881F",
+      textColor: "#F6881F",
+      label: "Terjadwal",
+      isAnimated: false,
+    },
+  };
+
+  return stateMap[state] || {
+    backgroundColor: "#F6881F",
+    textColor: "#F6881F",
+    label: "Tidak Diketahui",
+    isAnimated: false,
+  };
+};
+
+
   return (
     <div className="card">
       <div className="card-body">
+        {loading && <div className="text-center my-3">Loading...</div>}
+        {error && <div className="alert alert-danger my-3">{error}</div>}
         {/* Header & Date Filter */}
         <div className="d-flex justify-content-between align-items-start pb-3">
-          <h5>{data.data.total} total produk</h5>
+          <h5>{filteredData.length} total produk</h5>
           <div style={{ position: "relative" }}>
             <button
               onClick={() => setShowCalendar(!showCalendar)}
-              className="btn btn-secondary"
-              style={{ backgroundColor: "#8042D4", border: "none" }}
+              className="btn btn-primary"
+              // style={{ border: "none" }}
             >
               {comparatorDate && comaparedDate
-              ? `${comparatorDate.toLocaleDateString("id-ID")} - ${comaparedDate.toLocaleDateString("id-ID")}`
-              : (typeof date === 'string' ? date : (Array.isArray(date) ? "1 Minggu terakhir" : "Pilih Tanggal"))}
+                ? `${comparatorDate.toLocaleDateString("id-ID")} - ${comaparedDate.toLocaleDateString("id-ID")}`
+                : (typeof date === 'string' ? date : (Array.isArray(date) ? "1 Minggu terakhir" : "Pilih Tanggal"))}
             </button>
             {showCalendar && (
               <div
@@ -863,20 +1418,20 @@ const AdsTable = ({ data, datas }) => {
                   className="d-flex flex-column py-2 px-1"
                   style={{ width: "130px", listStyleType: "none" }}
                 >
-                    <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection(new Date().toISOString().split("T")[0])}>Hari ini</p>
-                    <p style={{ cursor: "pointer" }}
-                      onClick={() => {
-                        const yesterday = new Date();
-                        yesterday.setDate(yesterday.getDate() - 1);
-                        handleDateSelection(yesterday.toISOString().split("T")[0]);
-                      }}
-                    >
-                      Kemarin
-                    </p>
-                    <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection(getAllDaysInLast7Days())}>1 Minggu terakhir</p>
-                    <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection("Bulan Ini")}>Bulan ini</p>
+                  <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection(new Date().toISOString().split("T")[0])}>Hari ini</p>
+                  <p style={{ cursor: "pointer" }}
+                    onClick={() => {
+                      const yesterday = new Date();
+                      yesterday.setDate(yesterday.getDate() - 1);
+                      handleDateSelection(yesterday.toISOString().split("T")[0]);
+                    }}
+                  >
+                    Kemarin
+                  </p>
+                  <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection(getAllDaysInLast7Days())}>1 Minggu terakhir</p>
+                  <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection("Bulan Ini")}>Bulan ini</p>
                 </div>
-                <div style={{ width: "1px", height: "auto", backgroundColor: "#E3E3E3FF", margin: "10px 0"}}></div>
+                <div style={{ width: "1px", height: "auto", backgroundColor: "#E3E3E3FF", margin: "10px 0" }}></div>
                 {/* Kalender pembanding */}
                 <div>
                   <p className="pt-2" style={{ textAlign: "center" }}>Tanggal Pembanding</p>
@@ -889,8 +1444,8 @@ const AdsTable = ({ data, datas }) => {
                 </div>
                 {/* Confirm button for date range */}
                 <div className="d-flex align-items-end mb-1">
-                  <button 
-                    className="btn btn-primary" 
+                  <button
+                    className="btn btn-primary"
                     onClick={handleComparisonDatesConfirm}
                     disabled={!comparatorDate || !comaparedDate}
                   >
@@ -905,21 +1460,21 @@ const AdsTable = ({ data, datas }) => {
           {/* Matric filter */}
           <div className="row g-3 justify-content-center">
             {Object.keys(metrics).map((metricKey) => (
-                <div className="col-12 col-md-6 col-lg-2">
-                    <div
-                        className="card border-light shadow-sm h-100 p-2"
-                        style={handleStyleMatricButton(metricKey)}
-                        onClick={() => handleMetricFilter(metricKey)}
-                        key={metricKey}
-                    >
-                        <h6 className="card-title">
-                            {metrics[metricKey].label}
-                        </h6>
-                        <span className="card-text fs-4 fw-bold">
-                          {formatMetricValue(metricKey, metricsTotals[metricKey])}
-                        </span>
-                    </div>
+              <div className="col-12 col-md-6 col-lg-2">
+                <div
+                  className="card border-light shadow-sm h-100 p-2"
+                  style={handleStyleMatricButton(metricKey)}
+                  onClick={() => handleMetricFilter(metricKey)}
+                  key={metricKey}
+                >
+                  <h6 className="card-title">
+                    {metrics[metricKey].label}
+                  </h6>
+                  <span className="card-text fs-4 fw-bold">
+                    {formatMetricValue(metricKey, metricsTotals[metricKey])}
+                  </span>
                 </div>
+              </div>
             ))}
           </div>
           <div ref={chartRef} style={{ width: "100%", height: "300px" }}></div>
@@ -937,28 +1492,6 @@ const AdsTable = ({ data, datas }) => {
                 <span >Pilih minimal 1 metrik untuk menampilkan data</span>
               </div>
             )}
-            {/* <div
-              id="custom-ads-container-filter-metric"
-              className="d-flex align-items-center gap-2"
-              style={{ width: "fit-content", listStyleType: "none" }}
-            >
-              <span>Matric Produk</span>
-              <div className="custom-metric-filter-buttons-wrapper">
-                {Object.keys(metrics).map((metricKey) => (
-                  <div 
-                    key={metricKey}
-                    style={handleStyleMatricButton(metricKey)}
-                    onClick={() => handleMetricFilter(metricKey)}
-                    className={handleClassisActiveMetricButton(metricKey)}
-                  >
-                    {metrics[metricKey].label}
-                    <span className="card-text fs-4 fw-bold">
-                      {formatMetricValue(metricKey, metricsTotals[metricKey])}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div> */}
             {/* Status filter */}
             <div
               className="d-flex align-items-center gap-1 gap-md-2 flex-wrap"
@@ -967,55 +1500,50 @@ const AdsTable = ({ data, datas }) => {
               <span>Status Produk</span>
               <div className="d-flex gap-1 gap-md-2 flex-wrap">
                 <div
-                  className={`status-button-filter rounded-pill d-flex align-items-center  ${
-                    statusProductFilter === "all"
+                  className={`status-button-filter rounded-pill d-flex align-items-center  ${statusProductFilter === "all"
                       ? "custom-font-color custom-border-select"
                       : "border border-secondary-subtle"
-                  }`}
+                    }`}
                   onClick={() => setStatusProductFilter("all")}
                   style={{ cursor: "pointer", fontSize: "12px", padding: "6px 12px", }}
                 >
                   Semua
                 </div>
                 <div
-                  className={`status-button-filter rounded-pill d-flex align-items-center ${
-                    statusProductFilter === "scheduled"
+                  className={`status-button-filter rounded-pill d-flex align-items-center ${statusProductFilter === "scheduled"
                       ? "custom-font-color custom-border-select"
                       : "border border-secondary-subtle"
-                  }`}
+                    }`}
                   onClick={() => setStatusProductFilter("scheduled")}
                   style={{ cursor: "pointer", fontSize: "12px", padding: "6px 12px", }}
                 >
                   Terjadwal
                 </div>
                 <div
-                  className={`status-button-filter rounded-pill d-flex align-items-center  ${
-                    statusProductFilter === "ongoing"
+                  className={`status-button-filter rounded-pill d-flex align-items-center  ${statusProductFilter === "ongoing"
                       ? "custom-font-color custom-border-select"
                       : "border border-secondary-subtle"
-                  }`}
+                    }`}
                   onClick={() => setStatusProductFilter("ongoing")}
                   style={{ cursor: "pointer", fontSize: "12px", padding: "6px 12px", }}
                 >
                   Berjalan
                 </div>
                 <div
-                  className={`status-button-filter rounded-pill d-flex align-items-center  ${
-                    statusProductFilter === "paused"
+                  className={`status-button-filter rounded-pill d-flex align-items-center  ${statusProductFilter === "paused"
                       ? "custom-font-color custom-border-select"
                       : "border border-secondary-subtle"
-                  }`}
+                    }`}
                   onClick={() => setStatusProductFilter("paused")}
                   style={{ cursor: "pointer", fontSize: "12px", padding: "6px 12px", }}
                 >
                   Nonaktif
                 </div>
                 <div
-                  className={`status-button-filter rounded-pill d-flex align-items-center ${
-                    statusProductFilter === "ended"
+                  className={`status-button-filter rounded-pill d-flex align-items-center ${statusProductFilter === "ended"
                       ? "custom-font-color custom-border-select"
                       : "border border-secondary-subtle"
-                  }`}
+                    }`}
                   onClick={() => setStatusProductFilter("ended")}
                   style={{ cursor: "pointer", fontSize: "12px", padding: "1px 12px", }}
                 >
@@ -1142,10 +1670,9 @@ const AdsTable = ({ data, datas }) => {
                 {/* Column filter */}
                 <div id="container-other-filters-right">
                   <button
-                    className="btn btn-secondary dropdown-toggle w-100"
+                    className="btn btn-primary dropdown-toggle w-100"
                     type="button"
                     onClick={() => setShowTableColumn(!showTableColumn)}
-                    style={{ backgroundColor: "#8042D4", border: "none" }}
                   >
                     Pilih kriteria
                   </button>
@@ -1184,12 +1711,7 @@ const AdsTable = ({ data, datas }) => {
               )}
             </div>
             {/* Table container */}
-            <div className="table-responsive"
-              // style={{
-              //   width: "max-content",
-              //   minWidth: "100%",
-              // }}
-            >
+            <div className="table-responsive">
               <table className="table table-centered">
                 <thead className="table-light">
                   <tr>
@@ -1209,7 +1731,7 @@ const AdsTable = ({ data, datas }) => {
                   {paginatedData.length !== 0 && paginatedData !== null ? (
                     paginatedData?.map((entry, index) => (
                       <>
-                        <tr key={entry.campaign.campaign_id}>
+                        <tr key={entry.campaignId}>
                           {filteredData.length > 0 && filteredData !== null && (
                             <td>{index + 1}</td>
                           )}
@@ -1221,116 +1743,45 @@ const AdsTable = ({ data, datas }) => {
                                 maxWidth: "400px",
                                 cursor: "pointer",
                                 color:
-                                selectedProduct?.campaign.campaign_id === entry.campaign.campaign_id
-                                  ? "#F6881F"
-                                  : "",
+                                  selectedProduct?.campaignId === entry.campaignId
+                                    ? "#F6881F"
+                                    : "",
                               }}
                               onClick={() => handleProductClick(entry)}
                             >
-                                <img
-                                  src={
-                                    "https://down-id.img.susercontent.com/file/" +
-                                    entry.image
-                                  }
-                                  alt={entry.title}
-                                  className="rounded"
-                                  style={{ width: "60px", height: "60px" }}
-                                />
+                              <img
+                                src={
+                                  "https://down-id.img.susercontent.com/file/" +
+                                  entry.image
+                                }
+                                alt={entry.title}
+                                className="rounded"
+                                style={{ width: "60px", height: "60px" }}
+                              />
                               <div className="d-flex flex-column">
                                 <span>{entry.title}</span>
-                                {/* {
-                                  entry.type === "product_manual" ? (
-                                    <div className="d-flex flex-col">
-                                      <span className="text-secondary" style={{ fontSize: "12px" }}>
-                                      {checkTypeAds(entry.type)}
-                                      </span>
-                                      {entry.manual_product_ads != null ? (
-                                        <div className="d-flex gap-1 align-items-center">
-                                          <span style={{ fontSize: "11px" }}>Penempatan :</span>
-                                          <span style={{ fontSize: "11px" }}>
-                                            {
-                                              entry.manual_product_ads.product_placement === "search_product"
-                                                ? "Halaman Pencarian"
-                                                : entry.manual_product_ads.product_placement === "targeting"
-                                                ? "Halaman Rekomendasi"
-                                                : ""
-                                            }
-                                          </span>
-                                        </div>
-                                      ) : (
-                                        ""
-                                      )}
-                                    </div>
-      
-                                  ) : entry.type === "product_manual" ? (
-                                    entry?.manual_product_ads?.product_placement === "search_product" ? (
-                                      <Link to={"/performance/ads/details"}>
-                                        se
-                                        <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24"><path fill="currentColor" d="m16 8.4l-8.9 8.9q-.275.275-.7.275t-.7-.275t-.275-.7t.275-.7L14.6 7H7q-.425 0-.712-.288T6 6t.288-.712T7 5h10q.425 0 .713.288T18 6v10q0 .425-.288.713T17 17t-.712-.288T16 16z"></path></svg>
-                                      </Link>
-                                    ) : entry?.manual_product_ads?.product_placement === "targeting" ? (
-                                      <Link to={"/performance/ads/detail"}>
-                                        re
-                                        <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24"><path fill="currentColor" d="m16 8.4l-8.9 8.9q-.275.275-.7.275t-.7-.275t-.275-.7t.275-.7L14.6 7H7q-.425 0-.712-.288T6 6t.288-.712T7 5h10q.425 0 .713.288T18 6v10q0 .425-.288.713T17 17t-.712-.288T16 16z"></path></svg>
-                                      </Link>
-                                    ) : (
-                                      <span></span>
-                                    )
-                                  ) : (
-                                    <span></span>
-                                  )
-                                } */}
-                                {/* <span className="text-secondary" style={{ fontSize: "12px" }}>
-                                  {checkTypeAds(entry.type)}
-                                </span>
-                                {
-                                  entry.manual_product_ads != null ? (
-                                    <div className="d-flex gap-1 align-items-center">
-                                      <span style={{ fontSize: "11px" }}>Penempatan :</span>
-                                      <span style={{ fontSize: "11px" }}>
-                                        {
-                                          entry.manual_product_ads.product_placement === "search_product"
-                                            ? "Halaman Pencarian"
-                                            : entry.manual_product_ads.product_placement === "targeting"
-                                            ? "Halaman Rekomendasi"
-                                            : ""
-                                        }
-                                      </span>
-                                    </div>
-                                  ) : (
-                                    ""
-                                  )
-                                } */}
                                 <span style={{ fontSize: "11px" }}>
                                   Tidak terbatas
                                 </span>
-                                <div className="d-flex gap-1 align-items-center">
-                                  <div
-                                    className={`marker ${entry.state === "ongoing"
-                                        ? "animated-circle"
-                                        : ""
-                                      }`}
-                                    style={{
-                                      backgroundColor:
-                                        entry.state === "ongoing"
-                                          ? "#00EB3FFF"
-                                          : "#F6881F",
-                                    }}
-                                  ></div>
-                                  <span
-                                    style={{
-                                      fontSize: "14px",
-                                      color:
-                                        entry.state === "ongoing"
-                                          ? "#00D138FF"
-                                          : "#F6881F",
-                                    }}
-                                  >
-                                    {entry.state === "ongoing"
-                                      ? "Berjalan"
-                                      : "Nonaktif"}
-                                  </span>
-                                </div>
+                                {(() => {
+                                  const stateStyle = getStateStyle(entry.state);
+                                  return (
+                                    <div className="d-flex gap-1 align-items-center">
+                                      <div
+                                        className={`marker ${stateStyle.isAnimated ? "animated-circle" : ""}`}
+                                        style={{ backgroundColor: stateStyle.backgroundColor }}
+                                      ></div>
+                                      <span
+                                        style={{
+                                          fontSize: "14px",
+                                          color: stateStyle.textColor,
+                                        }}
+                                      >
+                                        {stateStyle.label}
+                                      </span>
+                                    </div>
+                                  );
+                                })()}
                               </div>
                             </td>
                           )}
@@ -1338,7 +1789,7 @@ const AdsTable = ({ data, datas }) => {
                             <td style={{ width: "200px" }}>
                               <div className="d-flex flex-column">
                                 <span>
-                                  Rp {convertBudgetToIDR(entry.campaign.daily_budget)}
+                                  Rp {convertBudgetToIDR(entry.dailyBudget)}
                                 </span>
                                 <span className="text-success" style={{ fontSize: "10px" }}>
                                   +12.7%
@@ -1349,7 +1800,8 @@ const AdsTable = ({ data, datas }) => {
                           {selectedColumns.includes("iklan_dilihat") && (
                             <td style={{ width: "200px" }}>
                               <div className="d-flex flex-column">
-                                <span>{entry.report.impression}</span>
+                                <span></span>
+                                {/* <span>{entry.report.impression}</span> */}
                                 <span className="text-danger" style={{ fontSize: "10px" }}>
                                   -102.7%
                                 </span>
@@ -1359,7 +1811,7 @@ const AdsTable = ({ data, datas }) => {
                           {selectedColumns.includes("click") && (
                             <td style={{ width: "200px" }}>
                               <div className="d-flex flex-column">
-                                <span>{entry.report.click}</span>
+                                <span>{entry.click}</span>
                                 <span className="text-danger" style={{ fontSize: "10px" }}>
                                   -102.7%
                                 </span>
@@ -1369,7 +1821,7 @@ const AdsTable = ({ data, datas }) => {
                           {selectedColumns.includes("ctr") && (
                             <td style={{ width: "200px" }}>
                               <div className="d-flex flex-column">
-                                <span>{entry.report.ctr}</span>
+                                <span>{entry.ctr}</span>
                                 <span className="text-danger" style={{ fontSize: "10px" }}>
                                   -102.7%
                                 </span>
@@ -1379,7 +1831,7 @@ const AdsTable = ({ data, datas }) => {
                           {selectedColumns.includes("acos") && (
                             <td style={{ width: "200px" }}>
                               <div className="d-flex flex-column">
-                                <span>{entry.report.broad_cir}</span>
+                                <span>{entry.acos}</span>
                                 <span className="text-danger" style={{ fontSize: "10px" }}>
                                   -102.7%
                                 </span>
@@ -1389,7 +1841,7 @@ const AdsTable = ({ data, datas }) => {
                           {selectedColumns.includes("cpc") && (
                             <td style={{ width: "200px" }}>
                               <div className="d-flex flex-column">
-                                <span>{entry.report.cpc}</span>
+                                <span>{entry.cpc}</span>
                                 <span className="text-danger" style={{ fontSize: "10px" }}>
                                   -102.7%
                                 </span>
@@ -1399,7 +1851,8 @@ const AdsTable = ({ data, datas }) => {
                           {selectedColumns.includes("convertion") && (
                             <td style={{ width: "200px" }}>
                               <div className="d-flex flex-column">
-                                <span>{entry.report.checkout}</span>
+                                <span></span>
+                                {/* <span>{entry.report.checkout}</span> */}
                                 <span className="text-danger" style={{ fontSize: "10px" }}>
                                   -102.7%
                                 </span>
@@ -1433,12 +1886,7 @@ const AdsTable = ({ data, datas }) => {
                           {selectedColumns.includes("insight") && (
                             <td style={{ width: "200px" }}>
                               <span>
-                                {entry.bidding
-                                  ? entry.bidding > 5
-                                    ? "Tambahkan Bidding"
-                                    : "Turunkan Bidding"
-                                  : ""}
-                                {/* {entry.campaign.daily_budget / entry.report.click} */}
+                                {entry.insight}
                               </span>
                             </td>
                           )}
@@ -1451,10 +1899,8 @@ const AdsTable = ({ data, datas }) => {
                                 style={{ width: "100px", height: "30px" }}
                               />
                               <button
-                                className="btn btn-primary"
+                                className="btn btn-success"
                                 style={{
-                                  backgroundColor: "#8042D4",
-                                  border: "none",
                                   width: "100px",
                                   padding: "5px 0px",
                                   fontSize: "12px",
@@ -1466,33 +1912,34 @@ const AdsTable = ({ data, datas }) => {
                             </td>
                           )}
                           {selectedColumns.includes("detail") && (
-                          <td style={{ width: "200px" }}>
-                            {
-                              entry.type === "product_gmv_max_roas" ? (
-                                <Link to={"/dashboard/performance/ads/detailROAS"}>
-                                  roas
-                                  <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24"><path fill="currentColor" d="m16 8.4l-8.9 8.9q-.275.275-.7.275t-.7-.275t-.275-.7t.275-.7L14.6 7H7q-.425 0-.712-.288T6 6t.288-.712T7 5h10q.425 0 .713.288T18 6v10q0 .425-.288.713T17 17t-.712-.288T16 16z"></path></svg>
-                                </Link>
-                              ) : entry.type === "product_manual" ? (
-                                entry?.manual_product_ads?.product_placement === "search_product" ? (
-                                  <Link to={"/dashboard/performance/ads/detail"}>
-                                    se
+                            <td style={{ width: "200px" }}>
+                              <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24"><path fill="currentColor" d="m16 8.4l-8.9 8.9q-.275.275-.7.275t-.7-.275t-.275-.7t.275-.7L14.6 7H7q-.425 0-.712-.288T6 6t.288-.712T7 5h10q.425 0 .713.288T18 6v10q0 .425-.288.713T17 17t-.712-.288T16 16z"></path></svg>
+                              {/* {
+                                entry.type === "product_gmv_max_roas" ? (
+                                  <Link to={"/dashboard/performance/ads/detailROAS"}>
+                                    roas
                                     <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24"><path fill="currentColor" d="m16 8.4l-8.9 8.9q-.275.275-.7.275t-.7-.275t-.275-.7t.275-.7L14.6 7H7q-.425 0-.712-.288T6 6t.288-.712T7 5h10q.425 0 .713.288T18 6v10q0 .425-.288.713T17 17t-.712-.288T16 16z"></path></svg>
                                   </Link>
-                                ) : entry?.manual_product_ads?.product_placement === "targeting" ? (
-                                  <Link to={"/dashboard/performance/ads/detailRECOM"}>
-                                    re
-                                    <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24"><path fill="currentColor" d="m16 8.4l-8.9 8.9q-.275.275-.7.275t-.7-.275t-.275-.7t.275-.7L14.6 7H7q-.425 0-.712-.288T6 6t.288-.712T7 5h10q.425 0 .713.288T18 6v10q0 .425-.288.713T17 17t-.712-.288T16 16z"></path></svg>
-                                  </Link>
+                                ) : entry.type === "product_manual" ? (
+                                  entry?.manual_product_ads?.product_placement === "search_product" ? (
+                                    <Link to={"/dashboard/performance/ads/detail"}>
+                                      se
+                                      <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24"><path fill="currentColor" d="m16 8.4l-8.9 8.9q-.275.275-.7.275t-.7-.275t-.275-.7t.275-.7L14.6 7H7q-.425 0-.712-.288T6 6t.288-.712T7 5h10q.425 0 .713.288T18 6v10q0 .425-.288.713T17 17t-.712-.288T16 16z"></path></svg>
+                                    </Link>
+                                  ) : entry?.manual_product_ads?.product_placement === "targeting" ? (
+                                    <Link to={"/dashboard/performance/ads/detailRECOM"}>
+                                      re
+                                      <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24"><path fill="currentColor" d="m16 8.4l-8.9 8.9q-.275.275-.7.275t-.7-.275t-.275-.7t.275-.7L14.6 7H7q-.425 0-.712-.288T6 6t.288-.712T7 5h10q.425 0 .713.288T18 6v10q0 .425-.288.713T17 17t-.712-.288T16 16z"></path></svg>
+                                    </Link>
+                                  ) : (
+                                    <span></span>
+                                  )
                                 ) : (
                                   <span></span>
                                 )
-                              ) : (
-                                <span></span>
-                              )
-                            }
-                          </td>
-                        )}
+                              } */}
+                            </td>
+                          )}
                         </tr>
                       </>
                     ))

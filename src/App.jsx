@@ -6,10 +6,11 @@ import { useAuth } from "./context/Auth";
 import { setUnauthorizedHandler } from "./utils/request";
 import PrivateRoute from "./utils/protectRoutes";
 import GlobalJsScripts from './assets/global';
+import HomeRoute from "./utils/homeRoute";
 import LoginPage from './pages/auth/LoginPage';
 import OtpPage from './pages/auth/OtpPage';
 import HomeDashboardPage from "./pages/index";
-import MerchantInformationPage from './pages/merchant/InformatioPage';
+import MerchantInformationPage from './pages/merchant/InformationPage';
 import MerchantKPIPage from './pages/merchant/KpiPage';
 import PerformanceAdsPage from './pages/performance/AdsPage';
 import PerformanceProductPage from './pages/performance/ProductPage';
@@ -21,20 +22,24 @@ import NotFoundPage from "./pages/NotFound";
 
 
 function App() {
-  const { handleUnauthorized } = useAuth();
+  const { handleUnauthorized, isChecking } = useAuth();
 
   useEffect(() => {
     setUnauthorizedHandler(handleUnauthorized);
   }
   , [handleUnauthorized]);
 
+  if (isChecking) {
+    return <div></div>;
+  }
+
   return (
     <>
       <Toaster position="top-center" />
       <GlobalJsScripts />
       <Routes>
-        <Route path="/" element={<LoginPage />} />
-
+        <Route path="/" element={<HomeRoute />} />
+        <Route path="/login" element={<LoginPage />} />
         <Route element={<PrivateRoute />}>
           <Route path="/verification-otp" element={<OtpPage />} />
           <Route path="/dashboard" element={<HomeDashboardPage />} />

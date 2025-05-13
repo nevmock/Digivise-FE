@@ -1,79 +1,41 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+// import { useAuth } from "./context/Auth";
+// import { setUnauthorizedHandler } from "./utils/request";
+// import PrivateRoute from "./utils/protectRoutes";
+// import GlobalJsScripts from './assets/global';
 
-import { useAuth } from "../../context/Auth";
-import { login } from "../../resolver/auth/authApp";
 
+// function App() {
+//   const { handleUnauthorized } = useAuth();
 
-export default function LoginPage() {
-    const { loginSuccess } = useAuth();
-    const navigate = useNavigate();
-    const [username, setUsername] = useState("");
-    const [password, setPassword] = useState("");
-    const [isLoading, setIsLoading] = useState(false);
+//   useEffect(() => {
+//     setUnauthorizedHandler(handleUnauthorized);
+//   }
+//   , [handleUnauthorized]);
 
-    const handleSubmitLogin = async (e) => {
-        e.preventDefault();
-        setIsLoading(true);
+//   return (
+//     <>
+//       <Toaster position="top-center" />
+//       <GlobalJsScripts />
+//       <Routes>
+//         <Route path="/" element={<LoginPage />} />
 
-        try {
-            await login(username, password);
-            await loginSuccess();
-            navigate("/dashboard");
-        } catch (error) {
-            alert("Login gagal, silahkan coba lagi");
-            console.error("Gagal login, error pada server:", error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
+//         <Route element={<PrivateRoute />}>
+//           <Route path="/verification-otp" element={<OtpPage />} />
+//           <Route path="/dashboard" element={<HomeDashboardPage />} />
+//           <Route path="/dashboard/merchant-information" element={<MerchantInformationPage />} />
+//           <Route path="/dashboard/merchant-kpi" element={<MerchantKPIPage />} />
+//           <Route path="/dashboard/performance/ads" element={<PerformanceAdsPage />} />
+//           <Route path="/dashboard/performance/product" element={<PerformanceProductPage />} />
+//           <Route path="/dashboard/performance/stock" element={<PerformanceStockPage />} />
+//           <Route path="/dashboard/performance/ads/detail" element={<TetsDetailAdsPage />} />
+//           <Route path="/dashboard/performance/ads/detailRECOM" element={<TestDetailDuaAdsPage />} />
+//           <Route path="/dashboard/performance/ads/detailROAS" element={<TestDetailTigaAdsPage />} />
+//         </Route>
+        
+//         <Route path="*" element={<NotFoundPage />} />
+//       </Routes>
+//     </>
+//   );
+// };
 
-    return (
-        <>
-            <div className="card-body p-5">
-                <div className="text-center">
-                    <h1 className="fw-bold text-dark mb-2">Login</h1>
-                    <p className="text-muted">Sign in to continue to your account</p>
-                </div>
-                <form className="mt-5" onSubmit={handleSubmitLogin}>
-                    <div className="mb-3">
-                        <label htmlFor="username" className="form-label">username</label>
-                        <input
-                            type="test"
-                            className="form-control"
-                            id="username"
-                            name="username"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            placeholder="Enter your username"
-                        />
-                    </div>
-                    <div className="mb-3">
-                        <div className="d-flex justify-content-between align-items-center">
-                            <label htmlFor="password" className="form-label">Password</label>
-                        </div>
-                        <input
-                            type="password"
-                            className="form-control"
-                            id="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Enter your password"
-                        />
-                    </div>
-                    <div className="d-grid mt-5">
-                        <button className="btn btn-dark btn-lg fw-medium" type="submit">
-                        {isLoading ? (
-                            <div className="spinner-border spinner-border-sm" role="status">
-                                <span className="visually-hidden ">Loading...</span>
-                            </div>
-                        ) : (
-                            "Login"
-                        )}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </>
-    )
-};
+// export default App;

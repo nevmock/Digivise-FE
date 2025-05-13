@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 
@@ -7,12 +7,18 @@ import { login } from "../../resolver/auth/authApp";
 
 
 export default function LoginPage() {
-    const { loginSuccess } = useAuth();
+    const { loginSuccess, isAuth } = useAuth();
     const navigate = useNavigate();
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [errors, setErrors] = useState({});
     const [isLoading, setIsLoading] = useState(false);
+    
+    useEffect(() => {
+        if (isAuth) {
+            navigate("/dashboard", { replace: true });
+        }
+    }, [isAuth, navigate]);
 
     const validate = () => {
         const newErrors = {};
@@ -33,8 +39,8 @@ export default function LoginPage() {
         }
 
         try {
-            await login(username, password);
-            loginSuccess();
+            const response = await login(username, password);
+            loginSuccess(response);
             toast.success("Login berhasil!");
             navigate("/dashboard");
         } catch (error) {

@@ -1,5 +1,9 @@
 import axiosRequest from "../../utils/request";
 
+
+const TOKEN_KEY = "userAppToken";
+const USER_DATA_KEY = "userDataApp";
+
 export const login = async (username, password) => {
     const payload = { username, password };
     try {
@@ -7,16 +11,17 @@ export const login = async (username, password) => {
         if (response.status === 200 && response.data) {
             const { accessToken, userId, username, merchants = [] } = response.data;
             const userData = {
+                accessToken,
                 userId,
                 username,
-                merchants,
+                merchants
             };
-            localStorage.setItem("userDataApp", JSON.stringify(userData));
-            localStorage.setItem("userAppToken", accessToken);
-            
-            return accessToken;
+            localStorage.setItem(USER_DATA_KEY, JSON.stringify(userData));
+            localStorage.setItem(TOKEN_KEY, accessToken);
+
+            return userData;
         } else {
-            throw new Error("Login failed");
+            throw new Error("Login Gagal, silakan coba lagi");
         }
     } catch (error) {    
         throw error;
@@ -24,7 +29,7 @@ export const login = async (username, password) => {
 };
 
 export const logout = async () => {
-    const accessToken = localStorage.getItem("userAppToken");
+    const accessToken = localStorage.getItem(TOKEN_KEY);
     if (!accessToken) {
         return;
     }
@@ -35,17 +40,13 @@ export const logout = async () => {
                 Authorization: `Bearer ${accessToken}`,
             },
         });
-        localStorage.removeItem("userDataApp");
-        localStorage.removeItem("userAppToken");
+        localStorage.removeItem(USER_DATA_KEY);
+        localStorage.removeItem(TOKEN_KEY);
     } catch (error) {
         throw error;
     }
 };
 
-export const getToken = () => {
-    return localStorage.getItem("userAppToken");
-};
+export const getToken = () => localStorage.getItem(TOKEN_KEY);
 
-export const isAuthenticated = () => {
-    return !!getToken();
-};
+export const isAuthenticated = () =>  !!getToken();
