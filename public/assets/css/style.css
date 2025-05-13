@@ -19160,6 +19160,9 @@ body.authentication-bg {
   display: -ms-flexbox;
   display: flex;
   min-height: 100vh;
+  /* background-image: url(/assets/images/bg-pattern.png);
+  background-repeat: no-repeat;
+  background-size: cover; */
 }
 
 @-webkit-keyframes gradient {

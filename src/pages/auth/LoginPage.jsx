@@ -54,14 +54,19 @@ export default function LoginPage() {
     return (
         <>
             <div className="account-pages py-5 bg-white vh-100 d-flex justify-content-center align-items-center">
-                <div className="container">
+                <div className="background-bubbles">
+                    {Array.from({ length: 10 }).map((_, i) => (
+                        <div key={i} className="bubble" />
+                    ))}
+                </div>
+                <div className="container position-relative" style={{ zIndex: 10 }}>
                     <div className="row justify-content-center">
                         <div className="col-md-6 col-lg-5">
                             <div className="card border-0 shadow-lg">
                                 <div className="card-body p-5">
                                     <div className="text-center">
                                         <h1 className="fw-bold text-dark mb-2">Login</h1>
-                                        <p className="text-muted">Sign in to continue to your account</p>
+                                        <p className="text-muted">Mohon login terlebih dahulu untuk melanjutkan</p>
                                     </div>
                                     <form className="mt-5" onSubmit={handleSubmitLogin}>
                                         <div className="mb-3">
@@ -94,7 +99,7 @@ export default function LoginPage() {
                                         </div>
                                         <div className="d-grid mt-5">
                                             <button
-                                                className="btn btn-dark btn-lg fw-medium"
+                                                className="btn btn-primary btn-lg fw-medium"
                                                 type="submit"
                                                 disabled={isLoading}
                                             >
