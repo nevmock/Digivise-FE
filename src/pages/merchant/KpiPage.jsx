@@ -138,56 +138,48 @@ export default function MerchantKpiPage() {
         <h3>Merchant</h3>
       </div>
       <div>
-        <div className="card px-3 py-3">
-          <h5 className="text-left">Merchant Key Performance Indicator (KPI)</h5>
-          <div className="row row-cols-1 row-cols-md-2 g-3">
-            <div className="col">
-              {
-                isLoading ? (
-                  <div className="flex justify-content-center align-items-center">
-                    <Loading />
-                  </div>
-                ) : (
+        {
+          isLoading ? (
+            <div className="flex justify-content-center align-items-center vh-100">
+              <Loading />
+            </div>
+          ) : (
+            <div className="card px-3 py-3">
+              <h5 className="text-left">Merchant Key Performance Indicator (KPI)</h5>
+              <div className="row row-cols-1 row-cols-md-2 g-3">
+                <div className="col">
                   <KpiSection
                     title="Efeceiency Uptumize KPI Metrics"
                     category="efeciency"
                     globalKpiData={kpiData}
                     setGlobalKpiData={setKpiData}
                   />
-                )
-              }
-            </div>
-            <div className="col">
-              {
-                isLoading ? (
-                  <div className="flex justify-content-center align-items-center">
-                    <Loading />
-                  </div>
-                ) : (
+                </div>
+                <div className="col">
                   <KpiSection
                     title="Scale Up KPI Metrics"
                     category="scaleup"
                     globalKpiData={kpiData}
                     setGlobalKpiData={setKpiData}
                   />
-                )
-              }
+                </div>
+              </div>
+              <div className="d-flex justify-content-end mt-3">
+                <button type="submit" className="btn btn-primary" onClick={handleUpdate} disabled={isUpdating}>
+                  {
+                    isUpdating ? (
+                      <div className="spinner-border spinner-border-sm" role="status">
+                        <span className="visually-hidden">Loading...</span>
+                      </div>
+                    ) : (
+                      "Update"
+                    )
+                  }
+                </button>
+              </div>
             </div>
-          </div>
-          <div className="d-flex justify-content-end mt-3">
-            <button type="submit" className="btn btn-primary" onClick={handleUpdate} disabled={isUpdating}>
-              {
-                isUpdating ? (
-                  <div className="spinner-border spinner-border-sm" role="status">
-                    <span className="visually-hidden">Loading...</span>
-                  </div>
-                ) : (
-                  "Update"
-                )
-              }
-            </button>
-          </div>
-        </div>
+          )
+        }
       </div>
     </BaseLayout>
   );
