@@ -150,8 +150,20 @@ export default function MerchantInformationPage() {
 };
 
 
+
 // export default function MerchantInformationPage() {
 //   const dataMerchant = localStorage.getItem("userDataApp");
+//   const parsedMerchant = dataMerchant ? JSON.parse(dataMerchant) : null;
+
+//   if (parsedMerchant.merchants.length == 0) {
+//     return (
+//       <BaseLayout>
+//         <div className="alert alert-warning">
+//           Tidak ada merchant aktif. Silahkan buat merchant atau login ke merchant terlebih dahulu.
+//         </div>
+//       </BaseLayout>
+//     );
+//   }
 
 //   return (
 //     <>
