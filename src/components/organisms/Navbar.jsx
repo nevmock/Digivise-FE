@@ -7,6 +7,7 @@ import { useAuth } from "../../context/Auth";
 import { logout } from "../../resolver/auth/authApp";
 import CreateMerchantModal from "../organisms/ModalAddMerchant";
 import LoginMerchantModal from "../organisms/ModalLoginMerchant";
+import avatarProfile from "../../assets/images/users/avatar-1.jpg";
 
 
 const Navbar = () => {
@@ -108,7 +109,7 @@ const Navbar = () => {
                                                     >
                                                         <div className="d-flex align-items-center">
                                                             <img
-                                                                src={"../../assets/images/users/avatar-1.jpg"}
+                                                                src={avatarProfile}
                                                                 className="rounded-circle me-2"
                                                                 width="40"
                                                                 height="40"
@@ -171,8 +172,8 @@ const Navbar = () => {
                                 <a type="button" className="topbar-button" id="page-header-user-dropdown" data-bs-toggle="dropdown"
                                     aria-haspopup="true" aria-expanded="false">
                                     <span className="d-flex align-items-center">
-                                        <img className="rounded-circle" width="32" src="../../assets/images/users/avatar-1.jpg"
-                                            alt="avatar-3" />
+                                        <img className="rounded-circle" width="32" src={avatarProfile}
+                                            alt="avatar" />
                                     </span>
                                 </a>
                                 <div className="dropdown-menu dropdown-menu-end">
