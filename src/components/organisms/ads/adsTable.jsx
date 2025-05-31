@@ -2,12 +2,14 @@ import { useState, useEffect, useRef } from "react";
 import Select from "react-select";
 import Calendar from "react-calendar";
 import * as echarts from "echarts";
+import { Link } from "react-router-dom";
 
 import axiosRequest from "../../../utils/request";
 import useDebounce from "../../../hooks/useDebounce";
 import convertBudgetToIDR from "../../../utils/convertBudgetIDR";
 import converTypeAds from "../../../utils/convertTypeAds";
 import formatMetricValue from "../../../utils/convertValueMetricFilter";
+import Loading from "../../atoms/Loading/Loading";
 
 
 const AdsTable = () => {
@@ -34,7 +36,7 @@ const AdsTable = () => {
   const [paginatedData, setPaginatedData] = useState([]);
   const [totalPages, setTotalPages] = useState(1);
   const [metricsTotals, setMetricsTotals] = useState({});
-  const [isloading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
 
@@ -88,7 +90,12 @@ const AdsTable = () => {
         ? toDate.toISOString()
         : new Date(toDate).toISOString();
 
-      const response = await axiosRequest.get(`/api/product-ads?shopId=252234165&from=2025-05-05T17:25:01.869&to=2025-05-10T21:00:00`);
+      // const response = await axiosRequest.get(`/api/product-ads?shopId=252234165&from=2025-05-05T17:25:01.869&to=2025-05-10T21:00:00`);
+      // console.log("Selected Type Ads:", selectedTypeAds[0]?.value);
+      // useEffect(() => {
+      // }, [selectedTypeAds]);
+
+      const response = await axiosRequest.get(`/api/product-ads/daily?shopId=252234165&from=2025-05-05T17:25:01.869&to=2025-05-10T21:00:00&biddingStrategy=manual`);
       if (!response) {
         throw new Error('Failed to fetch data');
       }
@@ -110,6 +117,7 @@ const AdsTable = () => {
       setIsLoading(false);
     }
   };
+
 
   // Date utility for getting all days in the last 7 days
   function getAllDaysInLast7Days() {
@@ -599,7 +607,7 @@ const AdsTable = () => {
 
     const selectedAdValues = selectedTypeAds.map((ad) => ad.value);
     if (!selectedAdValues.includes("all")) {
-      filtered = rawData.filter((entry) => selectedAdValues.includes(entry.type));
+      filtered = rawData.filter((entry) => selectedAdValues.includes(entry.biddingStrategy));
     };
 
 
@@ -712,6 +720,14 @@ const AdsTable = () => {
     );
   };
 
+  // console.log(rawData, "rawData");
+  // console.log(filteredData, "filteredData");
+  // console.log(paginatedData, "paginatedData");
+
+  // const mappingPage = paginatedData.map((product) => {
+  //   console.log(product, "product");
+  // });
+
 
 
   // SALES CLASSIFICATION FEATURE
@@ -752,8 +768,8 @@ const AdsTable = () => {
     { value: "all", label: "Semue Tipe" },
     { value: "product_gmv_max_roas", label: "Iklan Produk GMV Max ROAS" },
     { value: "product_gmv_max_auto", label: "Iklan Produk GMV Max Auto" },
-    { value: "product_auto", label: "Iklan Produk Auto" },
-    { value: "product_manual", label: "Iklan Produk Manual" },
+    { value: "auto", label: "Iklan Produk Auto" },
+    { value: "manual", label: "Iklan Produk Manual" },
     { value: "shop_auto", label: "Iklan Toko Auto" },
     { value: "shop_manual", label: "Iklan Toko Manual" },
   ];
@@ -886,584 +902,577 @@ const AdsTable = () => {
   };
 
   return (
-    <div className="card">
-      <div className="card-body">
-        {isloading && <div className="text-center my-3">Loading...</div>}
-        {error && <div className="alert alert-danger my-3">{error}</div>}
-        {/* Header & Date Filter */}
-        <div className="d-flex justify-content-between align-items-start pb-3">
-          <h5>{filteredData.length} total produk</h5>
-          <div style={{ position: "relative" }}>
-            <button
-              onClick={() => setShowCalendar(!showCalendar)}
-              className="btn btn-primary"
-            >
-              {comparatorDate && comaparedDate
-                ? `${comparatorDate.toLocaleDateString("id-ID")} - ${comaparedDate.toLocaleDateString("id-ID")}`
-                : (typeof date === 'string' ? date : (Array.isArray(date) ? "1 Minggu terakhir" : "Pilih Tanggal"))}
-            </button>
-            {showCalendar && (
-              <div
-                className="d-flex"
-                style={{
-                  position: "absolute",
-                  top: "40px",
-                  right: "0",
-                  zIndex: 1000,
-                  background: "white",
-                  boxShadow: "0px 4px 6px rgba(0,0,0,0.1)",
-                  borderRadius: "8px",
-                  padding: "0px 10px",
-                }}
-              >
-                <div
-                  className="d-flex flex-column py-2 px-1"
-                  style={{ width: "130px", listStyleType: "none" }}
-                >
-                  <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection(new Date().toISOString().split("T")[0])}>Hari ini</p>
-                  <p style={{ cursor: "pointer" }}
-                    onClick={() => {
-                      const yesterday = new Date();
-                      yesterday.setDate(yesterday.getDate() - 1);
-                      handleDateSelection(yesterday.toISOString().split("T")[0]);
-                    }}
-                  >
-                    Kemarin
-                  </p>
-                  <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection(getAllDaysInLast7Days())}>1 Minggu terakhir</p>
-                  <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection("Bulan Ini")}>Bulan ini</p>
-                </div>
-                <div style={{ width: "1px", height: "auto", backgroundColor: "#E3E3E3FF", margin: "10px 0" }}></div>
-                {/* Kalender pembanding */}
-                <div>
-                  <p className="pt-2" style={{ textAlign: "center" }}>Tanggal Pembanding</p>
-                  <Calendar onChange={(date) => setComparatorDate(date)} value={comparatorDate} maxDate={comaparedDate || new Date(2100, 0, 1)} />
-                </div>
-                {/* Kalender dibanding */}
-                <div>
-                  <p className="pt-2" style={{ textAlign: "center" }}>Tanggal Dibanding</p>
-                  <Calendar onChange={(date) => setComaparedDate(date)} value={comaparedDate} minDate={comparatorDate || new Date()} />
-                </div>
-                {/* Confirm button for date range */}
-                <div className="d-flex align-items-end mb-1">
+    <>
+      {
+        isLoading ? (
+          <div className="d-flex justify-content-center align-items-start vh-100">
+            <Loading size={40} />
+          </div>
+        ) : (
+          <div className="card">
+            <div className="card-body">
+              {error && <div className="alert alert-danger my-3">{error}</div>}
+              {/* Header & Date Filter */}
+              <div className="d-flex justify-content-between align-items-start pb-3">
+                <strong>{filteredData.length} total produk</strong>
+                <div style={{ position: "relative" }}>
                   <button
+                    onClick={() => setShowCalendar(!showCalendar)}
                     className="btn btn-primary"
-                    onClick={handleComparisonDatesConfirm}
-                    disabled={!comparatorDate || !comaparedDate}
                   >
-                    Terapkan
+                    {comparatorDate && comaparedDate
+                      ? `${comparatorDate.toLocaleDateString("id-ID")} - ${comaparedDate.toLocaleDateString("id-ID")}`
+                      : (typeof date === 'string' ? date : (Array.isArray(date) ? "1 Minggu terakhir" : "Pilih Tanggal"))}
                   </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="d-flex flex-column gap-3">
-          {/* Matric filter */}
-          <div className="row g-3 justify-content-center">
-            {Object.keys(metrics).map((metricKey) => (
-              <div className="col-12 col-md-6 col-lg-2">
-                <div
-                  className="card border-light shadow-sm h-100 p-2"
-                  style={handleStyleMatricButton(metricKey)}
-                  onClick={() => handleMetricFilter(metricKey)}
-                  key={metricKey}
-                >
-                  <h6 className="card-title">
-                    {metrics[metricKey].label}
-                  </h6>
-                  <span className="card-text fs-4 fw-bold">
-                    {formatMetricValue(metricKey, metricsTotals[metricKey])}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div ref={chartRef} style={{ width: "100%", height: "300px" }}></div>
-          {/* Filter & Table */}
-          <div className="d-flex flex-column gap-2">
-            {/* Alert validation */}
-            {showAlert && (
-              <div className="alert alert-warning alert-dismissible fade show" role="alert">
-                Maksimal metrik yang dapat dipilih adalah 4 metrik
-                <button type="button" className="btn-close" onClick={() => setShowAlert(false)}></button>
-              </div>
-            )}
-            {selectedMetrics.length === 0 && (
-              <div className="alert alert-warning alert-dismissible fade show">
-                <span >Pilih minimal 1 metrik untuk menampilkan data</span>
-              </div>
-            )}
-            {/* Status filter */}
-            <div
-              className="d-flex align-items-center gap-1 gap-md-2 flex-wrap"
-              style={{ width: "fit-content", listStyleType: "none" }}
-            >
-              <span>Status Produk</span>
-              <div className="d-flex gap-1 gap-md-2 flex-wrap">
-                <div
-                  className={`status-button-filter rounded-pill d-flex align-items-center  ${statusProductFilter === "all"
-                      ? "custom-font-color custom-border-select"
-                      : "border border-secondary-subtle"
-                    }`}
-                  onClick={() => setStatusProductFilter("all")}
-                  style={{ cursor: "pointer", fontSize: "12px", padding: "6px 12px", }}
-                >
-                  Semua
-                </div>
-                <div
-                  className={`status-button-filter rounded-pill d-flex align-items-center ${statusProductFilter === "scheduled"
-                      ? "custom-font-color custom-border-select"
-                      : "border border-secondary-subtle"
-                    }`}
-                  onClick={() => setStatusProductFilter("scheduled")}
-                  style={{ cursor: "pointer", fontSize: "12px", padding: "6px 12px", }}
-                >
-                  Terjadwal
-                </div>
-                <div
-                  className={`status-button-filter rounded-pill d-flex align-items-center  ${statusProductFilter === "ongoing"
-                      ? "custom-font-color custom-border-select"
-                      : "border border-secondary-subtle"
-                    }`}
-                  onClick={() => setStatusProductFilter("ongoing")}
-                  style={{ cursor: "pointer", fontSize: "12px", padding: "6px 12px", }}
-                >
-                  Berjalan
-                </div>
-                <div
-                  className={`status-button-filter rounded-pill d-flex align-items-center  ${statusProductFilter === "paused"
-                      ? "custom-font-color custom-border-select"
-                      : "border border-secondary-subtle"
-                    }`}
-                  onClick={() => setStatusProductFilter("paused")}
-                  style={{ cursor: "pointer", fontSize: "12px", padding: "6px 12px", }}
-                >
-                  Nonaktif
-                </div>
-                <div
-                  className={`status-button-filter rounded-pill d-flex align-items-center ${statusProductFilter === "ended"
-                      ? "custom-font-color custom-border-select"
-                      : "border border-secondary-subtle"
-                    }`}
-                  onClick={() => setStatusProductFilter("ended")}
-                  style={{ cursor: "pointer", fontSize: "12px", padding: "1px 12px", }}
-                >
-                  Berakhir
-                </div>
-              </div>
-            </div>
-            {/* Other filter*/}
-            <div className="d-flex flex-column mb-3 gap-2">
-              <div id="container-other-filters" className="d-flex w-full justify-content-between align-items-start">
-                <div id="container-other-filters-left" className="d-flex gap-2 flex-wrap">
-                  {/* search bar */}
-                  <div className="custom-filter-search">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Cari berdasarkan nama"
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                  </div>
-                  {/* type placement filter */}
-                  {isTypeManualProductSelected && (
-                    <div className="custom-filter-typePlacement">
-                      <Select
-                        options={placementOptions}
-                        value={selectedOptionPlacement}
-                        onChange={handlePlacementChange}
-                        placeholder="Pilih Penempatan"
-                        styles={{
-                          control: (base) => ({
-                            ...base,
-                            backgroundColor: "#FFFFFF00 !important",
-                            border: "0.5px solid #d8dfe7 !important",
-                            borderColor: "#d8dfe7 !important",
-                            boxShadow: "none",
-                            "&:hover": {
-                              border: "0.5px solid #d8dfe7 !important",
-                              boxShadow: "none",
-                            },
-                            "&:focus": {
-                              border: "0.5px solid #d8dfe7 !important",
-                              boxShadow: "none",
-                            },
-                            "&:active": {
-                              border: "0.5px solid #d8dfe7 !important",
-                              boxShadow: "none",
-                            },
-                            padding: "0.6px 4px",
-                          }),
-                        }}
-                      />
+                  {showCalendar && (
+                    <div
+                      className="d-flex"
+                      style={{
+                        position: "absolute",
+                        top: "40px",
+                        right: "0",
+                        zIndex: 1000,
+                        background: "white",
+                        boxShadow: "0px 4px 6px rgba(0,0,0,0.1)",
+                        borderRadius: "8px",
+                        padding: "0px 10px",
+                      }}
+                    >
+                      <div
+                        className="d-flex flex-column py-2 px-1"
+                        style={{ width: "130px", listStyleType: "none" }}
+                      >
+                        <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection(new Date().toISOString().split("T")[0])}>Hari ini</p>
+                        <p style={{ cursor: "pointer" }}
+                          onClick={() => {
+                            const yesterday = new Date();
+                            yesterday.setDate(yesterday.getDate() - 1);
+                            handleDateSelection(yesterday.toISOString().split("T")[0]);
+                          }}
+                        >
+                          Kemarin
+                        </p>
+                        <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection(getAllDaysInLast7Days())}>1 Minggu terakhir</p>
+                        <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection("Bulan Ini")}>Bulan ini</p>
+                      </div>
+                      <div style={{ width: "1px", height: "auto", backgroundColor: "#E3E3E3FF", margin: "10px 0" }}></div>
+                      {/* Kalender pembanding */}
+                      <div>
+                        <p className="pt-2" style={{ textAlign: "center" }}>Tanggal Pembanding</p>
+                        <Calendar onChange={(date) => setComparatorDate(date)} value={comparatorDate} maxDate={comaparedDate || new Date(2100, 0, 1)} />
+                      </div>
+                      {/* Kalender dibanding */}
+                      <div>
+                        <p className="pt-2" style={{ textAlign: "center" }}>Tanggal Dibanding</p>
+                        <Calendar onChange={(date) => setComaparedDate(date)} value={comaparedDate} minDate={comparatorDate || new Date()} />
+                      </div>
+                      {/* Confirm button for date range */}
+                      <div className="d-flex align-items-end mb-1">
+                        <button
+                          className="btn btn-primary"
+                          onClick={handleComparisonDatesConfirm}
+                          disabled={!comparatorDate || !comaparedDate}
+                        >
+                          Terapkan
+                        </button>
+                      </div>
                     </div>
                   )}
-                  {/* ads filter */}
-                  <div className="custom-filter-typeAds">
-                    <Select
-                      isMulti
-                      options={typeAdsOptions}
-                      value={selectedTypeAds}
-                      onChange={handleAdsChange}
-                      placeholder="Pilih Tipe Iklan"
-                      isClearable={false}
-                      styles={{
-                        control: (base) => ({
-                          ...base,
-                          backgroundColor: "#FFFFFF00 !important",
-                          border: "0.5px solid #d8dfe7 !important",
-                          borderColor: "#d8dfe7 !important",
-                          boxShadow: "none",
-                          "&:hover": {
-                            border: "0.5px solid #d8dfe7 !important",
-                            boxShadow: "none",
-                          },
-                          "&:focus": {
-                            border: "0.5px solid #d8dfe7 !important",
-                            boxShadow: "none",
-                          },
-                          "&:active": {
-                            border: "0.5px solid #d8dfe7 !important",
-                            boxShadow: "none",
-                          },
-                          padding: "0.6px 4px",
-                        }),
-                      }}
-                    />
-                  </div>
-                  {/* clasification filter */}
-                  <div className="custom-filter-salesClassification">
-                    <Select
-                      isMulti
-                      options={typeClasificationOptions}
-                      value={selectedClassificationOption}
-                      onChange={handleClassificationChange}
-                      placeholder="Filter Klasifikasi"
-                      styles={{
-                        control: (base) => ({
-                          ...base,
-                          backgroundColor: "#FFFFFF00 !important",
-                          border: "0.5px solid #d8dfe7 !important",
-                          borderColor: "#d8dfe7 !important",
-                          boxShadow: "none",
-                          "&:hover": {
-                            border: "0.5px solid #d8dfe7 !important",
-                            boxShadow: "none",
-                          },
-                          "&:focus": {
-                            border: "0.5px solid #d8dfe7 !important",
-                            boxShadow: "none",
-                          },
-                          "&:active": {
-                            border: "0.5px solid #d8dfe7 !important",
-                            boxShadow: "none",
-                          },
-                          padding: "0.6px 4px",
-                        }),
-                        multiValue: (base) => ({
-                          ...base,
-                          backgroundColor: "#F9DBBF",
-                        }),
-                      }}
-                    />
-                  </div>
-                </div>
-                {/* Column filter */}
-                <div id="container-other-filters-right">
-                  <button
-                    className="btn btn-primary dropdown-toggle w-100"
-                    type="button"
-                    onClick={() => setShowTableColumn(!showTableColumn)}
-                  >
-                    Pilih kriteria
-                  </button>
                 </div>
               </div>
-              {showTableColumn && (
-                <div className="border px-2 py-2 rounded">
-                  {allColumns.map((col) => (
-                    <div key={col.key} className="form-check form-check-inline">
-                      <input
-                        style={{
-                          border: "1px solid #8042D4",
-                          width: "18px",
-                          height: "18px",
-                          borderRadius: "10%",
-                        }}
-                        className="form-check-input "
-                        type="checkbox"
-                        checked={selectedColumns.includes(col.key)}
-                        onChange={() => handleColumnChange(col.key)}
-                      />
-                      {
-                        col.label ? (
-                          <span className="text-secondary" style={{ fontSize: "12px" }}>
-                            {col.label}
-                          </span>
-                        ) : (
-                          <span className="text-secondary" style={{ fontSize: "12px" }}>
-                            Detail
-                          </span>
-                        )
-                      }
+              <div className="d-flex flex-column gap-3">
+                {/* Matric filter */}
+                <div className="row g-3 justify-content-center">
+                  {Object.keys(metrics).map((metricKey) => (
+                    <div className="col-12 col-md-6 col-lg-2">
+                      <div
+                        className="card shadow-md p-2"
+                        style={handleStyleMatricButton(metricKey)}
+                        onClick={() => handleMetricFilter(metricKey)}
+                        key={metricKey}
+                      >
+                        <h6 className="card-title">
+                          {metrics[metricKey].label}
+                        </h6>
+                        <span className="card-text fs-4 fw-bold">
+                          {formatMetricValue(metricKey, metricsTotals[metricKey])}
+                        </span>
+                      </div>
                     </div>
                   ))}
                 </div>
-              )}
-            </div>
-            {/* Table container */}
-            <div className="table-responsive">
-              <table className="table table-centered">
-                <thead className="table-dark">
-                  <tr>
-                    {filteredData.length !== 0 && filteredData !== null && <th scope="col">No</th>}
-                    {allColumns
-                      .filter((col) => selectedColumns.includes(col.key))
-                      .map((col) => (
-                        <th key={col.key}>
-                          <div className="d-flex justify-content-start align-items-center">
-                            {col.label}
-                          </div>
-                        </th>
-                      ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedData.length !== 0 && paginatedData !== null ? (
-                    paginatedData?.map((entry, index) => (
-                      <>
-                        <tr key={entry.campaignId}>
-                          {filteredData.length > 0 && filteredData !== null && (
-                            <td>{index + 1}</td>
-                          )}
-                          {selectedColumns.includes("info_iklan") && (
-                            <td
-                              className="d-flex gap-2"
-                              style={{
-                                width: "400px",
-                                maxWidth: "400px",
-                                cursor: "pointer",
-                                color:
-                                  selectedProduct?.campaignId === entry.campaignId
-                                    ? "#F6881F"
-                                    : "",
-                              }}
-                              onClick={() => handleProductClick(entry)}
-                            >
-                              <img
-                                src={
-                                  "https://down-id.img.susercontent.com/file/" +
-                                  entry.image
-                                }
-                                alt={entry.title}
-                                className="rounded"
-                                style={{ width: "60px", height: "60px" }}
-                              />
-                              <div className="d-flex flex-column">
-                                <span>{entry.title}</span>
-                                <span style={{ fontSize: "11px"}}>
-                                  Tidak terbatas
-                                </span>
-                                {(() => {
-                                  const stateStyle = getStateStyle(entry.state);
-                                  return (
-                                    <div className="d-flex gap-1 align-items-center">
-                                      <div
-                                        className={`marker ${stateStyle.isAnimated ? "animated-circle" : ""}`}
-                                        style={{ backgroundColor: stateStyle.backgroundColor }}
-                                      ></div>
-                                      <span
-                                        style={{
-                                          fontSize: "14px",
-                                          color: stateStyle.textColor,
-                                        }}
-                                      >
-                                        {stateStyle.label}
-                                      </span>
-                                    </div>
-                                  );
-                                })()}
-                              </div>
-                            </td>
-                          )}
-                          {selectedColumns.includes("biaya") && (
-                            <td style={{ width: "200px" }}>
-                              <div className="d-flex flex-column">
-                                <span>
-                                  Rp {convertBudgetToIDR(entry.dailyBudget)}
-                                </span>
-                                <span className="text-success" style={{ fontSize: "10px" }}>
-                                  +12.7%
-                                </span>
-                              </div>
-                            </td>
-                          )}
-                          {selectedColumns.includes("iklan_dilihat") && (
-                            <td style={{ width: "200px" }}>
-                              <div className="d-flex flex-column">
-                                <span>{entry.impression}</span>
-                                <span className="text-danger" style={{ fontSize: "10px" }}>
-                                  -102.7%
-                                </span>
-                              </div>
-                            </td>
-                          )}
-                          {selectedColumns.includes("click") && (
-                            <td style={{ width: "200px" }}>
-                              <div className="d-flex flex-column">
-                                <span>{entry.click}</span>
-                                <span className="text-danger" style={{ fontSize: "10px" }}>
-                                  -102.7%
-                                </span>
-                              </div>
-                            </td>
-                          )}
-                          {selectedColumns.includes("ctr") && (
-                            <td style={{ width: "200px" }}>
-                              <div className="d-flex flex-column">
-                                <span>{entry.ctr}</span>
-                                <span className="text-danger" style={{ fontSize: "10px" }}>
-                                  -102.7%
-                                </span>
-                              </div>
-                            </td>
-                          )}
-                          {selectedColumns.includes("acos") && (
-                            <td style={{ width: "200px" }}>
-                              <div className="d-flex flex-column">
-                                <span>{entry.acos}</span>
-                                <span className="text-danger" style={{ fontSize: "10px" }}>
-                                  -102.7%
-                                </span>
-                              </div>
-                            </td>
-                          )}
-                          {selectedColumns.includes("cpc") && (
-                            <td style={{ width: "200px" }}>
-                              <div className="d-flex flex-column">
-                                <span>{entry.cpc}</span>
-                                <span className="text-danger" style={{ fontSize: "10px" }}>
-                                  -102.7%
-                                </span>
-                              </div>
-                            </td>
-                          )}
-                          {selectedColumns.includes("convertion") && (
-                            <td style={{ width: "200px" }}>
-                              <div className="d-flex flex-column">
-                                <span></span>
-                                {/* <span>{entry.report.checkout}</span> */}
-                                <span className="text-danger" style={{ fontSize: "10px" }}>
-                                  -102.7%
-                                </span>
-                              </div>
-                            </td>
-                          )}
-                          {selectedColumns.includes("classification") &&
-                            (index === 0 ? (
-                              <td style={{ width: "200px" }}>
-                                <div className="d-flex gap-1 align-items-center">
-                                  <div
-                                    className="marker"
-                                    style={{
-                                      backgroundColor: "#007BFF",
-                                    }}
-                                  ></div>
-                                  <span
-                                    style={{
-                                      fontSize: "14px",
-                                    }}
-                                  >
-                                    Middle Moving
-                                  </span>
-                                </div>
-                              </td>
-                            ) : (
-                              <td style={{ width: "200px" }}>
-                                <span> </span>
-                              </td>
-                            ))}
-                          {selectedColumns.includes("insight") && (
-                            <td style={{ width: "200px" }}>
-                              <span>
-                                {entry.insight}
-                              </span>
-                            </td>
-                          )}
-                          {selectedColumns.includes("custom_roas") && (
-                            entry.type === "product_gmv_max_roas" ? (
-                              <td style={{ width: "200px" }}>
-                                <input
-                                  type="number"
-                                  className="form-control mb-1"
-                                  placeholder="0"
-                                  style={{ width: "100px", height: "30px" }}
-                                />
-                                <button
-                                  className="btn btn-success"
-                                  style={{
-                                    width: "100px",
-                                    padding: "5px 0px",
-                                    fontSize: "12px",
-                                  }}
-                                  onClick={() => alert("Custom Roas saved")}
-                                >
-                                  Simpan
-                                </button>
-                              </td>
-                            ) : (
-                              <td style={{ width: "200px" }}>
-                                <span></span>
-                              </td>
-                            )
-                          )}
-                          {selectedColumns.includes("detail") && (
-                            <td style={{ width: "200px" }}>
-                              <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24"><path fill="currentColor" d="m16 8.4l-8.9 8.9q-.275.275-.7.275t-.7-.275t-.275-.7t.275-.7L14.6 7H7q-.425 0-.712-.288T6 6t.288-.712T7 5h10q.425 0 .713.288T18 6v10q0 .425-.288.713T17 17t-.712-.288T16 16z"></path></svg>
-                              {/* {
-                                entry.type === "product_gmv_max_roas" ? (
-                                  <Link to={"/dashboard/performance/ads/detailROAS"}>
-                                    roas
-                                    <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24"><path fill="currentColor" d="m16 8.4l-8.9 8.9q-.275.275-.7.275t-.7-.275t-.275-.7t.275-.7L14.6 7H7q-.425 0-.712-.288T6 6t.288-.712T7 5h10q.425 0 .713.288T18 6v10q0 .425-.288.713T17 17t-.712-.288T16 16z"></path></svg>
-                                  </Link>
-                                ) : entry.type === "product_manual" ? (
-                                  entry?.manual_product_ads?.product_placement === "search_product" ? (
-                                    <Link to={"/dashboard/performance/ads/detail"}>
-                                      se
-                                      <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24"><path fill="currentColor" d="m16 8.4l-8.9 8.9q-.275.275-.7.275t-.7-.275t-.275-.7t.275-.7L14.6 7H7q-.425 0-.712-.288T6 6t.288-.712T7 5h10q.425 0 .713.288T18 6v10q0 .425-.288.713T17 17t-.712-.288T16 16z"></path></svg>
-                                    </Link>
-                                  ) : entry?.manual_product_ads?.product_placement === "targeting" ? (
-                                    <Link to={"/dashboard/performance/ads/detailRECOM"}>
-                                      re
-                                      <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24"><path fill="currentColor" d="m16 8.4l-8.9 8.9q-.275.275-.7.275t-.7-.275t-.275-.7t.275-.7L14.6 7H7q-.425 0-.712-.288T6 6t.288-.712T7 5h10q.425 0 .713.288T18 6v10q0 .425-.288.713T17 17t-.712-.288T16 16z"></path></svg>
-                                    </Link>
-                                  ) : (
-                                    <span></span>
-                                  )
-                                ) : (
-                                  <span></span>
-                                )
-                              } */}
-                            </td>
-                          )}
-                        </tr>
-                      </>
-                    ))
-                  ) : (
-                    <div className="w-100 d-flex justify-content-center">
-                      <span>Data tidak tersedia</span>
+                <div ref={chartRef} style={{ width: "100%", height: "300px" }}></div>
+                {/* Filter & Table */}
+                <div className="d-flex flex-column gap-2">
+                  {/* Alert validation */}
+                  {showAlert && (
+                    <div className="alert alert-warning alert-dismissible fade show" role="alert">
+                      Maksimal metrik yang dapat dipilih adalah 4 metrik
+                      <button type="button" className="btn-close" onClick={() => setShowAlert(false)}></button>
                     </div>
                   )}
-                </tbody>
-              </table>
+                  {selectedMetrics.length === 0 && (
+                    <div className="alert alert-warning alert-dismissible fade show">
+                      <span >Pilih minimal 1 metrik untuk menampilkan data</span>
+                    </div>
+                  )}
+                  {/* Status filter */}
+                  <div
+                    className="d-flex align-items-center gap-1 gap-md-2 flex-wrap"
+                    style={{ width: "fit-content", listStyleType: "none" }}
+                  >
+                    <span>Status Produk</span>
+                    <div className="d-flex gap-1 gap-md-2 flex-wrap">
+                      <div
+                        className={`status-button-filter rounded-pill d-flex align-items-center  ${statusProductFilter === "all"
+                            ? "custom-font-color custom-border-select"
+                            : "border border-secondary-subtle"
+                          }`}
+                        onClick={() => setStatusProductFilter("all")}
+                        style={{ cursor: "pointer", fontSize: "12px", padding: "6px 12px", }}
+                      >
+                        Semua
+                      </div>
+                      <div
+                        className={`status-button-filter rounded-pill d-flex align-items-center ${statusProductFilter === "scheduled"
+                            ? "custom-font-color custom-border-select"
+                            : "border border-secondary-subtle"
+                          }`}
+                        onClick={() => setStatusProductFilter("scheduled")}
+                        style={{ cursor: "pointer", fontSize: "12px", padding: "6px 12px", }}
+                      >
+                        Terjadwal
+                      </div>
+                      <div
+                        className={`status-button-filter rounded-pill d-flex align-items-center  ${statusProductFilter === "ongoing"
+                            ? "custom-font-color custom-border-select"
+                            : "border border-secondary-subtle"
+                          }`}
+                        onClick={() => setStatusProductFilter("ongoing")}
+                        style={{ cursor: "pointer", fontSize: "12px", padding: "6px 12px", }}
+                      >
+                        Berjalan
+                      </div>
+                      <div
+                        className={`status-button-filter rounded-pill d-flex align-items-center  ${statusProductFilter === "paused"
+                            ? "custom-font-color custom-border-select"
+                            : "border border-secondary-subtle"
+                          }`}
+                        onClick={() => setStatusProductFilter("paused")}
+                        style={{ cursor: "pointer", fontSize: "12px", padding: "6px 12px", }}
+                      >
+                        Nonaktif
+                      </div>
+                      <div
+                        className={`status-button-filter rounded-pill d-flex align-items-center ${statusProductFilter === "ended"
+                            ? "custom-font-color custom-border-select"
+                            : "border border-secondary-subtle"
+                          }`}
+                        onClick={() => setStatusProductFilter("ended")}
+                        style={{ cursor: "pointer", fontSize: "12px", padding: "1px 12px", }}
+                      >
+                        Berakhir
+                      </div>
+                    </div>
+                  </div>
+                  {/* Other filter*/}
+                  <div className="d-flex flex-column mb-3 gap-2">
+                    <div id="container-other-filters" className="d-flex w-full justify-content-between align-items-start">
+                      <div id="container-other-filters-left" className="d-flex gap-2 flex-wrap">
+                        {/* search bar */}
+                        <div className="custom-filter-search">
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Cari berdasarkan nama"
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                          />
+                        </div>
+                        {/* type placement filter */}
+                        {isTypeManualProductSelected && (
+                          <div className="custom-filter-typePlacement">
+                            <Select
+                              options={placementOptions}
+                              value={selectedOptionPlacement}
+                              onChange={handlePlacementChange}
+                              placeholder="Pilih Penempatan"
+                              styles={{
+                                control: (base) => ({
+                                  ...base,
+                                  backgroundColor: "#FFFFFF00 !important",
+                                  border: "0.5px solid #d8dfe7 !important",
+                                  borderColor: "#d8dfe7 !important",
+                                  boxShadow: "none",
+                                  "&:hover": {
+                                    border: "0.5px solid #d8dfe7 !important",
+                                    boxShadow: "none",
+                                  },
+                                  "&:focus": {
+                                    border: "0.5px solid #d8dfe7 !important",
+                                    boxShadow: "none",
+                                  },
+                                  "&:active": {
+                                    border: "0.5px solid #d8dfe7 !important",
+                                    boxShadow: "none",
+                                  },
+                                  padding: "0.6px 4px",
+                                }),
+                              }}
+                            />
+                          </div>
+                        )}
+                        {/* ads filter */}
+                        <div className="custom-filter-typeAds">
+                          <Select
+                            isMulti
+                            options={typeAdsOptions}
+                            value={selectedTypeAds}
+                            onChange={handleAdsChange}
+                            placeholder="Pilih Tipe Iklan"
+                            isClearable={false}
+                            styles={{
+                              control: (base) => ({
+                                ...base,
+                                backgroundColor: "#FFFFFF00 !important",
+                                border: "0.5px solid #d8dfe7 !important",
+                                borderColor: "#d8dfe7 !important",
+                                boxShadow: "none",
+                                "&:hover": {
+                                  border: "0.5px solid #d8dfe7 !important",
+                                  boxShadow: "none",
+                                },
+                                "&:focus": {
+                                  border: "0.5px solid #d8dfe7 !important",
+                                  boxShadow: "none",
+                                },
+                                "&:active": {
+                                  border: "0.5px solid #d8dfe7 !important",
+                                  boxShadow: "none",
+                                },
+                                padding: "0.6px 4px",
+                              }),
+                            }}
+                          />
+                        </div>
+                        {/* clasification filter */}
+                        <div className="custom-filter-salesClassification">
+                          <Select
+                            isMulti
+                            options={typeClasificationOptions}
+                            value={selectedClassificationOption}
+                            onChange={handleClassificationChange}
+                            placeholder="Filter Klasifikasi"
+                            styles={{
+                              control: (base) => ({
+                                ...base,
+                                backgroundColor: "#FFFFFF00 !important",
+                                border: "0.5px solid #d8dfe7 !important",
+                                borderColor: "#d8dfe7 !important",
+                                boxShadow: "none",
+                                "&:hover": {
+                                  border: "0.5px solid #d8dfe7 !important",
+                                  boxShadow: "none",
+                                },
+                                "&:focus": {
+                                  border: "0.5px solid #d8dfe7 !important",
+                                  boxShadow: "none",
+                                },
+                                "&:active": {
+                                  border: "0.5px solid #d8dfe7 !important",
+                                  boxShadow: "none",
+                                },
+                                padding: "0.6px 4px",
+                              }),
+                              multiValue: (base) => ({
+                                ...base,
+                                backgroundColor: "#F9DBBF",
+                              }),
+                            }}
+                          />
+                        </div>
+                      </div>
+                      {/* Column filter */}
+                      <div id="container-other-filters-right">
+                        <button
+                          className="btn btn-primary dropdown-toggle w-100"
+                          type="button"
+                          onClick={() => setShowTableColumn(!showTableColumn)}
+                        >
+                          Pilih kriteria
+                        </button>
+                      </div>
+                    </div>
+                    {showTableColumn && (
+                      <div className="border px-2 py-2 rounded">
+                        {allColumns.map((col) => (
+                          <div key={col.key} className="form-check form-check-inline">
+                            <input
+                              style={{
+                                border: "1px solid #8042D4",
+                                width: "18px",
+                                height: "18px",
+                                borderRadius: "10%",
+                              }}
+                              className="form-check-input "
+                              type="checkbox"
+                              checked={selectedColumns.includes(col.key)}
+                              onChange={() => handleColumnChange(col.key)}
+                            />
+                            {
+                              col.label ? (
+                                <span className="text-secondary" style={{ fontSize: "12px" }}>
+                                  {col.label}
+                                </span>
+                              ) : (
+                                <span className="text-secondary" style={{ fontSize: "12px" }}>
+                                  Detail
+                                </span>
+                              )
+                            }
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {/* Table container */}
+                  <div className="table-responsive">
+                    <table className="table table-centered">
+                      <thead className="table-dark">
+                        <tr>
+                          {filteredData.length !== 0 && filteredData !== null && <th scope="col">No</th>}
+                          {allColumns
+                            .filter((col) => selectedColumns.includes(col.key))
+                            .map((col) => (
+                              <th key={col.key}>
+                                <div className="d-flex justify-content-start align-items-center">
+                                  {col.label}
+                                </div>
+                              </th>
+                            ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {paginatedData.length !== 0 && paginatedData !== null ? (
+                          paginatedData?.map((entry, index) => (
+                            <>
+                              <tr key={entry.campaignId}>
+                                {filteredData.length > 0 && filteredData !== null && (
+                                  <td>{index + 1}</td>
+                                )}
+                                {selectedColumns.includes("info_iklan") && (
+                                  <td
+                                    className="d-flex gap-2"
+                                    style={{
+                                      width: "400px",
+                                      maxWidth: "400px",
+                                      cursor: "pointer",
+                                      color:
+                                        selectedProduct?.campaignId === entry.campaignId
+                                          ? "#F6881F"
+                                          : "",
+                                    }}
+                                    onClick={() => handleProductClick(entry)}
+                                  >
+                                    <img
+                                      src={
+                                        "https://down-id.img.susercontent.com/file/" +
+                                        entry.image
+                                      }
+                                      alt={entry.title}
+                                      className="rounded"
+                                      style={{ width: "60px", height: "60px" }}
+                                    />
+                                    <div className="d-flex flex-column">
+                                      <span>{entry.title}</span>
+                                      <span style={{ fontSize: "11px"}}>
+                                        Tidak terbatas
+                                      </span>
+                                      {(() => {
+                                        const stateStyle = getStateStyle(entry.state);
+                                        return (
+                                          <div className="d-flex gap-1 align-items-center">
+                                            <div
+                                              className={`marker ${stateStyle.isAnimated ? "animated-circle" : ""}`}
+                                              style={{ backgroundColor: stateStyle.backgroundColor }}
+                                            ></div>
+                                            <span
+                                              style={{
+                                                fontSize: "14px",
+                                                color: stateStyle.textColor,
+                                              }}
+                                            >
+                                              {stateStyle.label}
+                                            </span>
+                                          </div>
+                                        );
+                                      })()}
+                                    </div>
+                                  </td>
+                                )}
+                                {selectedColumns.includes("biaya") && (
+                                  <td style={{ width: "200px" }}>
+                                    <div className="d-flex flex-column">
+                                      <span>
+                                        Rp {convertBudgetToIDR(entry.data[0].dailyBudget)}
+                                      </span>
+                                      <span className="text-success" style={{ fontSize: "10px" }}>
+                                        +12.7%
+                                      </span>
+                                    </div>
+                                  </td>
+                                )}
+                                {selectedColumns.includes("iklan_dilihat") && (
+                                  <td style={{ width: "200px" }}>
+                                    <div className="d-flex flex-column">
+                                      <span>{entry.data[0].impression}</span>
+                                      <span className="text-danger" style={{ fontSize: "10px" }}>
+                                        -102.7%
+                                      </span>
+                                    </div>
+                                  </td>
+                                )}
+                                {selectedColumns.includes("click") && (
+                                  <td style={{ width: "200px" }}>
+                                    <div className="d-flex flex-column">
+                                      <span>{entry.data[0].click}</span>
+                                      <span className="text-danger" style={{ fontSize: "10px" }}>
+                                        -102.7%
+                                      </span>
+                                    </div>
+                                  </td>
+                                )}
+                                {selectedColumns.includes("ctr") && (
+                                  <td style={{ width: "200px" }}>
+                                    <div className="d-flex flex-column">
+                                      <span>{entry.data[0].ctr}</span>
+                                      <span className="text-danger" style={{ fontSize: "10px" }}>
+                                        -102.7%
+                                      </span>
+                                    </div>
+                                  </td>
+                                )}
+                                {selectedColumns.includes("acos") && (
+                                  <td style={{ width: "200px" }}>
+                                    <div className="d-flex flex-column">
+                                      <span>{entry.acos}</span>
+                                      <span className="text-danger" style={{ fontSize: "10px" }}>
+                                        -102.7%
+                                      </span>
+                                    </div>
+                                  </td>
+                                )}
+                                {selectedColumns.includes("cpc") && (
+                                  <td style={{ width: "200px" }}>
+                                    <div className="d-flex flex-column">
+                                      <span>{entry.cpc}</span>
+                                      <span className="text-danger" style={{ fontSize: "10px" }}>
+                                        -102.7%
+                                      </span>
+                                    </div>
+                                  </td>
+                                )}
+                                {selectedColumns.includes("convertion") && (
+                                  <td style={{ width: "200px" }}>
+                                    <div className="d-flex flex-column">
+                                      <span></span>
+                                      {/* <span>{entry.report.checkout}</span> */}
+                                      <span className="text-danger" style={{ fontSize: "10px" }}>
+                                        -102.7%
+                                      </span>
+                                    </div>
+                                  </td>
+                                )}
+                                {selectedColumns.includes("classification") &&
+                                  (index === 0 ? (
+                                    <td style={{ width: "200px" }}>
+                                      <div className="d-flex gap-1 align-items-center">
+                                        <div
+                                          className="marker"
+                                          style={{
+                                            backgroundColor: "#007BFF",
+                                          }}
+                                        ></div>
+                                        <span
+                                          style={{
+                                            fontSize: "14px",
+                                          }}
+                                        >
+                                          Middle Moving
+                                        </span>
+                                      </div>
+                                    </td>
+                                  ) : (
+                                    <td style={{ width: "200px" }}>
+                                      <span> </span>
+                                    </td>
+                                  ))}
+                                {selectedColumns.includes("insight") && (
+                                  <td style={{ width: "200px" }}>
+                                    <span>
+                                      {entry.insight}
+                                    </span>
+                                  </td>
+                                )}
+                                {selectedColumns.includes("custom_roas") && (
+                                  entry.type === "product_gmv_max_roas" ? (
+                                    <td style={{ width: "200px" }}>
+                                      <input
+                                        type="number"
+                                        className="form-control mb-1"
+                                        placeholder="0"
+                                        style={{ width: "100px", height: "30px" }}
+                                      />
+                                      <button
+                                        className="btn btn-success"
+                                        style={{
+                                          width: "100px",
+                                          padding: "5px 0px",
+                                          fontSize: "12px",
+                                        }}
+                                        onClick={() => alert("Custom Roas saved")}
+                                      >
+                                        Simpan
+                                      </button>
+                                    </td>
+                                  ) : (
+                                    <td style={{ width: "200px" }}>
+                                      <span></span>
+                                    </td>
+                                  )
+                                )}
+                                {selectedColumns.includes("detail") && (
+                                  <td style={{ width: "200px" }}>
+                                    {
+                                      entry.data[0].biddingStrategy == "manual" ? (
+                                        <Link to={"/dashboard/performance/ads/detail"}>
+                                          <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24"><path fill="currentColor" d="m16 8.4l-8.9 8.9q-.275.275-.7.275t-.7-.275t-.275-.7t.275-.7L14.6 7H7q-.425 0-.712-.288T6 6t.288-.712T7 5h10q.425 0 .713.288T18 6v10q0 .425-.288.713T17 17t-.712-.288T16 16z"></path></svg>
+                                        </Link>
+                                      ) : (
+                                        <span>test</span>
+                                      )
+                                    }
+                                  </td>
+                                )}
+                              </tr>
+                            </>
+                          ))
+                        ) : (
+                          <div className="w-100 d-flex justify-content-center">
+                            <span>Data tidak tersedia</span>
+                          </div>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                  {/* Pagination */}
+                  {filteredData.length > 0 && filteredData !== null && renderPagination()}
+                </div>
+              </div>
             </div>
-            {/* Pagination */}
-            {filteredData.length > 0 && filteredData !== null && renderPagination()}
           </div>
-        </div>
-      </div>
-    </div>
+        )
+      }
+    </>
   );
 };
 

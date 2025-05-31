@@ -49,6 +49,7 @@ function App() {
           <Route path="/dashboard/performance/product" element={<PerformanceProductPage />} />
           <Route path="/dashboard/performance/stock" element={<PerformanceStockPage />} />
           <Route path="/dashboard/performance/ads/detail" element={<TetsDetailAdsPage />} />
+          <Route path="/dashboard/performance/ads/detail/:campaignId" element={<TetsDetailAdsPage />} />
           <Route path="/dashboard/performance/ads/detailRECOM" element={<TestDetailDuaAdsPage />} />
           <Route path="/dashboard/performance/ads/detailROAS" element={<TestDetailTigaAdsPage />} />
         </Route>
@@ -56,7 +57,7 @@ function App() {
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </>
-  );
+  )
 };
 
 export default App;

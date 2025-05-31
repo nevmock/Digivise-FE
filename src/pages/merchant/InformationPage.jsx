@@ -26,11 +26,10 @@ export default function MerchantInformationPage() {
         <div className="d-flex align-items-center">
           <h3>Merchant</h3>
         </div>
-
         {
           isLoading ? (
-            <div className="d-flex justify-content-center align-items-center">
-              <Loading />
+            <div className="d-flex justify-content-center align-items-start vh-100">
+              <Loading size={40} />
             </div>
           ) : (
             <>
@@ -151,8 +150,20 @@ export default function MerchantInformationPage() {
 };
 
 
+
 // export default function MerchantInformationPage() {
 //   const dataMerchant = localStorage.getItem("userDataApp");
+//   const parsedMerchant = dataMerchant ? JSON.parse(dataMerchant) : null;
+
+//   if (parsedMerchant.merchants.length == 0) {
+//     return (
+//       <BaseLayout>
+//         <div className="alert alert-warning">
+//           Tidak ada merchant aktif. Silahkan buat merchant atau login ke merchant terlebih dahulu.
+//         </div>
+//       </BaseLayout>
+//     );
+//   }
 
 //   return (
 //     <>
