@@ -8,7 +8,7 @@ const ACTIVE_MERCHANT_KEY = "activeUserMerchant";
 export const login = async (username, password) => {
     const payload = { username, password };
     try {
-        const response = await axiosRequest.post("auth/login", payload);
+        const response = await axiosRequest.post("/auth/login", payload);
         if (response.status === 200 && response.data) {
             const { accessToken, userId, username, merchants = [] } = response.data;
             const userData = {
@@ -21,8 +21,6 @@ export const login = async (username, password) => {
             localStorage.setItem(TOKEN_KEY, accessToken);
 
             return userData;
-        } else {
-            throw new Error("Login Gagal, silakan coba lagi");
         }
     } catch (error) {    
         throw error;
@@ -36,15 +34,11 @@ export const logout = async () => {
     }
 
     try {
-        const response = await axiosRequest.post("auth/logout", {}, {
+        await axiosRequest.post("/auth/logout", {}, {
             headers: {
                 Authorization: `Bearer ${accessToken}`
             }
         });
-
-        if ((response.status !== 200 || response.code !== 200) || !response.data) {
-            throw new Error("Logout Gagal, silakan coba lagi");
-        }
 
         localStorage.removeItem(USER_DATA_KEY);
         localStorage.removeItem(TOKEN_KEY);
