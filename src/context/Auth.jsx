@@ -37,19 +37,6 @@ export const AuthProvider = ({ children }) => {
         setIsChecking(false);
     }, []);
 
-    // useEffect(() => {
-    //     const token = getToken();
-    //     const storedUser = localStorage.getItem(USER_DATA_KEY);
-
-    //     if (token && isTokenValid(token) && storedUser) {
-    //         setIsAuth(true);
-    //         setUserData(JSON.parse(storedUser));
-    //     } else {
-    //         logoutSuccess();
-    //     }
-    //     setIsChecking(false);
-    // }, []);
-
     const updateData = (data) => {
         setUserData(data);
         localStorage.setItem(USER_DATA_KEY, JSON.stringify(data));
@@ -65,9 +52,6 @@ export const AuthProvider = ({ children }) => {
     const logoutSuccess = () => {
         setIsAuth(false);
         setUserData(null);
-        localStorage.removeItem(USER_DATA_KEY);
-        localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem(ACTIVE_MERCHANT_KEY);
     };
 
     const setActiveMerchant = (merchantObj) => {
@@ -104,7 +88,7 @@ export const AuthProvider = ({ children }) => {
             const response = await axiosRequest.post("/api/merchants/login", payload);
             if (response.status === 200 || response.data) {
                 const merchantData = response.data;
-                // setActiveMerchant(merchantData);
+                setActiveMerchant(merchantData);
                 return merchantData;
             }
         } catch (error) {
