@@ -6,7 +6,7 @@ import { getKpiData } from "../../resolver/kpi/index";
 import axiosRequest from "../../utils/request";
 import BaseLayout from "../../components/organisms/BaseLayout";
 import KpiSection from "../../components/organisms/kpi/KpiSection";
-import Loading from "../../components/atoms/Loading/Loading"
+import Loading from "../../components/atoms/Loading/Loading";
 
 
 export default function MerchantKpiPage() {
@@ -57,19 +57,11 @@ export default function MerchantKpiPage() {
   };
 
   const fetchKPIData = async () => {
-    if (!activeMerchant) {
-      return (
-        <BaseLayout>
-          <div className="alert alert-warning">
-            Tidak ada merchant aktif. Login ke merchant terlebih dahulu.
-          </div>
-        </BaseLayout>
-      )
-    };
-
     try {
       setIsLoading(true);
-      const merchantId = activeMerchant.id;
+      isMounted.current = true;
+      const merchantId = userData?.activeMerchant?.id || userData?.merchants[0]?.id;
+      // const merchantId = activeMerchant.id;
       const response = await getKpiData(merchantId);
       if (response && isMounted.current) {
         const transformed = transformApiDataToKpiList(response);
@@ -78,9 +70,9 @@ export default function MerchantKpiPage() {
     } catch (error) {
       if (isMounted.current) {
         toast.error("Gagal mengambil data KPI");
-        console.error("Gagal mengambil KPI data, kesehalan pada server", error);
+        console.error("Gagal mengambil KPI data, kesalahan pada server", error);
       }
-      console.error("Gagal mengambli KPI data:", error);
+      console.error("Gagal mengambil KPI data:", error);
     } finally {
       if (isMounted.current) {
         setIsLoading(false);
@@ -97,7 +89,8 @@ export default function MerchantKpiPage() {
     try {
       setIsUpdating(true);
 
-      const merchantId = activeMerchant.id;
+      // const merchantId = activeMerchant.id;
+      const merchantId = userData?.activeMerchant?.id || userData?.merchants[0]?.id;
       const userId = userData?.userId;
 
       if (!userId) {
@@ -140,8 +133,8 @@ export default function MerchantKpiPage() {
       <div>
         {
           isLoading ? (
-            <div className="flex justify-content-center align-items-center vh-100">
-              <Loading />
+            <div className="w-100 d-flex justify-content-center vh-100">
+              <Loading size={40} />
             </div>
           ) : (
             <div className="card px-3 py-3">

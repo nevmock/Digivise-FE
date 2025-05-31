@@ -173,6 +173,7 @@ html[data-bs-theme=dark][data-topbar-color=light] {
   --bs-body-font-size: 0.875rem;
   --bs-body-font-weight: 400;
   --bs-body-line-height: 1.5;
+  --custom-bs-font-color: #303944FF;
   --bs-body-color: #5d7186;
   --bs-body-color-rgb: 93, 113, 134;
   --bs-body-bg: #f8f7fa;
@@ -223,6 +224,7 @@ html[data-bs-theme=dark][data-topbar-color=light] {
 
 [data-bs-theme=dark] {
   color-scheme: dark;
+  --custom-bs-font-color: #aab8c5;
   --bs-body-color: #aab8c5;
   --bs-body-color-rgb: 170, 184, 197;
   --bs-body-bg: #191e23;
@@ -5569,17 +5571,18 @@ textarea.form-control-lg {
   --bs-card-bg: var(--bs-secondary-bg);
   --bs-card-img-overlay-padding: 1.5rem;
   --bs-card-group-margin: 0.75rem;
-  position: relative;
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex;
+    position: relative;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
   -webkit-box-orient: vertical;
   -webkit-box-direction: normal;
       -ms-flex-direction: column;
           flex-direction: column;
   min-width: 0;
   height: var(--bs-card-height);
-  color: var(--bs-body-color);
+  /* color: var(--bs-body-color); */
+  color: var(--custom-bs-font-color);
   word-wrap: break-word;
   background-color: var(--bs-card-bg);
   background-clip: border-box;
@@ -6005,7 +6008,8 @@ textarea.form-control-lg {
 }
 .page-link.disabled, .disabled > .page-link {
   color: var(--bs-pagination-disabled-color);
-  pointer-events: none;
+  pointer-events: not-allowed;
+  cursor: not-allowed;
   background-color: var(--bs-pagination-disabled-bg);
   border-color: var(--bs-pagination-disabled-border-color);
 }

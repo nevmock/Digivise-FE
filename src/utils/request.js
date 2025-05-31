@@ -13,7 +13,7 @@ const apiAppSettingsInstance = axios.create({
         "Content-Type": "application/json",
         Authorization: `Bearer ${localStorage.getItem(TOKEN_KEY)}`,
     },
-    timeout: 50000
+    timeout: 10000
 });
 
 apiAppSettingsInstance.interceptors.request.use(
@@ -67,17 +67,5 @@ apiAppSettingsInstance.interceptors.response.use(
         return Promise.reject(error);
     }
 );
-
-// apiAppSettingsInstance.interceptors.response.use(
-//     (response) => {
-//         return response;
-//     },
-//     (error) => {
-//         if (error.response?.status === 401 && unauthorizedHandler) {
-//             unauthorizedHandler();
-//         }
-//         return Promise.reject(error);
-//     }
-// );
 
 export default apiAppSettingsInstance; 

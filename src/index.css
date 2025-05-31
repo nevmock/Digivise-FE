@@ -1,18 +1,7 @@
 /* @import 'bootstrap/dist/css/bootstrap.min.css'; */
 
-:root {
-  font-family: Inter;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+body {
+  font-family: Poppins, sans-serif !important;
 }
 
 .custom-cursor-pointer {
@@ -49,6 +38,11 @@
 * .react-calendar {
   padding: 2px;
   border: none !important;
+  background-color: #FFFFFF00 !important;
+}
+
+* .react-calendar .react-calendar__navigation button{
+  color: #5d7186 !important;
 }
 
 .custom-font-color {
@@ -105,7 +99,6 @@
   background-color: #502A85FF !important;
   transition: background-color 0.3s ease !important;
 }
-
 
 
 
@@ -288,4 +281,90 @@
   width: 40px;
   height: 40px;
   animation-delay: 3.5s;
+}
+
+
+
+
+.custom-calendar-behavior {
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: opacity 0.3s ease, transform 0.4s ease;
+}
+
+.custom-content-calendar p:hover {
+  color: #F6881F;
+}
+
+.custom-calendar-behavior.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+
+
+.custom-container-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@media (max-width: 768px) {
+  .custom-container-pagination {
+    flex-wrap: wrap;
+    flex-direction: column-reverse;
+    align-items: start;
+    gap: 1rem;
+  }
+
+  .custom-pagination-select {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .custom-pagination-list {
+    display: block;
+    width: 100%;
+  }
+
+  .custom-pagination-list .pagination {
+    justify-content: space-between;
+  }
+}
+
+.custom-table-title-paragraph {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+
+
+
+@media (max-width: 1024px) {
+  .custom-calendar-behavior {
+    flex-direction: column !important;
+  }
+  .custom-content-calendar {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    padding: 16px 0px 0px 0px !important;
+  }
+  #custom-calendar-behavior-barrier {
+    width: 100% !important;
+    height: 1px !important;
+    margin: 8px 0 !important;
+  }
+  #custom-calendar-behavior-button {
+    margin-top: 2rem;
+  }
+  #custom-calendar-behavior-button .btn {
+    width: 100% !important;
+  }
 }
