@@ -3,6 +3,7 @@ import axiosRequest from "../../utils/request";
 
 const TOKEN_KEY = "userAppToken";
 const USER_DATA_KEY = "userDataApp";
+const ACTIVE_MERCHANT_KEY = "activeUserMerchant";
 
 export const login = async (username, password) => {
     const payload = { username, password };
@@ -35,13 +36,19 @@ export const logout = async () => {
     }
 
     try {
-        await axiosRequest.post("auth/logout", {}, {
+        const response = await axiosRequest.post("auth/logout", {}, {
             headers: {
-                Authorization: `Bearer ${accessToken}`,
-            },
+                Authorization: `Bearer ${accessToken}`
+            }
         });
+
+        if ((response.status !== 200 || response.code !== 200) || !response.data) {
+            throw new Error("Logout Gagal, silakan coba lagi");
+        }
+
         localStorage.removeItem(USER_DATA_KEY);
         localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(ACTIVE_MERCHANT_KEY);
     } catch (error) {
         throw error;
     }
