@@ -98,7 +98,7 @@ export default function DetailAds() {
                     ? toLocalISOString(toDate)
                     : toLocalISOString(new Date(toDate));
 
-            const apiUrl = `/api/product-ads/daily?shopId=${shopId}&from=${fromISO}&to=${toISO}&limit=100`;
+            const apiUrl = `/api/product-ads/daily?shopId=${shopId}&from=${fromISO}&to=${toISO}&limit=100000`;
             // const apiUrl = `/api/product-ads/daily?shopId=${shopId}&from=2025-06-04T00:00:00.869&to=2025-06-04T23:59:59.99900&limit=10&biddingStrategy=manual`;
             const response = await axiosRequest.get(apiUrl);
             const data = await response.data;
@@ -168,7 +168,6 @@ export default function DetailAds() {
             setIsLoading(false);
         }
     };
-    console.log("Keywords Data:", keywordsData);
 
     // Date utility for getting all days in the last 7 days
     function getAllDaysInLast7Days() {
@@ -590,13 +589,6 @@ export default function DetailAds() {
                         });
                         return result;
                     },
-                    // formatter: function (params) {
-                    //     let result = params[0].axisValue + '<br/>';
-                    //     params.forEach(param => {
-                    //         result += `<span style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background-color:${param.color};"></span> ${param.seriesName}: ${param.value}<br/>`;
-                    //     });
-                    //     return result;
-                    // }
                 },
                 legend: {
                     data: chartData.series?.map((s) => s.name) || [],
@@ -644,6 +636,8 @@ export default function DetailAds() {
         }
     }, [chartData, selectedMetrics]);
 
+    
+
     /// CALCULATE FILTER METRIC TOTALS FEATURE
     // Function to calculate totals for each metric based on raw data
     function calculateMetricTotals(keywords) {
@@ -672,65 +666,22 @@ export default function DetailAds() {
         { key: "acos", label: "Biaya per Klik" },
     ];
 
-    // Initialize selected columns state
-    const [selectedColumns, setSelectedColumns] = useState(
-        allColumns.map((col) => col.key)
-    );
-
-    // Handle column change
-    const handleColumnChange = (colKey) => {
-        setSelectedColumns((prev) =>
-            prev.includes(colKey)
-                ? prev.filter((key) => key !== colKey)
-                : [...prev, colKey]
-        );
-    };
-
     // Handle style for matric filter button
     const handleStyleMatricButton = (metricKey) => {
         const isActive = selectedMetrics.includes(metricKey);
         const metric = metrics[metricKey];
-
         return {
             backgroundColor: "#ffffff00",
             borderTop: `solid ${isActive ? `${metric.color} 3px` : "rgb(179.4, 184.2, 189) 1px"}`,
-            borderRadius: "8px",
-            cursor: "pointer",
-            fontSize: "12px",
-            fontWeight: isActive ? "medium" : "normal",
-            transition: "all 0.3s ease",
-            flex: "1 1 200px",
-            height: "auto",
-            justifyContent: "center",
-        };
+        }
     };
 
     // Format metric value based on its type
     const formatMetricValue = (metricKey, value) => {
-        if (value === undefined || value === null) return "-";
-
-        switch (metricKey) {
-            case "impression":
-            case "click":
-                return value.toLocaleString("id-ID");
-            case "ctr":
-                return (value * 100).toFixed(2) + "%";
-            case "cost":
-                return "Rp " + (value / 1000).toLocaleString("id-ID");
-            default:
-                return value.toLocaleString("id-ID");
-        }
     };
 
     // SHOW CALENDER FEATURE
     const toggleOpenCalendar = () => {
-        if (showCalendar) {
-            setAnimateCalendar(false);
-            setTimeout(() => setShowCalendar(false), 100);
-        } else {
-            setShowCalendar(true);
-            setTimeout(() => setAnimateCalendar(true), 100);
-        }
     };
 
     return (
@@ -756,119 +707,7 @@ export default function DetailAds() {
                             {/* Detail iklan */}
                             <div className="d-flex flex-column gap-1">
                                 <h4 className="fw-bold">Detail Iklan</h4>
-                                <div className="card d-flex flex-column align-items-center gap-3 p-2">
-                                    {/* Info iklan */}
-                                    <div className="w-100 d-flex gap-1">
-                                        <img
-                                            src={
-                                                "https://down-id.img.susercontent.com/file/" +
-                                                productData?.data[0].image
-                                            }
-                                            alt={productData?.data[0].title}
-                                            className="rounded"
-                                            style={{
-                                                width: "100px",
-                                                height: "100px",
-                                                objectFit: "cover",
-                                                aspectRatio: "1/1",
-                                            }}
-                                        />
-                                        <div className="d-flex flex-column pt-1">
-                                            <h5>{productData?.data[0].title}</h5>
-                                            <div>
-                                                <span className="text-secondary">Mode Bidding : </span>{" "}
-                                                <span
-                                                    style={{ borderRadius: "3px", color: "#1ab0f8" }}
-                                                    className="fw-bold bg-info-subtle px-2 py-1"
-                                                >
-                                                    {productData?.data[0].biddingStrategy == "manual"
-                                                        ? "Manual"
-                                                        : "Otomatis"}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Details */}
-                                    <div
-                                        className="w-100 border rounded p-3"
-                                        style={{ marginBottom: "0" }}
-                                    >
-                                        <div className="d-flex justify-content-between align-items-center gap-3">
-                                            <div className="d-flex flex-column align-items-center">
-                                                <div className="d-flex flex-column">
-                                                    <span>Modal</span>
-                                                    <span className="fw-bold">
-                                                        Rp.
-                                                        {productData?.data[0].dailyBudget.toLocaleString(
-                                                            "id-ID"
-                                                        )}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div
-                                                style={{
-                                                    width: "1.6px",
-                                                    height: "40px",
-                                                    backgroundColor: "#CECECE",
-                                                }}
-                                            ></div>
-                                            <div className="d-flex flex-column">
-                                                <div className="d-flex justify-content-between flex-column align-items-center">
-                                                    <span>Periode Iklan</span>
-                                                    <span className="fw-bold">Tidak terbatas</span>
-                                                </div>
-                                            </div>
-                                            <div
-                                                style={{
-                                                    width: "1.6px",
-                                                    height: "40px",
-                                                    backgroundColor: "#CECECE",
-                                                }}
-                                            ></div>
-                                            <div className="d-flex flex-column">
-                                                <div className="d-flex flex-column align-items-end">
-                                                    <span>Penempatan Iklan</span>
-                                                    <span className="fw-bold">Pencarian</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Analysis Section */}
-                                    <div className="w-100 rounded d-flex flex-column gap-1">
-                                        <div className="row g-2">
-                                            <div className="col-6 col-lg-3">
-                                                <div className="p-3 border rounded text-center">
-                                                    <p className="mb-1">Bidding</p>
-                                                    <span className="text-success fw-bold">Baik</span>
-                                                </div>
-                                            </div>
-                                            <div className="col-6 col-lg-3">
-                                                <div className="p-3 border rounded text-center">
-                                                    <p className="mb-1">Modal</p>
-                                                    <span className="text-success fw-bold">Baik</span>
-                                                </div>
-                                            </div>
-                                            <div className="col-6 col-lg-3">
-                                                <div className="p-3 border rounded text-center">
-                                                    <p className="mb-1">Saldo Iklan</p>
-                                                    <span className="text-danger fw-bold">
-                                                        Perlu Ditingkatkan
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div className="col-6 col-lg-3">
-                                                <div className="p-3 border rounded text-center">
-                                                    <p className="mb-1">Stabilitas Iklan</p>
-                                                    <span className="text-muted fw-bold">
-                                                        Tidak Tersedia
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <h5>{productData?.data[0].title}</h5>
                             </div>
 
                             {/* Peforma */}
@@ -885,7 +724,6 @@ export default function DetailAds() {
                                                     <button
                                                         onClick={toggleOpenCalendar}
                                                         className="btn btn-primary"
-
                                                     >
                                                         {comparatorDate && comparedDate
                                                         ? `${comparatorDate.toLocaleDateString("id-ID")} - ${comparedDate.toLocaleDateString("id-ID")}`
@@ -893,44 +731,29 @@ export default function DetailAds() {
                                                     </button>
                                                     {showCalendar && (
                                                         <div
-                                                        className={`card custom-calendar-behavior ${animateCalendar ? "show" : ""}`}
-                                                        style={{
-                                                            flexDirection: "row",
-                                                            position: "absolute",
-                                                            top: "44px",
-                                                            right: "0",
-                                                            zIndex: 1000,
-                                                            boxShadow: "0px 4px 6px rgba(0,0,0,0.1)",
-                                                            borderRadius: "8px",
-                                                            padding: "5px 10px",
-                                                        }}
-                                                        >
-                                                        <div
-                                                            className="custom-content-calendar d-flex flex-column py-2 px-1"
-                                                            style={{ width: "130px", listStyleType: "none" }}
-                                                        >
-                                                            <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection(new Date().toISOString().split("T")[0], "hari_ini")}>Hari ini</p>
-                                                            <p style={{ cursor: "pointer" }}
+                                                        className={`card custom-calendar-behavior ${animateCalendar ? "show" : ""}`}>
+                                                        <div className="custom-content-calendar d-flex flex-column py-2 px-1">
+                                                            <p onClick={() => handleDateSelection(new Date().toISOString().split("T")[0], "hari_ini")}>Hari ini</p>
+                                                            <p
                                                             onClick={() => {
                                                                 const yesterday = new Date();
-                                                                yesterday.setDate(yesterday.getDate() - 2);
+                                                                yesterday.setDate(yesterday.getDate() - 1);
                                                                 handleDateSelection(yesterday.toISOString().split("T")[0], "kemarin");
                                                             }}
                                                             >
                                                             Kemarin
                                                             </p>
-                                                            <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection(getAllDaysInLast7Days(), "minggu_ini")}>1 Minggu terakhir</p>
-                                                            <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection("Bulan Ini", "bulan_ini")}>Bulan ini</p>
+                                                            <p onClick={() => handleDateSelection(getAllDaysInLast7Days(), "minggu_ini")}>1 Minggu terakhir</p>
+                                                            <p onClick={() => handleDateSelection("Bulan Ini", "bulan_ini")}>Bulan ini</p>
                                                         </div>
-                                                        <div id="custom-calendar-behavior-barrier" style={{ width: "1px", height: "auto", backgroundColor: "#E3E3E3FF", margin: "10px 4px" }}></div>
                                                         {/* Kalender pembanding */}
                                                         <div>
-                                                            <p className="pt-2" style={{ textAlign: "center" }}>Tanggal Pembanding</p>
+                                                            <p>Tanggal Pembanding</p>
                                                             <Calendar onChange={(date) => setComparatorDate(date)} value={comparatorDate} maxDate={comparedDate || new Date(2100, 0, 1)} />
                                                         </div>
                                                         {/* Kalender dibanding */}
                                                         <div>
-                                                            <p className="pt-2" style={{ textAlign: "center" }}>Tanggal Dibanding</p>
+                                                            <p>Tanggal Dibanding</p>
                                                             <Calendar onChange={(date) => setComparedDate(date)} value={comparedDate} minDate={comparatorDate || new Date()} />
                                                         </div>
                                                         {/* Confirm button for date range */}
@@ -976,27 +799,6 @@ export default function DetailAds() {
                                                         </div>
                                                     ))}
                                                 </div>
-                                                {/* Alert validation */}
-                                                {showAlert && (
-                                                    <div
-                                                        className="alert alert-warning alert-dismissible fade show"
-                                                        role="alert"
-                                                    >
-                                                        Maksimal 3 metrik yang dapat dipilih
-                                                        <button
-                                                            type="button"
-                                                            className="btn-close"
-                                                            onClick={() => setShowAlert(false)}
-                                                        ></button>
-                                                    </div>
-                                                )}
-                                                {selectedMetrics.length === 0 && (
-                                                    <div className="alert alert-warning alert-dismissible fade show">
-                                                        <span>
-                                                            Pilih minimal 1 metrik untuk menampilkan data
-                                                        </span>
-                                                    </div>
-                                                )}
                                             </div>
                                             {/* Chart */}
                                             <div
@@ -1006,128 +808,15 @@ export default function DetailAds() {
                                         </div>
                                     </div>
 
-                                    {/* Keyword Performance */}
-                                    <div className="p-2 d-flex flex-column gap-1">
-                                        <div className="d-flex justify-content-between align-items-center">
-                                            <h5>Keywords</h5>
-                                            <button
-                                                className="btn btn-secondary dropdown-toggle"
-                                                type="button"
-                                                onClick={() => setShowTableColumn(!showTableColumn)}
-                                                style={{ backgroundColor: "#8042D4", border: "none" }}
-                                            >
-                                                Pilih kriteria
-                                            </button>
-                                        </div>
-                                        {showTableColumn && (
-                                            <div className="border px-2 py-2 rounded">
-                                                {allColumns.map((col) => (
-                                                    <div
-                                                        key={col.key}
-                                                        className="form-check form-check-inline"
-                                                    >
-                                                        <input
-                                                            style={{
-                                                                border: "1px solid #8042D4",
-                                                                width: "18px",
-                                                                height: "18px",
-                                                                borderRadius: "10%",
-                                                            }}
-                                                            className="form-check-input "
-                                                            type="checkbox"
-                                                            checked={selectedColumns.includes(col.key)}
-                                                            onChange={() => handleColumnChange(col.key)}
-                                                        />
-                                                        <label className="form-check-label fs-5 ms-1">
-                                                            {col.label}
-                                                        </label>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                        {/* Table container */}
-                                        <div
-                                            className="table-responsive"
-                                        // style={{
-                                        //     width: "max-content",
-                                        //     minWidth: "100%",
-                                        // }}
-                                        >
-                                            <table className="table table-centered">
-                                                <thead className="table-light">
-                                                    <tr>
-                                                        {keywordsData.length !== 0 &&
-                                                            keywordsData !== null && <th scope="col">No</th>}
-                                                        {allColumns
-                                                            .filter((col) =>
-                                                                selectedColumns.includes(col.key)
-                                                            )
-                                                            .map((col) => (
-                                                                <th key={col.key}>
-                                                                    <div className="d-flex justify-content-start align-items-center">
-                                                                        {col.label}
-                                                                    </div>
-                                                                </th>
-                                                            ))}
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {hasKeywords || keywordsData.length !== 0 ? (
-                                                        keywordsData?.map((entry, index) => (
-                                                            <>
-                                                                <tr key={index}>
-                                                                    {keywordsData.length > 0 &&
-                                                                        keywordsData !== null && (
-                                                                            <td>{index + 1}</td>
-                                                                        )}
-                                                                    {selectedColumns.includes("keywords") && (
-                                                                        <td style={{ width: "200px" }}>
-                                                                            <span>{entry.key}</span>
-                                                                        </td>
-                                                                    )}
-                                                                    {selectedColumns.includes("cpc") && (
-                                                                        <td style={{ width: "200px" }}>
-                                                                            <span>{entry.cpc}</span>
-                                                                        </td>
-                                                                    )}
-                                                                    {selectedColumns.includes("impression") && (
-                                                                        <td style={{ width: "200px" }}>
-                                                                            <span>{entry.impression}</span>
-                                                                        </td>
-                                                                    )}
-                                                                    {selectedColumns.includes("click") && (
-                                                                        <td style={{ width: "200px" }}>
-                                                                            <span>{entry.click}</span>
-                                                                        </td>
-                                                                    )}
-                                                                    {selectedColumns.includes("acos") && (
-                                                                        <td style={{ width: "200px" }}>
-                                                                            <span>{entry.acos}</span>
-                                                                        </td>
-                                                                    )}
-                                                                </tr>
-                                                            </>
-                                                        ))
-                                                    ) : (
-                                                        <div className="w-100 d-flex justify-content-center">
-                                                            <span>Produk tidak mempunyai keyword</span>
-                                                        </div>
-                                                    )}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                        {/* <div className="table-responsive"
-                                // style={{
-                                //     width: "max-content",
-                                //     minWidth: "100%",
-                                // }}
-                                >
                                     <table className="table table-centered">
                                         <thead className="table-light">
                                             <tr>
-                                                {filteredData.keyword_ads.length !== 0 && filteredData.keyword_ads !== null && <th scope="col">No</th>}
+                                                {keywordsData.length !== 0 &&
+                                                    keywordsData !== null && <th scope="col">No</th>}
                                                 {allColumns
-                                                    .filter((col) => selectedColumns.includes(col.key))
+                                                    .filter((col) =>
+                                                        selectedColumns.includes(col.key)
+                                                    )
                                                     .map((col) => (
                                                         <th key={col.key}>
                                                             <div className="d-flex justify-content-start align-items-center">
@@ -1138,53 +827,37 @@ export default function DetailAds() {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {filteredData?.keyword_ads.length !== 0 && filteredData?.keyword_ads !== null ? (
-                                                filteredData?.keyword_ads.map((entry, index) => (
+                                            {hasKeywords || keywordsData.length !== 0 ? (
+                                                keywordsData?.map((entry, index) => (
                                                     <>
                                                         <tr key={index}>
-                                                            {filteredData.keyword_ads.length > 0 && filteredData.keyword_ads !== null && (
-                                                                <td>{index + 1}</td>
-                                                            )}
+                                                            {keywordsData.length > 0 &&
+                                                                keywordsData !== null && (
+                                                                    <td>{index + 1}</td>
+                                                                )}
                                                             {selectedColumns.includes("keywords") && (
                                                                 <td style={{ width: "200px" }}>
-                                                                    <span>
-                                                                        {entry.keyword}
-                                                                    </span>
+                                                                    <span>{entry.key}</span>
                                                                 </td>
                                                             )}
-                                                            {selectedColumns.includes("mathcing_type") && (
+                                                            {selectedColumns.includes("cpc") && (
                                                                 <td style={{ width: "200px" }}>
-                                                                    <span>
-                                                                        {entry?.matching_type == "wide" ? "Luas" : "Spesifik"}
-                                                                    </span>
-                                                                </td>
-                                                            )}
-                                                            {selectedColumns.includes("cost_per_click") && (
-                                                                <td style={{ width: "200px" }}>
-                                                                    <span>
-                                                                        {entry.cost_per_click}
-                                                                    </span>
+                                                                    <span>{entry.cpc}</span>
                                                                 </td>
                                                             )}
                                                             {selectedColumns.includes("impression") && (
                                                                 <td style={{ width: "200px" }}>
-                                                                    <span>
-                                                                        {entry.impression}
-                                                                    </span>
+                                                                    <span>{entry.impression}</span>
                                                                 </td>
                                                             )}
-                                                            {selectedColumns.includes("clicks") && (
+                                                            {selectedColumns.includes("click") && (
                                                                 <td style={{ width: "200px" }}>
-                                                                    <span>
-                                                                        {entry.clicks}
-                                                                    </span>
+                                                                    <span>{entry.click}</span>
                                                                 </td>
                                                             )}
-                                                            {selectedColumns.includes("persentage_per_click") && (
+                                                            {selectedColumns.includes("acos") && (
                                                                 <td style={{ width: "200px" }}>
-                                                                    <span>
-                                                                        {entry.persentage_per_click}
-                                                                    </span>
+                                                                    <span>{entry.acos}</span>
                                                                 </td>
                                                             )}
                                                         </tr>
@@ -1192,13 +865,11 @@ export default function DetailAds() {
                                                 ))
                                             ) : (
                                                 <div className="w-100 d-flex justify-content-center">
-                                                    <span>Data tidak tersedia</span>
+                                                    <span>Produk tidak mempunyai keyword</span>
                                                 </div>
                                             )}
                                         </tbody>
                                     </table>
-                                </div> */}
-                                    </div>
                                 </div>
                             </div>
                         </>

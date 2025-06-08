@@ -1,11 +1,11 @@
 import { useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 
 import { useAuth } from "../../context/Auth";
 
 
-const MerchantModalLogin = ({ onClose, merchant}) => {
+const MerchantModalLoginWithEmail = ({ onClose, merchant}) => {
     const { loginToMerchant, setActiveMerchant  } = useAuth();
     const navigate = useNavigate();
     const modalRef = useRef(null);
@@ -59,6 +59,11 @@ const MerchantModalLogin = ({ onClose, merchant}) => {
 
         try {
             const merchantData = await loginToMerchant(formData.email, formData.password);
+            if (!merchantData) {
+                toast.error("Merchant tidak ditemukan, silakan coba lagi");
+                return;
+            }
+
             setActiveMerchant({
                 ...merchant,
                 ...merchantData
@@ -94,7 +99,7 @@ const MerchantModalLogin = ({ onClose, merchant}) => {
                         <label className="form-label">Email</label>
                         <input
                             name="email"
-                            type="email"
+                            type="text"
                             value={formData.email}
                             onChange={handleInputChange}
                             className={`form-control ${errors.email ? "is-invalid" : ""}`}
@@ -129,10 +134,14 @@ const MerchantModalLogin = ({ onClose, merchant}) => {
                     >
                         Cancel
                     </button>
+
+                    <div className="mt-3 d-flex justify-content-center align-items-center">
+                        <Link className="form-label">Login menggunakan No.Handphone</Link>
+                    </div>
                 </form>
             </div>
         </div>
     );
 };
 
-export default MerchantModalLogin;
+export default MerchantModalLoginWithEmail;

@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 import { getToken } from "../resolver/auth/authApp";
 import { isTokenValid } from "../utils/jwtDecode";
@@ -10,7 +11,6 @@ const AuthContext = createContext();
 const TOKEN_KEY = "userAppToken";
 const USER_DATA_KEY = "userDataApp";
 const ACTIVE_MERCHANT_KEY = "activeUserMerchant";
-
 export const AuthProvider = ({ children }) => {
     const [isAuth, setIsAuth] = useState(false);
     const [userData, setUserData] = useState(null);
@@ -75,22 +75,45 @@ export const AuthProvider = ({ children }) => {
                 updateData(updatedUserData);
                 return response.data.merchant;
             }
-            throw new Error("Gagal membuat merchant");
         } catch (error) {
-            console.error("Error membuat merchant, kesalahan pada server:", error);
             throw error;
         }
     };
 
     const loginToMerchant = async (email, password) => {
-        const payload = { email, password };
+        const payload = { email, password }
         try {
-            const response = await axiosRequest.post("/api/merchants/login", payload);
-            if (response.status === 200 || response.data) {
-                const merchantData = response.data;
-                setActiveMerchant(merchantData);
-                return merchantData;
-            }
+            const response = await axios.get("http://localhost:1337/api/v1/shopee-seller/login", payload, {
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+            setActiveMerchant(response.data);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    };
+
+    const loginToMerchantv2 = async (handphone) => {
+        const payload = { handphone }
+        try {
+            const response = await axios.get("http://localhost:1337/api/v1/shopee-seller/login", payload, {
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+            setActiveMerchant(response.data);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    };
+
+    const verifyOTP = async (otp) => {
+        try {
+            const response = await axiosRequest.post("/api/merchants/verify-otp", { otp });
+            return response.data;
         } catch (error) {
             throw error;
         }
@@ -113,7 +136,10 @@ export const AuthProvider = ({ children }) => {
             activeMerchant: userData?.activeMerchant || null,
             setActiveMerchant,
             createMerchant,
-            loginToMerchant
+            loginToMerchant,
+            loginToMerchantv2,
+            verifyOTP,
+            updateData
         }}>
             {children}
         </AuthContext.Provider>

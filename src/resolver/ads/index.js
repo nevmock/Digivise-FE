@@ -20,3 +20,13 @@ export async function getAllProductAdsData() {
         throw error;
     }
 };
+
+export async function updateCustomRoasProduct(shopId, campaignId, customRoas) {
+    try {
+        const response = await axiosRequest.post(`/api/product-ads/custom-roas?shopId=${shopId}&campaignId=${campaignId}&customRoas=${customRoas}`);
+        return response.data;
+    } catch (error) {
+        console.error("Error saat memperbarui custom ROAS produk:", error);
+        throw error;
+    }
+};
