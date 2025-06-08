@@ -10,4 +10,4 @@ export default function HomeRoute() {
     }
     
     return isAuth ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />;
-}
+};

@@ -6,7 +6,8 @@ import { toast } from "react-hot-toast";
 import { useAuth } from "../../context/Auth";
 import { logout } from "../../resolver/auth/authApp";
 import CreateMerchantModal from "../organisms/ModalAddMerchant";
-import LoginMerchantModal from "../organisms/ModalLoginMerchant";
+import LoginMerchantModal from "./ModalLoginEmailMerchant";
+import LoginMerchantHpModal from "./ModalLoginHPMerchant";
 import avatarProfile from "../../assets/images/users/avatar-1.jpg";
 
 
@@ -16,12 +17,13 @@ const Navbar = () => {
     const [showDropdown, setShowDropdown] = useState(false);
     const [showModalFormCreateMerchant, setShowModalFormCreateMerchant] = useState(false);
     const [showModalFormLoginMerchant, setShowModalFormLoginMerchant] = useState(false);
+    const [showModalFormLoginHpMerchant, setShowModalFormLoginHpMerchant] = useState(false);
     const [selectedMerchant, setSelectedMerchant] = useState(null);
     const dropdownRef = useRef(null);
     const modalRef = useRef(null);
     const navigate = useNavigate();
     const [themeMode, setThemeMode] = useState(() => localStorage.getItem("appModeTheme") || "light");
-    
+
     const toggleTheme = () => {
         setThemeMode(prev => (prev === "light" ? "dark" : "light"));
     };
@@ -32,6 +34,7 @@ const Navbar = () => {
 
     const closeModalCreateMerchant = () => setShowModalFormCreateMerchant(false);
     const closeModalLoginMerchant = () => setShowModalFormLoginMerchant(false);
+    const closeModalLoginHpMerchant = () => setShowModalFormLoginHpMerchant(false);
 
     const handleOpenLoginModal = (merchant) => {
         setSelectedMerchant(merchant);
@@ -49,13 +52,16 @@ const Navbar = () => {
             if (showModalFormLoginMerchant && modalRef.current && !modalRef.current.contains(event.target)) {
                 setShowModalFormLoginMerchant(false);
             }       
+            if (showModalFormLoginHpMerchant && modalRef.current && !modalRef.current.contains(event.target)) {
+                setShowModalFormLoginHpMerchant(false);
+            }
         };
 
         document.addEventListener("mousedown", handleClickOutside);
         return () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
-    }, [showDropdown, showModalFormCreateMerchant, showModalFormLoginMerchant]);
+    }, [showDropdown, showModalFormCreateMerchant, showModalFormLoginMerchant, showModalFormLoginHpMerchant]);
 
     useEffect(() => {
         document.documentElement.setAttribute("data-bs-theme", themeMode);
@@ -154,6 +160,13 @@ const Navbar = () => {
                             {showModalFormLoginMerchant &&
                                 createPortal(
                                     <LoginMerchantModal onClose={closeModalLoginMerchant} merchant={selectedMerchant} />,
+                                    document.body
+                                )
+                            }
+
+                            {showModalFormLoginHpMerchant &&
+                                createPortal(
+                                    <LoginMerchantHpModal onClose={closeModalLoginHpMerchant} merchant={selectedMerchant} />,
                                     document.body
                                 )
                             }

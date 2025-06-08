@@ -1,50 +1,177 @@
 {
-  "code": 0,
-  "msg": "OK",
-  "debug_detail": "",
-  "validation_error_list": null,
-  "data": {
-    "campaign": {
-      "campaign_id": 315516327,
-      "end_time": 0,
-      "start_time": 1744177600
-    },
-    "image": "id-ssss-ssss-ssss",
-    "keyword_ads": [
-      {
-        "keyword_id": 3,
-        "keyword": "baju pria",
-        "matching_type": "wide",
-        "cost_per_click": 23100000000,
-        "impression": 1231,
-        "clicks": 1231,
-        "cost": 313000000000,
-        "selled": 46,
-        "roas": 12.32
-      },
-      {
-        "keyword_id": 3,
-        "keyword": "baju koko",
-        "matching_type": "wide",
-        "cost_per_click": 23100000000,
-        "impression": 1231,
-        "clicks": 1231,
-        "cost": 313000000000,
-        "selled": 46,
-        "roas": 12.32
-      },
-      {
-        "keyword_id": 3,
-        "keyword": "baju koko hitam",
-        "matching_type": "wide",
-        "cost_per_click": 23100000000,
-        "impression": 1231,
-        "clicks": 1231,
-        "cost": 313000000000,
-        "selled": 46,
-        "roas": 12.32
-      }
-    ],
-    "title": "Baju Koko"
-  }
+    "content": [
+        {
+            "campaignId": 312866329,
+            "from": "2025-06-04T00:00:00.869",
+            "to": "2025-06-04T23:59:59.999",
+            "shopeeFrom": null,
+            "shopeeTo": null,
+            "data": [
+                {
+                    "campaignId": 312866329,
+                    "shopeeMerchantId": "252234165",
+                    "acos": 0.010835073657505285,
+                    "cpc": 1708.32994,
+                    "from": "2025-06-04T00:00:00.869",
+                    "to": "2025-06-04T23:59:59.999",
+                    "shopeeFrom": "1748451600",
+                    "shopeeTo": "1748537999",
+                    "createdAt": "2025-06-04T00:52:55.144",
+                    "id": null,
+                    "title": "AMK Baju Koko Lengan Pendek KK Cross Stich S/s Hitam [6]",
+                    "image": "sg-11134201-7rces-lrr6jo9iynzsa0",
+                    "dailyBudget": 20000.0,
+                    "roas": null,
+                    "click": 28.0,
+                    "ctr": 0.03365384615384615,
+                    "insight": "Biarkan tanpa perubahan",
+                    "state": "ongoing",
+                    "impression": 832.0,
+                    "broadGmv": 4.73E10,
+                    "broadOrder": 3.0,
+                    "checkout": null,
+                    "directOrder": 1.0,
+                    "keywords": [
+                        {
+                            "campaignId": 312866329,
+                            "id": null,
+                            "key": "baju koko",
+                            "shopeeMerchantId": null,
+                            "acos": 0.004367268679245283,
+                            "cpc": 6.9439572E7,
+                            "from": "1748451600",
+                            "to": "1748537999",
+                            "shopeeFrom": "1748451600",
+                            "shopeeTo": "1748537999",
+                            "createdAt": "2025-06-02T00:21:48.489",
+                            "cost": 6.9439572E7,
+                            "click": 4.0,
+                            "ctr": 0.0547945205479452,
+                            "insight": "Biarkan, tapi masuk antrian evaluasi (bisa tunggu sampai klik cukup untuk keputusan)",
+                            "impression": 73.0
+                        },
+                        {
+                            "campaignId": 312866329,
+                            "id": null,
+                            "key": "baju koko dewasa",
+                            "shopeeMerchantId": null,
+                            "acos": 0.0010580645161290324,
+                            "cpc": 1.64E7,
+                            "from": "1748451600",
+                            "to": "1748537999",
+                            "shopeeFrom": "1748451600",
+                            "shopeeTo": "1748537999",
+                            "createdAt": "2025-06-02T00:21:48.489",
+                            "cost": 1.64E7,
+                            "click": 1.0,
+                            "ctr": 0.017857142857142856,
+                            "insight": "Biarkan, tapi masuk antrian evaluasi (bisa tunggu sampai klik cukup untuk keputusan)",
+                            "impression": 56.0
+                        },
+                        {
+                            "campaignId": 312866329,
+                            "id": null,
+                            "key": "baju koko hitam",
+                            "shopeeMerchantId": null,
+                            "acos": 0.0,
+                            "cpc": 0.0,
+                            "from": "1748451600",
+                            "to": "1748537999",
+                            "shopeeFrom": "1748451600",
+                            "shopeeTo": "1748537999",
+                            "createdAt": "2025-06-02T00:21:48.489",
+                            "cost": 9.7410167E7,
+                            "click": 5.0,
+                            "ctr": 0.06666666666666667,
+                            "insight": "Biarkan tanpa perubahan",
+                            "impression": 75.0
+                        }
+                    ],
+                    "biddingStrategy": "manual",
+                    "shopId": null,
+                    "hasKeywords": true
+                }
+            ]
+        },
+        {
+            "campaignId": 315005639,
+            "from": "2025-06-04T00:00:00.869",
+            "to": "2025-06-04T23:59:59.999",
+            "shopeeFrom": null,
+            "shopeeTo": null,
+            "data": [
+                {
+                    "campaignId": 315005639,
+                    "shopeeMerchantId": "252234165",
+                    "from": "2025-06-04T00:00:00.869",
+                    "to": "2025-06-04T23:59:59.999",
+                    "shopeeFrom": "1748451600",
+                    "shopeeTo": "1748537999",
+                    "createdAt": "2025-06-04T00:52:55.144",
+                    "id": null,
+                    "title": "AMK Kemeja Koko Pria Lengan Pendek KK BB 004 S/s Cap 6 Green",
+                    "dailyBudget": 0.0,
+                    "roas": 1.0,
+                    "insight": "Biarkan tanpa perubahan",
+                    "cpdc": 0.0,
+                    "hasKeywords": true,
+                    "keywords": [
+                        {
+                            "campaignId": null,
+                            "id": null,
+                            "key": null,
+                            "shopeeMerchantId": null,
+                            "acos": null,
+                            "cpc": null,
+                            "from": null
+                        }
+                    ]
+                },
+                {
+                    "campaignId": 315005639,
+                    "shopeeMerchantId": "252234165",
+                    "from": "2025-06-04T00:00:00.869",
+                    "to": "2025-06-04T23:59:59.999",
+                    "shopeeFrom": "1748451600",
+                    "shopeeTo": "1748537999",
+                    "createdAt": "2025-06-04T00:52:55.144",
+                    "id": null,
+                    "title": "AMK Kemeja Koko Pria Lengan Pendek KK BB 004 S/s Cap 6 Green",
+                    "dailyBudget": 12.0,
+                    "roas": 5.0,
+                    "insight": "Biarkan tanpa perubahan",
+                    "cpdc": 0.0,
+                    "hasKeywords": null,
+                    "keywords": null
+                },
+                {
+                    "campaignId": 315005639,
+                    "shopeeMerchantId": "252234165",
+                    "from": "2025-06-04T00:00:00.869",
+                    "to": "2025-06-04T23:59:59.999",
+                    "shopeeFrom": "1748451600",
+                    "shopeeTo": "1748537999",
+                    "createdAt": "2025-06-04T00:52:55.144",
+                    "id": null,
+                    "title": "AMK Kemeja Koko Pria Lengan Pendek KK BB 004 S/s Cap 6 Green",
+                    "dailyBudget": 3.0,
+                    "roas": 5.0,
+                    "insight": "Biarkan tanpa perubahan",
+                    "cpdc": 0.0,
+                    "hasKeywords": null,
+                    "keywords": [
+                        {
+                            "campaignId": null,
+                            "id": null,
+                            "key": null,
+                            "shopeeMerchantId": null,
+                            "acos": null,
+                            "cpc": null,
+                            "from": null
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
 }

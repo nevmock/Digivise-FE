@@ -63,7 +63,6 @@ export default function KpiSection({ title, category, globalKpiData, setGlobalKp
                                                 fontSize: "1rem",
                                                 fontWeight: "400",
                                                 lineHeight: "1.5",
-                                                color: "#495057",
                                                 border: "1px solid #ced4da",
                                                 borderRadius: "0.25rem",
                                             }}

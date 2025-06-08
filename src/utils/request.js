@@ -13,7 +13,7 @@ const apiAppSettingsInstance = axios.create({
         "Content-Type": "application/json",
         Authorization: `Bearer ${localStorage.getItem(TOKEN_KEY)}`,
     },
-    timeout: 10000
+    timeout: 100000
 });
 
 apiAppSettingsInstance.interceptors.request.use(

@@ -60,7 +60,7 @@ export default function MerchantKpiPage() {
     try {
       setIsLoading(true);
       isMounted.current = true;
-      const merchantId = userData?.activeMerchant?.id || userData?.merchants[0]?.id;
+      const merchantId = userData?.activeMerchant?.id;
       // const merchantId = activeMerchant.id;
       const response = await getKpiData(merchantId);
       if (response && isMounted.current) {
@@ -90,7 +90,7 @@ export default function MerchantKpiPage() {
       setIsUpdating(true);
 
       // const merchantId = activeMerchant.id;
-      const merchantId = userData?.activeMerchant?.id || userData?.merchants[0]?.id;
+      const merchantId = userData?.activeMerchant?.id;
       const userId = userData?.userId;
 
       if (!userId) {
