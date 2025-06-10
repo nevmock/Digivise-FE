@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 import { FaAngleLeft, FaAngleRight, FaAngleDown, FaAngleUp } from "react-icons/fa6";
 
 import { useAuth } from "../../context/Auth";
-import { convertStatusToLabel } from "../../utils/convertStatusToLabel";
+import convertStatusToLabel from "../../utils/convertStatusToLabel";
 import axiosRequest from "../../utils/request";
 import stockJsonData from "../../api/stock.json";
 import useDebounce from "../../hooks/useDebounce";
