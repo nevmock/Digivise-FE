@@ -1,18 +1,19 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import * as echarts from "echarts";
 import Calendar from "react-calendar";
 import Select from "react-select";
 import toast from "react-hot-toast";
-import { FaAngleLeft, FaAngleRight } from "react-icons/fa6";
+import { FaAngleLeft, FaAngleRight, FaAngleDown, FaAngleUp } from "react-icons/fa6";
 
 import { useAuth } from "../../context/Auth";
+import { convertStatusToLabel } from "../../utils/convertStatusToLabel";
 import axiosRequest from "../../utils/request";
 import stockJsonData from "../../api/stock.json";
 import useDebounce from "../../hooks/useDebounce";
 import BaseLayout from "../../components/organisms/BaseLayout";
 import iconArrowUp from "../../assets/icon/arrow-up.png";
 import iconArrowDown from "../../assets/icon/arrow-down.png";
-import Loading from "../../components/atoms/Loading/Loading"
+import Loading from "../../components/atoms/Loading/Loading";
 
 
 export default function PerformanceStockPage() {
@@ -30,7 +31,6 @@ export default function PerformanceStockPage() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [statusProductStockFilter, setStatusProductStockFilter] =
     useState("all");
-  const [classificationFilter, setClassificationFilter] = useState([]);
   const [showTableColumn, setShowTableColumn] = useState(false);
   const [selectedClassificationOption, setSelectedClassificationOption] =
     useState([]);
@@ -43,23 +43,23 @@ export default function PerformanceStockPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   // Other
-  const [showCalender, setShowCalender] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
   const [animateCalendar, setAnimateCalendar] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isContentLoading, setIsContentLoading] = useState(false);
 
 
 
-  const merchantData = activeMerchant;
-  if (!merchantData) {
-    return (
-      <BaseLayout>
-        <div className="alert alert-warning">
-          Tidak ada merchant aktif. Silahkan buat merchant atau login ke merchant terlebih dahulu.
-        </div>
-      </BaseLayout>
-    );
-  };
+  // const merchantData = activeMerchant;
+  // if (!merchantData) {
+  //   return (
+  //     <BaseLayout>
+  //       <div className="alert alert-warning">
+  //         Tidak ada merchant aktif. Silahkan buat merchant atau login ke merchant terlebih dahulu.
+  //       </div>
+  //     </BaseLayout>
+  //   );
+  // };
 
   const fetchData = async (fromDate, toDate) => {
     const isInitialLoad = !rawData.length;
@@ -91,11 +91,10 @@ export default function PerformanceStockPage() {
           ? toLocalISOString(toDate)
           : toLocalISOString(new Date(toDate));
 
-      const apiUrl = `/api/product-ads/daily?shopId=${shopId}&from=${fromISO}&to=${toISO}&limit=10000`;
-      console.log("Fetching data from API:", apiUrl);
-      // const apiUrl = `/api/product-ads/daily?shopId=${shopId}&from=2025-06-04T00:00:00.869&to=2025-06-04T23:59:59.99900&limit=10&biddingStrategy=manual`;
-      const response = await axiosRequest.get(apiUrl);
-      const data = await response.data;
+      // const apiUrl = `/api/product-ads/daily?shopId=${shopId}&from=${fromISO}&to=${toISO}&limit=10000`;
+      const response = stockJsonData;
+      // const response = await axiosRequest.get(apiUrl);
+      const data = await response;
       const content = data.content || [];
       setRawData(content);
       setFilteredData(content);
@@ -316,7 +315,15 @@ export default function PerformanceStockPage() {
     let mode = "daily";
     let variantsData = [];
 
-    // Determine time intervals
+    // Helper function untuk get date string
+    const getLocalDateString = (date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    };
+
+    // Determine time intervals based on selected date
     if (selectedDate === null || Array.isArray(selectedDate)) {
       timeIntervals = getAllDaysInLast7Days();
     } else if (selectedDate === "Bulan Ini") {
@@ -326,46 +333,108 @@ export default function PerformanceStockPage() {
       mode = "hourly";
     }
 
-    // Use rawData instead of stockJsonData
+    // Use rawData instead of raw data
     const selectedProductData = rawData.find((p) => p.id === product.id);
+    if (!selectedProductData || !selectedProductData.data) return [];
+    const allVariants = new Map();
 
-    if (selectedProductData && selectedProductData.data) {
-      // Get latest stock data with variants
-      const latestStockData = getLatestStockData(selectedProductData);
-      
-      if (latestStockData && latestStockData.variants) {
-        // Variants structure
-        latestStockData.variants.forEach((variant) => {
-          let variantStockMap = {};
-
-          timeIntervals.forEach((time) => {
-              variantStockMap[time] = 0;
-          });
-
-          // Use createdAt instead of epoch conversion
-          const stockDate = new Date(latestStockData.createdAt);
-          const dateKey = mode === "hourly" 
-            ? `${stockDate.getFullYear()}-${String(stockDate.getMonth() + 1).padStart(2, "0")}-${String(stockDate.getDate()).padStart(2, "0")} ${String(stockDate.getHours()).padStart(2, "0")}:00`
-            : `${stockDate.getFullYear()}-${String(stockDate.getMonth() + 1).padStart(2, "0")}-${String(stockDate.getDate()).padStart(2, "0")}`;
-
-          if (variantStockMap[dateKey] !== undefined) {
-            variantStockMap[dateKey] = variant.stock || 0;
+    selectedProductData.data.forEach((stockData) => {
+      if (stockData.variants) {
+        stockData.variants.forEach((variant) => {
+          if (!allVariants.has(variant.id)) {
+            allVariants.set(variant.id, {
+              id: variant.id,
+              name: variant.name
+            });
           }
-
-          const variantData = {
-            name: variant.name,
-            id: variant.id,
-            data: timeIntervals.map((time) => ({
-              date: time,
-              totalStock: variantStockMap[time],
-            })),
-          };
-
-          variantsData.push(variantData);
         });
       }
-    }
+    });
 
+    allVariants.forEach((variantInfo) => {
+      let variantStockMap = {};
+
+      // Initialize with 0 to ensure all time intervals are present
+      timeIntervals.forEach((time) => {
+        variantStockMap[time] = 0;
+      });
+
+      if (mode === "hourly") {
+        selectedProductData.data.forEach((stockData) => {
+          if (!stockData || !stockData.createdAt || !stockData.variants) return;
+
+          const createdAt = new Date(stockData.createdAt);
+          const productDateStr = getLocalDateString(createdAt);
+          
+          // For hourly, we need to match the selected date
+          const filterDate = Array.isArray(selectedDate) ? selectedDate[0] : selectedDate;
+          const filterDateStr = getLocalDateString(new Date(filterDate));
+          
+          if (productDateStr === filterDateStr) {
+            const hourKey = String(createdAt.getHours()).padStart(2, "0");
+            const timeKey = `${productDateStr} ${hourKey}:00`;
+            
+            // Find this variant in current stockData
+            const currentVariant = stockData.variants.find(v => v.id === variantInfo.id);
+            
+            if (currentVariant && timeIntervals.includes(timeKey)) {
+              variantStockMap[timeKey] = currentVariant.stock || 0;
+            }
+          }
+        });
+      } else {
+        // Get latest data per day (same as generateChartData)
+        const dataByDate = {};
+        
+        selectedProductData.data.forEach((stockData) => {
+          if (!stockData || !stockData.createdAt || !stockData.variants) return;
+
+          const createdAt = new Date(stockData.createdAt);
+          const productYear = createdAt.getFullYear();
+          const productMonth = String(createdAt.getMonth() + 1).padStart(2, "0");
+          const productDay = String(createdAt.getDate()).padStart(2, "0");
+          const dateDayKey = `${productYear}-${productMonth}-${productDay}`;
+
+          const productDateStr = getLocalDateString(createdAt);
+          const filterStartStr = Array.isArray(selectedDate) ? selectedDate[0] : timeIntervals[0];
+          const filterEndStr = Array.isArray(selectedDate) ? selectedDate[selectedDate.length - 1] : timeIntervals[timeIntervals.length - 1];
+
+          if (productDateStr >= filterStartStr && productDateStr <= filterEndStr) {
+            // Get latest data for each day
+            if (!dataByDate[dateDayKey] || 
+              new Date(dataByDate[dateDayKey].createdAt) < createdAt) {
+              dataByDate[dateDayKey] = stockData;
+            }
+          }
+        });
+
+        // Map the latest data to variant chart data
+        Object.keys(dataByDate).forEach((dateDayKey) => {
+          const stockData = dataByDate[dateDayKey];
+
+          if (timeIntervals.includes(dateDayKey) && stockData.variants) {
+            const currentVariant = stockData.variants.find(v => v.id === variantInfo.id);
+            
+            if (currentVariant) {
+              variantStockMap[dateDayKey] = currentVariant.stock || 0;
+            }
+          }
+        });
+      }
+
+      // Create chart data for this variant
+      const variantData = {
+        name: variantInfo.name,
+        id: variantInfo.id,
+        data: timeIntervals.map((time) => ({
+          date: time,
+          totalStock: variantStockMap[time] || 0,
+        })),
+      };
+
+      variantsData.push(variantData);
+    });
+    
     return variantsData;
   };
 
@@ -373,7 +442,7 @@ export default function PerformanceStockPage() {
   const handleDateSelection = (selectedDate, close = true) => {
     setDate(selectedDate);
     if (close) {
-      setShowCalender(false);
+      setShowCalendar(false);
     }
 
     // Determine date range for API call
@@ -405,40 +474,35 @@ export default function PerformanceStockPage() {
     setChartData(newChartData);
     
     if (selectedProduct) {
-        const newVariantsChartData = generateVariantsChartData(date, selectedProduct);
-        setVariantsChartData(newVariantsChartData);
+      const newVariantsChartData = generateVariantsChartData(date, selectedProduct);
+      setVariantsChartData(newVariantsChartData);
     } else {
-        setVariantsChartData([]);
+      setVariantsChartData([]);
     }
   }, [date, selectedProduct, rawData]);
 
-  // useEffect(() => {
-  //   setChartData(generateChartData(date, selectedProduct));
-  //   if (selectedProduct) {
-  //     setVariantsChartData(generateVariantsChartData(date, selectedProduct));
-  //   } else {
-  //     setVariantsChartData([]);
-  //   }
-  // }, [date, selectedProduct]);
-
   useEffect(() => {
     if (chartRef.current && chartData.length > 0) {
+      // Configure xAxis data
       let xAxisData = chartData.map((item) => item.date);
       let rotateAxisLabel = 0;
       
+      // Check if xAxisData includes time format with colon
       const includesColon = xAxisData.some((item) => item.includes(":"));
       if (includesColon) {
-          xAxisData = xAxisData.map((item) => item.split(" ")[1]);
+        // If time format, keep only the time part
+        xAxisData = xAxisData.map((item) => item.split(" ")[1]);
       } else {
-          xAxisData = xAxisData.map((item) => item.split("-").slice(1).join("-"));
+        // If date format, keep only the date part
+        xAxisData = xAxisData.map((item) => item.split("-").slice(1).join("-"));
       }
 
+      // Rotate labels if there are more than 7 data points and no time format
       if (xAxisData.length > 7 && !includesColon) {
-          rotateAxisLabel = 45;
+        rotateAxisLabel = 25;
       }
 
       const chartInstance = echarts.init(chartRef.current);
-
       const series = [
         {
           name: selectedProduct ? selectedProduct.name : "Total Stock",
@@ -446,55 +510,70 @@ export default function PerformanceStockPage() {
           smooth: true,
           showSymbol: false,
           data: chartData.map((item) => item.totalStock),
-          lineStyle: { color: "#5470C6" },
+          lineStyle: { color: "#5470C6", width: 1.5 },
+          emphasis: { focus: 'series' }
         },
       ];
 
-      // Add variant series if we have a selected product
       if (selectedProduct && variantsChartData.length > 0) {
+        const grayColors = [
+          "#95A5A6", "#7F8C8D", "#BDC3C7", "#85929E", "#A6ACAF", 
+          "#909497", "#ABB2B9", "#CCD1D1", "#D5DBDB", "#EAEDED"
+        ];
+        
         variantsChartData.forEach((variant, index) => {
-          const colors = ["#91CC75", "#FAC858", "#EE6666", "#73C0DE", "#3BA272"];
           series.push({
-            name: variant.name,
+            name: `↳ ${variant.name}`,
             type: "line",
             smooth: true,
             showSymbol: false,
             data: variant.data.map((item) => item.totalStock),
-            lineStyle: { color: colors[index % colors.length] },
+            lineStyle: { 
+                color: grayColors[index % grayColors.length],
+                width: 2,
+                type: 'dashed'
+            },
+            emphasis: { focus: 'series' }
           });
         });
       }
 
       chartInstance.setOption({
         toolbox: { feature: { saveAsImage: {} } },
-        grid: { left: 50, right: 50, bottom: 50, containLabel: false },
+        grid: { left: 60, right: 50, bottom: selectedProduct ? 80 : 50, containLabel: false },
         tooltip: {
           trigger: "axis",
           formatter: function (params) {
-            let result = params[0].axisValue + "<br/>";
+            let result = `<strong>${params[0].axisValue}</strong><br/>`;
             params.forEach((param) => {
-              result += param.seriesName + ": " + param.value + " Stok<br/>";
+              result += `${param.seriesName}: <strong>${param.value}</strong> Stok<br/>`;
             });
             return result;
           },
+          backgroundColor: 'rgba(50, 50, 50, 0.9)',
+          borderColor: '#777',
+          textStyle: { color: '#fff' }
         },
         legend: {
           data: series.map(s => s.name),
-          bottom: 0
+          bottom: 0,
+          type: 'scroll',
         },
         xAxis: {
-          type: "category",
-          data: xAxisData,
-          boundaryGap: false,
-          axisLabel: {
-            interval: 0,
-            rotate: rotateAxisLabel,
-          },
+            type: "category",
+            data: xAxisData,
+            boundaryGap: false,
+            axisLabel: {
+              interval: 0,
+              rotate: rotateAxisLabel,
+            },
         },
         yAxis: {
           type: "value",
           splitLine: { show: true },
-        },
+          name: 'Stock',
+          nameGap: 30
+      },
         series: series,
       });
 
@@ -502,93 +581,14 @@ export default function PerformanceStockPage() {
     }
   }, [chartData, variantsChartData, selectedProduct]);
 
-  // useEffect(() => {
-  //   let xAxisData = chartData?.map((item) => item.date);
-  //   let rotateAaxisLabel = 0;
-  //   const includesColon = xAxisData?.some((item) => item.includes(":"));
-  //   if (includesColon) {
-  //     xAxisData = xAxisData?.map((item) => item.split(" ")[1]);
-  //   } else {
-  //     xAxisData = xAxisData?.map((item) => item.split("-").slice(1).join("-"));
-  //   }
-
-  //   if (xAxisData?.length > 7 && !includesColon) {
-  //     rotateAaxisLabel = 45;
-  //   }
-
-  //   const chartInstance = echarts.init(chartRef.current);
-
-  //   const series = [
-  //     {
-  //       name: selectedProduct ? selectedProduct.name : "Total Stock",
-  //       type: "line",
-  //       smooth: true,
-  //       showSymbol: false,
-  //       data: chartData.map((item) => item.totalStock),
-  //       lineStyle: {
-  //         color: "#5470C6",
-  //       },
-  //     },
-  //   ];
-
-  //   // Add variant series if we have a selected product
-  //   if (selectedProduct && variantsChartData.length > 0) {
-  //     variantsChartData.forEach((variant) => {
-  //       series.push({
-  //         name: variant.name,
-  //         type: "line",
-  //         smooth: true,
-  //         showSymbol: false,
-  //         data: variant.data.map((item) => item.totalStock),
-  //         lineStyle: {
-  //           color: "#B2B6BE",
-  //         },
-  //       });
-  //     });
-  //   }
-
-  //   chartInstance.setOption({
-  //     toolbox: { feature: { saveAsImage: {} } },
-  //     grid: { left: 50, right: 50, bottom: 50, containLabel: false },
-  //     tooltip: {
-  //       trigger: "axis",
-  //       formatter: function (params) {
-  //         let result = params[0].axisValue + "<br/>";
-
-  //         params.forEach((param) => {
-  //           result += param.seriesName + ": " + param.value + " Stok<br/>";
-  //         });
-
-  //         return result;
-  //       },
-  //     },
-  //     xAxis: {
-  //       type: "category",
-  //       data: xAxisData,
-  //       boundaryGap: false,
-  //       axisLabel: {
-  //         interval: 0,
-  //         rotate: rotateAaxisLabel,
-  //       },
-  //     },
-  //     yAxis: {
-  //       type: "value",
-  //       splitLine: { show: true },
-  //     },
-  //     series: series,
-  //   });
-
-  //   return () => chartInstance.dispose();
-  // }, [chartData, variantsChartData, selectedProduct]);
-
 
 
   // FILTER COLUMNS FEATURE
   // Define all columns
   const allColumns = [
     { key: "name", label: "Nama" },
-    { key: "code", label: "Kode" },
     { key: "stock", label: "Stok" },
+    { key: "code", label: "Kode" },
     { key: "availability", label: "Availability" },
     { key: "status", label: "Status" },
     { key: "classification", label: "Sales Clasification" },
@@ -637,7 +637,7 @@ export default function PerformanceStockPage() {
     // Filter by search term
     if (debouncedSearchTerm !== "") {
       filtered = filtered.filter((entry) =>
-        entry.data[0].title
+        entry.name
           .toLowerCase()
           .includes(debouncedSearchTerm.toLowerCase())
       );
@@ -646,7 +646,7 @@ export default function PerformanceStockPage() {
     // Filter by status
     if (statusProductStockFilter !== "all") {
       filtered = filtered.filter(
-        (entry) => entry.data[0].state === statusProductStockFilter
+        (entry) => entry.state === statusProductStockFilter
       );
     }
 
@@ -656,7 +656,8 @@ export default function PerformanceStockPage() {
         (option) => option.value
       );
       filtered = filtered.filter((entry) => {
-        const entryClassification = entry.data[0].classification;
+        const latestData = getLatestStockData(entry);
+        const entryClassification = latestData?.classification;
         return classificationValues.includes(entryClassification);
       });
     }
@@ -666,7 +667,7 @@ export default function PerformanceStockPage() {
   }, [
     debouncedSearchTerm,
     statusProductStockFilter,
-    classificationFilter,
+    selectedClassificationOption,
     rawData,
   ]);
 
@@ -1035,9 +1036,8 @@ export default function PerformanceStockPage() {
                     <h5>{rawData.length} total produk</h5>
                     <div style={{ position: "relative" }}>
                       <button
-                        onClick={() => setShowCalender(!showCalender)}
-                        className="btn btn-secondary"
-                        style={{ backgroundColor: "#8042D4", border: "none" }}
+                        onClick={() => setShowCalendar(!showCalendar)}
+                        className="btn btn-primary"
                       >
                         {date === null
                           ? "Pilih tanggal"
@@ -1047,9 +1047,9 @@ export default function PerformanceStockPage() {
                               ? "Bulan ini"
                               : date}
                       </button>
-                      {showCalender && (
+                      {showCalendar && (
                         <div
-                          className="d-flex"
+                          className="d-flex custom-calendar-behavior-v2"
                           style={{
                             position: "absolute",
                             top: "40px",
@@ -1062,7 +1062,7 @@ export default function PerformanceStockPage() {
                           }}
                         >
                           <div
-                            className="d-flex flex-column py-2 px-1"
+                            className="custom-content-calendar-v2 d-flex flex-column py-2 px-1"
                             style={{ width: "130px", listStyleType: "none" }}
                           >
                             <p
@@ -1099,6 +1099,7 @@ export default function PerformanceStockPage() {
                             </p>
                           </div>
                           <div
+                            id="custom-calendar-behavior-barrier-v2"
                             style={{
                               width: "1px",
                               height: "auto",
@@ -1111,7 +1112,7 @@ export default function PerformanceStockPage() {
                               if (selectedDate instanceof Date) {
                                 handleDateSelection(selectedDate.toISOString().split("T")[0]);
                               }
-                              setShowCalender(false);
+                              setShowCalendar(false);
                             }}
                             value={date === "Bulan Ini" ? new Date() : date}
                             maxDate={new Date()}
@@ -1243,7 +1244,7 @@ export default function PerformanceStockPage() {
                             <Select
                               isMulti
                               options={typeClasificationOptions}
-                              value={classificationFilter}
+                              value={selectedClassificationOption}
                               onChange={handleClassificationChange}
                               placeholder="Filter Klasifikasi"
                               styles={{
@@ -1278,10 +1279,9 @@ export default function PerformanceStockPage() {
                         {/* Column filter */}
                         <div id="container-other-filters-right">
                           <button
-                            className="btn btn-secondary dropdown-toggle w-100"
+                            className="btn btn-primary dropdown-toggle w-100"
                             type="button"
                             onClick={() => setShowTableColumn(!showTableColumn)}
-                            style={{ backgroundColor: "#8042D4", border: "none" }}
                           >
                             Pilih kriteria
                           </button>
@@ -1379,15 +1379,16 @@ export default function PerformanceStockPage() {
                                     {filteredData.length > 0 && (
                                       <td
                                         onClick={() => toggleRow(entry.id)}
-                                        style={{ cursor: "pointer" }}
+                                        style={{ cursor: "pointer", width: "20px" }}
                                       >
-                                        {expandedVariantProduct[entry.id] ? "▲" : "▼"}
+                                        {expandedVariantProduct[entry.id] ? <FaAngleUp /> : <FaAngleDown />}
                                       </td>
                                     )}
                                     
                                     {selectedColumns.includes("name") && (
                                       <td
                                         style={{
+                                          width: "400px",
                                           cursor: "pointer",
                                           color: selectedProduct?.id === entry.id ? "#F6881F" : "",
                                         }}
@@ -1396,11 +1397,7 @@ export default function PerformanceStockPage() {
                                         {entry.name}
                                       </td>
                                     )}
-                                    
-                                    {selectedColumns.includes("code") && (
-                                      <td>{entry.id || "-"}</td>
-                                    )}
-                                    
+
                                     {selectedColumns.includes("stock") && (
                                       <td>
                                         <div className="d-flex flex-column align-items-start">
@@ -1409,10 +1406,14 @@ export default function PerformanceStockPage() {
                                       </td>
                                     )}
                                     
+                                    {selectedColumns.includes("code") && (
+                                      <td>{entry.id || "-"}</td>
+                                    )}
+                                    
                                     {selectedColumns.includes("availability") && (
                                       <td>
-                                        <span className={`badge ${(latestStockData?.total_available_stock || 0) > 0 ? 'bg-success' : 'bg-danger'}`}>
-                                          {(latestStockData?.total_available_stock || 0) > 0 ? 'Tersedia' : 'Habis'}
+                                        <span>
+                                          {latestStockData?.availability || "-"}
                                         </span>
                                       </td>
                                     )}
@@ -1420,7 +1421,7 @@ export default function PerformanceStockPage() {
                                     {selectedColumns.includes("status") && (
                                       <td>
                                         <span className={`badge ${entry.state === 'ongoing' ? 'bg-success' : 'bg-secondary'}`}>
-                                          {entry.state === 'ongoing' ? 'Aktif' : 'Nonaktif'}
+                                          {convertStatusToLabel(entry.state)}
                                         </span>
                                       </td>
                                     )}
@@ -1431,13 +1432,11 @@ export default function PerformanceStockPage() {
                                       </td>
                                     )}
                                   </tr>
-                                  
-                                  {/* Expanded variant row */}
                                   {expandedVariantProduct[entry.id] && latestStockData?.variants && (
                                     <tr className="bg-light">
                                       <td
                                         colSpan={selectedColumns.length + 1}
-                                        style={{ padding: "2px 4px", border: "none" }}
+                                        style={{ padding: "4px 4px", border: "none" }}
                                       >
                                         <ul className="list-group">
                                           {latestStockData.variants.map((variant) => (
@@ -1445,8 +1444,8 @@ export default function PerformanceStockPage() {
                                               key={variant.id}
                                               className="list-group-item d-flex justify-content-start gap-2"
                                             >
-                                              <span style={{ width: "4px" }}></span>
-                                              <span style={{ width: "150px" }}>
+                                              <span style={{ width: "8px" }}></span>
+                                              <span style={{ width: "388px" }}>
                                                 {variant.name}
                                               </span>
                                               <span>{variant.stock || 0} Stok</span>
@@ -1461,148 +1460,12 @@ export default function PerformanceStockPage() {
                             })
                           ) : (
                             <tr>
-                              <td colSpan={selectedColumns.length + 1} className="text-center">
+                              <td colSpan={selectedColumns.length + 1} className="text-left">
                                 Data tidak tersedia
                               </td>
                             </tr>
                           )}
                         </tbody>
-                        {/* <tbody>
-                          {paginatedData.length !== 0 && paginatedData !== null ? (
-                            paginatedData?.map((entry, index) => (
-                              <>
-                                <tr key={entry.id}>
-                                  {filteredData.length > 0 && (
-                                    <td
-                                      onClick={() => toggleRow(entry.id)}
-                                      style={{ cursor: "pointer" }}
-                                    >
-                                      {expandedVariantProduct[entry.id] ? (
-                                        <img
-                                          src={iconArrowUp}
-                                          alt="icon arrow up"
-                                          style={{ width: "8px", height: "8px" }}
-                                        />
-                                      ) : (
-                                        <img
-                                          src={iconArrowDown}
-                                          alt="icon arrow down"
-                                          style={{ width: "8px", height: "8px" }}
-                                        />
-                                      )}
-                                    </td>
-                                  )}
-                                  {selectedColumns.includes("name") && (
-                                    <td
-                                      style={{
-                                        cursor: "pointer",
-                                        color:
-                                          selectedProduct?.id === entry.id
-                                            ? "#F6881F"
-                                            : "",
-                                      }}
-                                      onClick={() => handleProductClick(entry)}
-                                    >
-                                      {entry.name}
-                                    </td>
-                                  )}
-                                  {selectedColumns.includes("code") && (
-                                    <td>{entry.id || "-"}</td>
-                                  )}
-                                  {selectedColumns.includes("stock") && (
-                                    <td>
-                                      <div className="d-flex flex-column align-items-center">
-                                        {entry.stock_detail.total_available_stock}
-                                      </div>
-                                    </td>
-                                  )}
-                                  {selectedColumns.includes("availability") && (
-                                    <td>test</td>
-                                  )}
-                                  {selectedColumns.includes("status") && (
-                                    <td>
-                                      <div className="d-flex gap-1 align-items-center">
-                                        <div
-                                          className={`marker ${
-                                            entry.state === "ongoing"
-                                              ? "animated-circle"
-                                              : ""
-                                          }`}
-                                          style={{
-                                            backgroundColor:
-                                              entry.state === "ongoing"
-                                                ? "#00EB3FFF"
-                                                : "gray",
-                                          }}
-                                        ></div>
-                                        <span
-                                          style={{
-                                            fontSize: "14px",
-                                            color:
-                                              entry.state === "ongoing"
-                                                ? "inherit"
-                                                : "gray",
-                                          }}
-                                        >
-                                          {entry.state === "ongoing"
-                                            ? "Berjalan"
-                                            : "Nonaktif"}
-                                        </span>
-                                      </div>
-                                    </td>
-                                  )}
-                                  {selectedColumns.includes("classification") && (
-                                    <td>
-                                      <div className="d-flex gap-1 align-items-center">
-                                        <span>test</span>
-                                      </div>
-                                    </td>
-                                  )}
-                                </tr>
-                                {expandedVariantProduct[entry.id] && (
-                                  <tr className="bg-light">
-                                    <td
-                                      colSpan={selectedColumns.length + 1}
-                                      style={{
-                                        padding: "2px 4px",
-                                        border: "none",
-                                      }}
-                                    >
-                                      <ul className="list-group">
-                                        {entry.model_list.map((variant, index) => (
-                                          <li
-                                            key={variant.id}
-                                            className="list-group-item d-flex justify-content-start gap-2"
-                                          >
-                                            <span style={{ width: "4px" }}></span>
-                                            <span style={{ width: "100px" }}>
-                                              {variant.name}
-                                            </span>
-                                            <span>
-                                              {" "}
-                                              {
-                                                variant.stock_detail
-                                                  .total_available_stock
-                                              }{" "}
-                                              Stok
-                                            </span>
-                                          </li>
-                                        ))}
-                                      </ul>
-                                    </td>
-                                  </tr>
-                                )}
-                              </>
-                            ))
-                          ) : (
-                            <div
-                              className="w-100 d-flex justify-content-center"
-                              style={{ width: "max-content" }}
-                            >
-                              <span>Data tidak tersedia</span>
-                            </div>
-                          )}
-                        </tbody> */}
                       </table>
                     </div>
                     {/* Pagination */}
