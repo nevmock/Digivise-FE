@@ -292,7 +292,7 @@ body {
   transition: opacity 0.3s ease, transform 0.4s ease;
 }
 
-.custom-content-calendar p:hover {
+.custom-content-calendar p:hover, .custom-content-calendar-v2 p:hover {
   color: #F6881F;
 }
 
@@ -345,10 +345,10 @@ body {
 
 
 @media (max-width: 1024px) {
-  .custom-calendar-behavior {
+  .custom-calendar-behavior, .custom-calendar-behavior-v2 {
     flex-direction: column !important;
   }
-  .custom-content-calendar {
+  .custom-content-calendar, .custom-content-calendar-v2 {
     display: flex !important;
     flex-direction: row !important;
     flex-wrap: wrap !important;
@@ -356,7 +356,7 @@ body {
     width: 100% !important;
     padding: 16px 0px 0px 0px !important;
   }
-  #custom-calendar-behavior-barrier {
+  #custom-calendar-behavior-barrier, #custom-calendar-behavior-barrier-v2 {
     width: 100% !important;
     height: 1px !important;
     margin: 8px 0 !important;
