@@ -19,9 +19,6 @@ const MerchantModalCreate = ({ onClose }) => {
         sector_industry: "",
         office_address: "",
         factory_address: "",
-        merchantName: "",
-        sessionPath: "merchant",
-        MerchantShoopeId: "",
     });
 
     const isEmpty = (value) => !value?.trim();
@@ -53,18 +50,6 @@ const MerchantModalCreate = ({ onClose }) => {
             newErrors.phone = "Phone number must contain only digits";
         } else if (formData.phone.length < 10) {
             newErrors.phone = "Phone number must be at least 10 digits";
-        }
-
-        if (isEmpty(formData.merchantName)) {
-            newErrors.merchantName = "Merchant name is required";
-        }
-
-        if (isEmpty(formData.MerchantShoopeId)) {
-            newErrors.MerchantShoopeId = "Merchant Shoope ID is required";
-        }
-
-        if (isEmpty(formData.sessionPath)) {
-            newErrors.sessionPath = "Session path is required";
         }
 
         if (isEmpty(formData.sector_industry)) {
@@ -125,7 +110,7 @@ const MerchantModalCreate = ({ onClose }) => {
             style={{ background: "rgba(0,0,0,0.5)", zIndex: 1050 }}
             onClick={onClose}
         >
-            <div className="bg-white p-4 rounded shadow-lg" style={{ width: "400px", maxHeight: "90vh", overflowY: "auto" }} ref={modalRef} onClick={(e) => e.stopPropagation()}>
+            <div className="bg-white p-4 rounded shadow-lg" style={{ width: "420px", maxHeight: "90vh", overflowY: "auto" }} ref={modalRef} onClick={(e) => e.stopPropagation()}>
                 <h5 className="text-center">Add Merchant</h5>
                 <hr />
                 <form onSubmit={handleSubmitFormData}>
@@ -134,9 +119,6 @@ const MerchantModalCreate = ({ onClose }) => {
                         { name: "email", label: "Email", type: "email" },
                         { name: "password", label: "Password", type: "password" },
                         { name: "phone", label: "Phone number", type: "text" },
-                        { name: "merchantName", label: "Merchant Name", type: "text" },
-                        { name: "MerchantShoopeId", label: "Merchant Shoope Id", type: "text" },
-                        { name: "sessionPath", label: "Session Path", type: "text" },
                         { name: "sector_industry", label: "Sector Industry", type: "text" },
                         { name: "office_address", label: "Office Address", type: "text" },
                         { name: "factory_address", label: "Factory Address", type: "text" },
@@ -159,7 +141,7 @@ const MerchantModalCreate = ({ onClose }) => {
                         </div>
                     ))}
 
-                    <button type="submit" className="btn btn-success w-100" disabled={isLoading}>
+                    <button type="submit" className="btn btn-success w-100 mt-3" disabled={isLoading}>
                         {isLoading ? (
                             <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                         ) : (
