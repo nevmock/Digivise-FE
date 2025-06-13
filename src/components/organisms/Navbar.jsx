@@ -107,7 +107,7 @@ const Navbar = () => {
                                         </button>
                                         
                                         {showDropdown && (
-                                            <div className="dropdown-menu show position-absolute shadow p-2 rounded" style={{ width: "180px" }}>
+                                            <div className="dropdown-menu show position-absolute shadow p-2 rounded" style={{ width: "200px" }}>
                                                 {userData.merchants.map((merchant, index) => (
                                                     <div 
                                                         key={index} 
