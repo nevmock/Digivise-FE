@@ -164,4 +164,10 @@ class ThemeLayout {
     init() {
         this.initVerticalMenu(), this.initConfig(), this.initSwitchListener(), this.initWindowSize(), this._adjustLayout(), this.setSwitchFromConfig()
     }
-}(new ThemeLayout).init();
+}
+
+// (new ThemeLayout).init();
+// Change (new ThemeLayout).init() to window.ThemeLayout to make it globally accessible
+window.ThemeLayout = ThemeLayout;
+window.themeLayout = new ThemeLayout();
+window.themeLayout.init();
