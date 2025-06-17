@@ -7,4 +7,4 @@ export default getProductsAll = async () => {
     } catch (error) {
         throw error;
     }
-}
+};

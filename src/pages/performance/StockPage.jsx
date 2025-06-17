@@ -560,13 +560,13 @@ export default function PerformanceStockPage() {
           type: 'scroll',
         },
         xAxis: {
-            type: "category",
-            data: xAxisData,
-            boundaryGap: false,
-            axisLabel: {
-              interval: 0,
-              rotate: rotateAxisLabel,
-            },
+          type: "category",
+          data: xAxisData,
+          boundaryGap: false,
+          axisLabel: {
+            interval: 0,
+            rotate: rotateAxisLabel,
+          },
         },
         yAxis: {
           type: "value",
@@ -1189,11 +1189,11 @@ export default function PerformanceStockPage() {
                         </div>
                         <div
                           className={`status-button-filter rounded-pill d-flex align-items-center  ${
-                            statusProductStockFilter === "paused"
+                            statusProductStockFilter === "closed"
                               ? "custom-font-color custom-border-select fw-bold"
                               : "border border-secondary-subtle"
                           }`}
-                          onClick={() => setStatusProductStockFilter("paused")}
+                          onClick={() => setStatusProductStockFilter("closed")}
                           style={{
                             cursor: "pointer",
                             fontSize: "12px",

@@ -1,34 +1,3 @@
-// import { useEffect } from "react";
-
-// function GlobalScripts() {
-//     useEffect(() => {
-//         const scriptPaths = [
-//             "/assets/js/app.js",
-//             "/assets/js/pages/dashboard.js",
-//         ];
-
-//         scriptPaths.forEach((src) => {
-//             const script = document.createElement("script");
-//             script.src = src;
-//             script.defer = true;
-//             document.body.appendChild(script);
-//         });
-
-//         return () => {
-//             scriptPaths.forEach((src) => {
-//                 const script = document.querySelector(`script[src="${src}"]`);
-//                 if (script) document.body.removeChild(script);
-//             });
-//         };
-//     }, []);
-
-//     return null;
-// }
-
-// export default GlobalScripts;
-
-
-
 import { useEffect } from "react";
 
 function GlobalScripts() {
@@ -38,51 +7,71 @@ function GlobalScripts() {
             "/assets/js/pages/dashboard.js",
         ];
 
-        const loadScripts = () => {
-            return new Promise((resolve, reject) => {
-                let loadedScripts = 0;
-                const totalScripts = scriptPaths.length;
-
-                scriptPaths.forEach((src) => {
-                    const script = document.createElement("script");
-                    script.src = src;
-                    script.defer = true;
-
-                    script.onload = () => {
-                        loadedScripts++;
-                        if (loadedScripts === totalScripts) {
+        const loadScripts = async () => {
+            try {
+                // Load scripts berurutan
+                for (const src of scriptPaths) {
+                    await new Promise((resolve, reject) => {
+                        const existingScript = document.querySelector(`script[src="${src}"]`);
+                        if (existingScript) {
                             resolve();
+                            return;
                         }
-                    };
 
-                    script.onerror = () => {
-                        reject(`Error loading script: ${src}`);
-                    };
+                        const script = document.createElement("script");
+                        script.src = src;
+                        script.async = false;
+                        
+                        script.onload = () => {
+                            resolve();
+                        };
+                        
+                        script.onerror = () => reject(`❌ Error loading: ${src}`);
+                        
+                        document.head.appendChild(script); // Pakai head, bukan body
+                    });
+                }
 
-                    document.body.appendChild(script);
-                });
-            });
+                await new Promise(resolve => setTimeout(resolve, 200));
+                
+                // Cek apakah ThemeLayout class ada di window
+                if (typeof window.ThemeLayout !== 'undefined') {
+                    
+                    // Jika belum ada instance, buat
+                    if (!window.themeLayout) {
+                        window.themeLayout = new window.ThemeLayout();
+                        window.themeLayout.init();
+                    }
+                } else {
+                    console.error("❌ ThemeLayout class still not found");
+                    
+                    // console.log("Available window properties:", 
+                    //     Object.keys(window).filter(key => 
+                    //         key.includes('Theme') || key.includes('theme')
+                    //     )
+                    // );
+                }
+                
+            } catch (error) {
+                console.error("Script loading error:", error);
+            }
         };
 
-        loadScripts()
-            .then(() => {
-                if (window.ThemeLayout) {
-                    console.log("ThemeLayout loaded successfully!");
-                } else {
-                    console.error("ThemeLayout is still undefined.");
-                }
-            })
-            .catch((error) => {
-                console.error(error);
-            });
+        loadScripts();
 
+        // Cleanup
         return () => {
             scriptPaths.forEach((src) => {
                 const script = document.querySelector(`script[src="${src}"]`);
                 if (script) {
-                    document.body.removeChild(script);
+                    script.remove();
                 }
             });
+            
+            // Cleanup global variables jika perlu
+            if (window.themeLayout) {
+                delete window.themeLayout;
+            }
         };
     }, []);
 
