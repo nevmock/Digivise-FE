@@ -55,7 +55,7 @@ const MerchantModalLoginWithUsername = ({ onClose, merchant}) => {
         setIsLoading(true);
 
         try {
-            const merchantData = await loginToMerchant(formData.email, formData.password);
+            const merchantData = await loginToMerchant(formData.username, formData.password);
             if (!merchantData) {
                 toast.error("Merchant tidak ditemukan, silakan coba lagi");
                 return;
