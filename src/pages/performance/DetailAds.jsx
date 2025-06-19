@@ -8,6 +8,7 @@ import axiosRequest from "../../utils/request";
 import Loading from "../../components/atoms/Loading/Loading";
 import BaseLayout from "../../components/organisms/BaseLayout";
 
+
 export default function DetailAds() {
     const navigate = useNavigate();
     const { campaignId } = useParams();
@@ -98,7 +99,7 @@ export default function DetailAds() {
                     ? toLocalISOString(toDate)
                     : toLocalISOString(new Date(toDate));
 
-            const apiUrl = `/api/product-ads/daily?shopId=${shopId}&from=${fromISO}&to=${toISO}&limit=100`;
+            const apiUrl = `/api/product-ads/daily?shopId=${shopId}&from=${fromISO}&to=${toISO}&limit=100000000`;
             // const apiUrl = `/api/product-ads/daily?shopId=${shopId}&from=2025-06-04T00:00:00.869&to=2025-06-04T23:59:59.99900&limit=10&biddingStrategy=manual`;
             const response = await axiosRequest.get(apiUrl);
             const data = await response.data;
@@ -168,7 +169,6 @@ export default function DetailAds() {
             setIsLoading(false);
         }
     };
-    console.log("Keywords Data:", keywordsData);
 
     // Date utility for getting all days in the last 7 days
     function getAllDaysInLast7Days() {
@@ -249,10 +249,10 @@ export default function DetailAds() {
 
         // Helper function untuk get date string tanpa timezone conversion
         const getLocalDateString = (date) => {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
         };
 
         // Determine time intervals based on selected date filter
@@ -749,7 +749,7 @@ export default function DetailAds() {
                             className="d-flex justify-content-center"
                             style={{ height: "100vh" }}
                         >
-                            <Loading />
+                            <Loading size={40} />
                         </div>
                     ) : (
                         <>
@@ -888,61 +888,61 @@ export default function DetailAds() {
 
                                                     >
                                                         {comparatorDate && comparedDate
-                                                        ? `${comparatorDate.toLocaleDateString("id-ID")} - ${comparedDate.toLocaleDateString("id-ID")}`
-                                                        : (typeof date === 'string' ? date : (Array.isArray(date) ? "1 Minggu terakhir" : "Pilih Tanggal"))}
+                                                            ? `${comparatorDate.toLocaleDateString("id-ID")} - ${comparedDate.toLocaleDateString("id-ID")}`
+                                                            : (typeof date === 'string' ? date : (Array.isArray(date) ? "1 Minggu terakhir" : "Pilih Tanggal"))}
                                                     </button>
                                                     {showCalendar && (
                                                         <div
-                                                        className={`card custom-calendar-behavior ${animateCalendar ? "show" : ""}`}
-                                                        style={{
-                                                            flexDirection: "row",
-                                                            position: "absolute",
-                                                            top: "44px",
-                                                            right: "0",
-                                                            zIndex: 1000,
-                                                            boxShadow: "0px 4px 6px rgba(0,0,0,0.1)",
-                                                            borderRadius: "8px",
-                                                            padding: "5px 10px",
-                                                        }}
-                                                        >
-                                                        <div
-                                                            className="custom-content-calendar d-flex flex-column py-2 px-1"
-                                                            style={{ width: "130px", listStyleType: "none" }}
-                                                        >
-                                                            <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection(new Date().toISOString().split("T")[0], "hari_ini")}>Hari ini</p>
-                                                            <p style={{ cursor: "pointer" }}
-                                                            onClick={() => {
-                                                                const yesterday = new Date();
-                                                                yesterday.setDate(yesterday.getDate() - 2);
-                                                                handleDateSelection(yesterday.toISOString().split("T")[0], "kemarin");
+                                                            className={`card custom-calendar-behavior ${animateCalendar ? "show" : ""}`}
+                                                            style={{
+                                                                flexDirection: "row",
+                                                                position: "absolute",
+                                                                top: "44px",
+                                                                right: "0",
+                                                                zIndex: 1000,
+                                                                boxShadow: "0px 4px 6px rgba(0,0,0,0.1)",
+                                                                borderRadius: "8px",
+                                                                padding: "5px 10px",
                                                             }}
+                                                        >
+                                                            <div
+                                                                className="custom-content-calendar d-flex flex-column py-2 px-1"
+                                                                style={{ width: "130px", listStyleType: "none" }}
                                                             >
-                                                            Kemarin
-                                                            </p>
-                                                            <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection(getAllDaysInLast7Days(), "minggu_ini")}>1 Minggu terakhir</p>
-                                                            <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection("Bulan Ini", "bulan_ini")}>Bulan ini</p>
-                                                        </div>
-                                                        <div id="custom-calendar-behavior-barrier" style={{ width: "1px", height: "auto", backgroundColor: "#E3E3E3FF", margin: "10px 4px" }}></div>
-                                                        {/* Kalender pembanding */}
-                                                        <div>
-                                                            <p className="pt-2" style={{ textAlign: "center" }}>Tanggal Pembanding</p>
-                                                            <Calendar onChange={(date) => setComparatorDate(date)} value={comparatorDate} maxDate={comparedDate || new Date(2100, 0, 1)} />
-                                                        </div>
-                                                        {/* Kalender dibanding */}
-                                                        <div>
-                                                            <p className="pt-2" style={{ textAlign: "center" }}>Tanggal Dibanding</p>
-                                                            <Calendar onChange={(date) => setComparedDate(date)} value={comparedDate} minDate={comparatorDate || new Date()} />
-                                                        </div>
-                                                        {/* Confirm button for date range */}
-                                                        <div id="custom-calendar-behavior-button" className="d-flex align-items-end mb-1">
-                                                            <button
-                                                            className="btn btn-primary"
-                                                            onClick={handleComparisonDatesConfirm}
-                                                            disabled={!comparatorDate || !comparedDate}
-                                                            >
-                                                            Terapkan
-                                                            </button>
-                                                        </div>
+                                                                <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection(new Date().toISOString().split("T")[0], "hari_ini")}>Hari ini</p>
+                                                                <p style={{ cursor: "pointer" }}
+                                                                    onClick={() => {
+                                                                        const yesterday = new Date();
+                                                                        yesterday.setDate(yesterday.getDate() - 2);
+                                                                        handleDateSelection(yesterday.toISOString().split("T")[0], "kemarin");
+                                                                    }}
+                                                                >
+                                                                    Kemarin
+                                                                </p>
+                                                                <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection(getAllDaysInLast7Days(), "minggu_ini")}>1 Minggu terakhir</p>
+                                                                <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection("Bulan Ini", "bulan_ini")}>Bulan ini</p>
+                                                            </div>
+                                                            <div id="custom-calendar-behavior-barrier" style={{ width: "1px", height: "auto", backgroundColor: "#E3E3E3FF", margin: "10px 4px" }}></div>
+                                                            {/* Kalender pembanding */}
+                                                            <div>
+                                                                <p className="pt-2" style={{ textAlign: "center" }}>Tanggal Pembanding</p>
+                                                                <Calendar onChange={(date) => setComparatorDate(date)} value={comparatorDate} maxDate={comparedDate || new Date(2100, 0, 1)} />
+                                                            </div>
+                                                            {/* Kalender dibanding */}
+                                                            <div>
+                                                                <p className="pt-2" style={{ textAlign: "center" }}>Tanggal Dibanding</p>
+                                                                <Calendar onChange={(date) => setComparedDate(date)} value={comparedDate} minDate={comparatorDate || new Date()} />
+                                                            </div>
+                                                            {/* Confirm button for date range */}
+                                                            <div id="custom-calendar-behavior-button" className="d-flex align-items-end mb-1">
+                                                                <button
+                                                                    className="btn btn-primary"
+                                                                    onClick={handleComparisonDatesConfirm}
+                                                                    disabled={!comparatorDate || !comparedDate}
+                                                                >
+                                                                    Terapkan
+                                                                </button>
+                                                            </div>
                                                         </div>
                                                     )}
                                                 </div>
@@ -950,6 +950,38 @@ export default function DetailAds() {
                                             {/* Matric filter */}
                                             <div className="d-flex flex-column gap-3">
                                                 <div className="row g-3">
+                                                {Object.keys(metrics).map((metricKey) => (
+                                                    <div
+                                                        className="col-12 col-sm-6 col-lg-3"
+                                                        key={metricKey}
+                                                        >
+                                                        <div
+                                                            className="card shadow-md px-2 py-1 h-100"
+                                                            style={handleStyleMatricButton(metricKey)}
+                                                            onClick={() => handleMetricFilter(metricKey)}
+                                                        >
+                                                            <strong style={{ color: "#5d7186" }}>
+                                                            {metrics[metricKey].label}
+                                                            </strong>
+                                                            <span className="card-text fs-4 fw-bold">
+                                                            {(() => {
+                                                                const value = metricsTotals[metricKey];
+                                                                const safeValue = isNaN(value) ? 0 : value;
+
+                                                                if (metrics[metricKey].type === "currency") {
+                                                                return <span>{formatMetricValue(safeValue)}</span>;
+                                                                } else if (metrics[metricKey].type === "percentage") {
+                                                                return <span>{Number(safeValue).toFixed(2)}%</span>;
+                                                                } else {
+                                                                return <span>{Number(safeValue).toFixed(2)}</span>;
+                                                                }
+                                                            })()}
+                                                            </span>
+                                                        </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                {/* <div className="row g-3">
                                                     {Object.keys(metrics).map((metricKey) => (
                                                         <div
                                                             className="col-12 col-sm-6 col-lg-3"
@@ -964,18 +996,18 @@ export default function DetailAds() {
                                                                     {metrics[metricKey].label}
                                                                 </strong>
                                                                 <span className="card-text fs-4 fw-bold">
-                                                                {
-                                                                    metrics[metricKey].type === "currency"
-                                                                    ? <span>{formatMetricValue(metricsTotals[metricKey])}</span>
-                                                                    : metrics[metricKey].type === "percentage"
-                                                                        ? <span>{Number(metricsTotals[metricKey]).toFixed(2)}%</span>
-                                                                        : <span>{Number(metricsTotals[metricKey]).toFixed(2)}</span>
-                                                                }
+                                                                    {
+                                                                        metrics[metricKey].type === "currency"
+                                                                            ? <span>{formatMetricValue(metricsTotals[metricKey])}</span>
+                                                                            : metrics[metricKey].type === "percentage"
+                                                                                ? <span>{Number(metricsTotals[metricKey]).toFixed(2)}%</span>
+                                                                                : <span>{Number(metricsTotals[metricKey]).toFixed(2)}</span>
+                                                                    }
                                                                 </span>
                                                             </div>
                                                         </div>
                                                     ))}
-                                                </div>
+                                                </div> */}
                                                 {/* Alert validation */}
                                                 {showAlert && (
                                                     <div
@@ -1116,88 +1148,6 @@ export default function DetailAds() {
                                                 </tbody>
                                             </table>
                                         </div>
-                                        {/* <div className="table-responsive"
-                                // style={{
-                                //     width: "max-content",
-                                //     minWidth: "100%",
-                                // }}
-                                >
-                                    <table className="table table-centered">
-                                        <thead className="table-light">
-                                            <tr>
-                                                {filteredData.keyword_ads.length !== 0 && filteredData.keyword_ads !== null && <th scope="col">No</th>}
-                                                {allColumns
-                                                    .filter((col) => selectedColumns.includes(col.key))
-                                                    .map((col) => (
-                                                        <th key={col.key}>
-                                                            <div className="d-flex justify-content-start align-items-center">
-                                                                {col.label}
-                                                            </div>
-                                                        </th>
-                                                    ))}
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {filteredData?.keyword_ads.length !== 0 && filteredData?.keyword_ads !== null ? (
-                                                filteredData?.keyword_ads.map((entry, index) => (
-                                                    <>
-                                                        <tr key={index}>
-                                                            {filteredData.keyword_ads.length > 0 && filteredData.keyword_ads !== null && (
-                                                                <td>{index + 1}</td>
-                                                            )}
-                                                            {selectedColumns.includes("keywords") && (
-                                                                <td style={{ width: "200px" }}>
-                                                                    <span>
-                                                                        {entry.keyword}
-                                                                    </span>
-                                                                </td>
-                                                            )}
-                                                            {selectedColumns.includes("mathcing_type") && (
-                                                                <td style={{ width: "200px" }}>
-                                                                    <span>
-                                                                        {entry?.matching_type == "wide" ? "Luas" : "Spesifik"}
-                                                                    </span>
-                                                                </td>
-                                                            )}
-                                                            {selectedColumns.includes("cost_per_click") && (
-                                                                <td style={{ width: "200px" }}>
-                                                                    <span>
-                                                                        {entry.cost_per_click}
-                                                                    </span>
-                                                                </td>
-                                                            )}
-                                                            {selectedColumns.includes("impression") && (
-                                                                <td style={{ width: "200px" }}>
-                                                                    <span>
-                                                                        {entry.impression}
-                                                                    </span>
-                                                                </td>
-                                                            )}
-                                                            {selectedColumns.includes("clicks") && (
-                                                                <td style={{ width: "200px" }}>
-                                                                    <span>
-                                                                        {entry.clicks}
-                                                                    </span>
-                                                                </td>
-                                                            )}
-                                                            {selectedColumns.includes("persentage_per_click") && (
-                                                                <td style={{ width: "200px" }}>
-                                                                    <span>
-                                                                        {entry.persentage_per_click}
-                                                                    </span>
-                                                                </td>
-                                                            )}
-                                                        </tr>
-                                                    </>
-                                                ))
-                                            ) : (
-                                                <div className="w-100 d-flex justify-content-center">
-                                                    <span>Data tidak tersedia</span>
-                                                </div>
-                                            )}
-                                        </tbody>
-                                    </table>
-                                </div> */}
                                     </div>
                                 </div>
                             </div>
