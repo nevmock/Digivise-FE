@@ -214,8 +214,8 @@ export default function MerchantKpiPage() {
   const fetchKPIData = async () => {
     try {
       setIsLoading(true);
-      const userData = JSON.parse(localStorage.getItem("userDataApp"));
-      const merchantId = userData?.activeMerchant?.id || userData?.merchants[0]?.id;
+      // const userData = JSON.parse(localStorage.getItem("userDataApp"));
+      const merchantId = "ff655719-bbfe-4817-84a4-cdbd6c31646a";
       if (!merchantId) throw new Error("Data unik dari merchant tidak ditemukan");
 
       const response = await getKpiData(merchantId);
@@ -243,7 +243,8 @@ export default function MerchantKpiPage() {
         throw new Error("Data pengguna tidak valid");
       }
       
-      const merchantId = userData?.merchants?.[0]?.id;
+      // const merchantId = userData?.merchants?.[0]?.id;
+      const merchantId = "ff655719-bbfe-4817-84a4-cdbd6c31646a";
       const userId = userData?.userId;
       
       if (!merchantId || !userId) {

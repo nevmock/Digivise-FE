@@ -80,14 +80,10 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const loginToMerchant = async (email, password) => {
-        const payload = { email, password }
+    const loginToMerchant = async (username, password) => {
+        const payload = { username, password }
         try {
-            const response = await axios.get("http://localhost:1337/api/v1/shopee-seller/login", payload, {
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            });
+            const response = await axios.post("/api/merchants/login", payload);
             setActiveMerchant(response.data);
             return response.data;
         } catch (error) {
