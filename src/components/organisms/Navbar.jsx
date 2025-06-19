@@ -6,7 +6,7 @@ import { toast } from "react-hot-toast";
 import { useAuth } from "../../context/Auth";
 import { logout } from "../../resolver/auth/authApp";
 import CreateMerchantModal from "../organisms/ModalAddMerchant";
-import LoginMerchantModal from "./ModalLoginEmailMerchant";
+import LoginMerchantModal from "./ModalLoginUsernameMerchant";
 import LoginMerchantHpModal from "./ModalLoginHPMerchant";
 import avatarProfile from "../../assets/images/users/avatar-1.jpg";
 
