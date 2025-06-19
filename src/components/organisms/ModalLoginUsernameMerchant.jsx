@@ -5,27 +5,24 @@ import { toast } from "react-hot-toast";
 import { useAuth } from "../../context/Auth";
 
 
-const MerchantModalLoginWithEmail = ({ onClose, merchant}) => {
+const MerchantModalLoginWithUsername = ({ onClose, merchant}) => {
     const { loginToMerchant, setActiveMerchant  } = useAuth();
     const navigate = useNavigate();
     const modalRef = useRef(null);
     const [isLoading, setIsLoading] = useState(false);
     const [errors, setErrors] = useState({});
     const [formData, setFormData] = useState({
-        email: merchant?.email || "",
+        username: merchant?.username || "",
         password: "",
     });
 
     const isEmpty = (value) => !value?.trim();
-    const isEmailValid = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
     const validateValueFormData = () => {
         const newErrors = {};
 
-        if (isEmpty(formData.email)) {
-            newErrors.email = "Email is required";
-        } else if (!isEmailValid(formData.email)) {
-            newErrors.email = "Email is not valid";
+        if (isEmpty(formData.username)) {
+            newErrors.username = "Username is required";
         }
 
         if (isEmpty(formData.password)) {
@@ -68,7 +65,7 @@ const MerchantModalLoginWithEmail = ({ onClose, merchant}) => {
                 ...merchant,
                 ...merchantData
             });
-            setFormData({ email: "", password: "" });
+            setFormData({ username: "", password: "" });
             onClose();
             navigate("/dashboard", { replace: true });
             toast.success("Login ke merchant berhasil");
@@ -96,15 +93,15 @@ const MerchantModalLoginWithEmail = ({ onClose, merchant}) => {
                 <hr />
                 <form onSubmit={handleSubmitFormData}>
                     <div className="mb-2">
-                        <label className="form-label">Email</label>
+                        <label className="form-label">Username</label>
                         <input
-                            name="email"
+                            name="username"
                             type="text"
-                            value={formData.email}
+                            value={formData.username}
                             onChange={handleInputChange}
-                            className={`form-control ${errors.email ? "is-invalid" : ""}`}
+                            className={`form-control ${errors.username ? "is-invalid" : ""}`}
                         />
-                        <div className="invalid-feedback">{errors.email}</div>
+                        <div className="invalid-feedback">{errors.username}</div>
                     </div>
 
                     <div className="mb-2">
@@ -144,4 +141,4 @@ const MerchantModalLoginWithEmail = ({ onClose, merchant}) => {
     );
 };
 
-export default MerchantModalLoginWithEmail;
+export default MerchantModalLoginWithUsername;

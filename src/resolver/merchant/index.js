@@ -19,9 +19,9 @@ export async function createMerchant(username, email, password, phone, sector_in
     }
 };
 
-export async function loginMerchant(email, password) {
+export async function loginMerchant(username, password) {
     try {
-        const response = await axios.post(`/login-merchant`, { email, password });
+        const response = await axios.post(`/login-merchant`, { username, password });
         return response.data;
     } catch (error) {
         throw error;
