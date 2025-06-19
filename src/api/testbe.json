@@ -1,179 +1,40 @@
+
 {
     "content": [
         {
-            "campaignId": 315005639,
-            "from": "2025-05-05T17:25:01.869",
-            "to": "2025-05-10T21:00:00",
+            "campaignId": 121828260,
+            "from": "2025-06-01T20:59:29",
+            "to": "2025-06-30T20:59:29",
             "data": [
                 {
-                    "campaignId": 315005639,
-                    "shopeeMerchantId": "252234165",
-                    "from": "2025-05-05T17:25:01.869",
-                    "to": "2025-05-10T21:00",
-                    "createdAt": "2025-05-06T01:32:30.835",
-                    "id": null,
-                    "title": "AMK Kemeja Koko Pria Lengan Pendek KK BB 004 S/s Cap 6 Green",
-                    "dailyBudget": 0.0,
-                    "impression": 0.0,
-                    "keywords": [],
-                    "shopId": null,
-                    "hasKeywords": false
+                    "campaignId": 121828260,
+                    "uv": 4,
+                    "pv": 9,
+                    "likes": 3,
+                    "bounceVisitors": 0,
+                    "shopeeFrom": 1746464400,
+                    "shopeeTo": 1746550799,
+                    "createdAt": "2025-06-09T16:27:27.9"
                 },
                 {
-                    "campaignId": 315005639,
-                    "shopeeMerchantId": "252234165",
-                    "from": "2025-05-05T17:25:01.869",
-                    "to": "2025-05-10T21:00",
-                    "createdAt": "2025-05-06T23:51:45.651",
-                    "id": null,
-                    "title": "AMK Kemeja Koko Pria Lengan Pendek KK BB 004 S/s Cap 6 Green",
-                    "dailyBudget": 10000.0,
-                    "impression": 0.0,
-                    "keywords": [],
-                    "shopId": null,
-                    "hasKeywords": false
+                    "campaignId": 121828260,
+                    "uv": 4,
+                    "pv": 9,
+                    "likes": 3,
+                    "bounceVisitors": 0,
+                    "shopeeFrom": 1746550800,
+                    "shopeeTo": 1746637199,
+                    "createdAt": "2025-06-010T16:28:48.139"
+                },
+                {
+                    "campaignId": 121828260,
+                    "uv": 4,
+                    "pv": 9,
+                    "likes": 3,
+                    "shopeeFrom": 1746637200,
+                    "shopeeTo": 1746723599,
+                    "createdAt": "2025-06-012T16:29:47.95"
                 }
             ]
         },
-        {
-            "campaignId": 314024628,
-            "from": "2025-05-05T17:25:01.869",
-            "to": "2025-05-10T21:00:00",
-            "data": [
-                {
-                    "campaignId": 314024628,
-                    "shopeeMerchantId": "252234165",
-                    "from": "2025-05-05T17:25:01.869",
-                    "to": "2025-05-10T21:00",
-                    "createdAt": "2025-05-06T01:32:30.835",
-                    "id": null,
-                    "title": "AMK Kemeja Pria Batik Lengan Pendek SH Wirata Ungu [5]",
-                    "dailyBudget": 50000.0,
-                    "keywords": [],
-                    "shopId": null,
-                    "hasKeywords": false
-                },
-                {
-                    "campaignId": 314024628,
-                    "shopeeMerchantId": "252234165",
-                    "from": "2025-05-05T17:25:01.869",
-                    "to": "2025-05-10T21:00",
-                    "createdAt": "2025-05-06T23:51:45.651",
-                    "id": null,
-                    "title": "AMK Kemeja Pria Batik Lengan Pendek SH Wirata Ungu [5]",
-                    "dailyBudget": 50000.0,
-                    "impression": 0.0,
-                    "keywords": [],
-                    "shopId": null,
-                    "hasKeywords": false
-                }
-            ]
-        },
-        {
-            "campaignId": 314012238,
-            "from": "2025-05-05T17:25:01.869",
-            "to": "2025-05-10T21:00:00",
-            "data": [
-                {
-                    "campaignId": 314012238,
-                    "shopeeMerchantId": "252234165",
-                    "from": "2025-05-05T17:25:01.869",
-                    "to": "2025-05-10T21:00",
-                    "createdAt": "2025-05-06T01:32:30.835",
-                    "id": null,
-                    "title": "AMK Kemeja Koko Pria Lengan Pendek KK MAHREZ S/S Black [5]",
-                    "dailyBudget": 0.0,
-                    "impression": 4154.0,
-                    "keywords": [
-                        {
-                            "campaignId": 314012238,
-                            "id": null,
-                            "key": "baju koko",
-                            "shopeeMerchantId": "252234165",
-                            "from": null,
-                            "to": null,
-                            "createdAt": "2025-05-06T04:59:29.631",
-                            "ctr": 0.03821656050955414,
-                            "insight": "Naikkan bid sebanyak -5.0% (karena keduanya di atas KPI)",
-                            "impression": 314.0
-                        },
-                        {
-                            "campaignId": 314012238,
-                            "id": null,
-                            "key": "baju koko hitam",
-                            "shopeeMerchantId": "252234165",
-                            "from": null,
-                            "to": null,
-                            "createdAt": "2025-05-06T04:59:29.631",
-                            "ctr": 0.060240963855421686,
-                            "impression": 83.0
-                        },
-                        {
-                            "campaignId": 314012238,
-                            "id": null,
-                            "key": "baju koko hitam lengan pendek",
-                            "shopeeMerchantId": "252234165",
-                            "from": null,
-                            "to": null,
-                            "createdAt": "2025-05-06T04:59:29.631",
-                            "ctr": 0.04861111111111111,
-                            "impression": 144.0
-                        }
-                    ],
-                    "biddingStrategy": "manual",
-                    "shopId": null,
-                    "hasKeywords": true
-                },
-                {
-                    "campaignId": 314012238,
-                    "shopeeMerchantId": "252234165",
-                    "from": "2025-05-05T17:25:01.869",
-                    "to": "2025-05-10T21:00",
-                    "createdAt": "2025-05-06T23:51:45.651",
-                    "id": null,
-                    "title": "AMK Kemeja Koko Pria Lengan Pendek KK MAHREZ S/S Black [5]",
-                    "dailyBudget": 0.0,
-                    "impression": 4154.0,
-                    "keywords": [
-                        {
-                            "campaignId": 314012238,
-                            "id": null,
-                            "key": "baju koko",
-                            "shopeeMerchantId": "252234165",
-                            "from": null,
-                            "to": null,
-                            "createdAt": "2025-05-06T04:59:29.631",
-                            "ctr": 0.03821656050955414,
-                            "insight": "Naikkan bid sebanyak -5.0% (karena keduanya di atas KPI)",
-                            "impression": 314.0
-                        },
-                        {
-                            "campaignId": 314012238,
-                            "id": null,
-                            "key": "baju koko hitam",
-                            "shopeeMerchantId": "252234165",
-                            "from": null,
-                            "to": null,
-                            "createdAt": "2025-05-06T04:59:29.631",
-                            "ctr": 0.060240963855421686,
-                            "impression": 83.0
-                        },
-                        {
-                            "campaignId": 314012238,
-                            "id": null,
-                            "key": "baju koko hitam lengan pendek",
-                            "shopeeMerchantId": "252234165",
-                            "from": null,
-                            "to": null,
-                            "createdAt": "2025-05-06T04:59:29.631",
-                            "ctr": 0.04861111111111111,
-                            "impression": 144.0
-                        }
-                    ],
-                    "shopId": null,
-                    "hasKeywords": true
-                }
-            ]
-        }
-    ]
-}
+        dan data objecy lainnya denga  campaignId berbeda yang terfilter oleh from dan to 

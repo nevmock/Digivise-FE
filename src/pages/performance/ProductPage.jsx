@@ -8,7 +8,6 @@ import { FaAngleLeft, FaAngleRight } from "react-icons/fa6";
 import { useAuth } from "../../context/Auth";
 import axiosRequest from "../../utils/request";
 import useDebounce from "../../hooks/useDebounce";
-import productJsonData from "../../api/products.json";
 import BaseLayout from "../../components/organisms/BaseLayout";
 import convertBudgetToIDR from "../../utils/convertBudgetIDR";
 import converTypeAds from "../../utils/convertTypeAds";
@@ -34,7 +33,7 @@ export default function PerformanceProductPage() {
   const [date, setDate] = useState(getAllDaysInLast7Days());
   const [showCalendar, setShowCalendar] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [selectedMetrics, setSelectedMetrics] = useState(["visitor"]);
+  const [selectedMetrics, setSelectedMetrics] = useState(["pv"]);
   const [metricsTotals, setMetricsTotals] = useState({});
   const [statusProductFilter, setStatusProductFilter] = useState("all");
   const [selectedClassificationOption, setSelectedClassificationOption] = useState([]);
@@ -51,7 +50,6 @@ export default function PerformanceProductPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isContentLoading, setIsContentLoading] = useState(false);
 
-
   // const merchantData = activeMerchant;
   // if (!merchantData) {
   //   return (
@@ -67,41 +65,41 @@ export default function PerformanceProductPage() {
 
   // Define metrics with their display names and colors
   const metrics = {
-    visitor: { 
+    pv: { 
       label: "Pengunjung", 
       color: "#0050C8",
-      dataKey: "visitor" 
+      dataKey: "pv" 
     },
-    add_to_cart: { 
+    addToCartUnits: { 
       label: "Add To Cart", 
       color: "#D50000", 
-      dataKey: "add_to_cart" 
+      dataKey: "addToCartUnits" 
     },
-    add_to_cart_pr: { 
+    uv_to_add_to_cart_rate: { 
       label: "Add To Cart (Percentage)", 
       color: "#00B800",
-      dataKey: "add_to_cart_pr" 
+      dataKey: "uv_to_add_to_cart_rate" 
     },
-    ready: { 
+    confirmedUnits: { 
       label: "Siap Dikirim", 
       color: "#DFC100",
-      dataKey: "ready" 
+      dataKey: "confirmedUnits" 
     },
     convertion: { 
       label: "Convertion", 
       color: "#C400BA",
       dataKey: "convertion" 
     },
-    sell: { 
+    confirmedSales: { 
       label: "Penjualan", 
       color: "#D77600",
-      dataKey: "sell" 
+      dataKey: "confirmedSales" 
     },
-    sell_ratio: { 
+    confirmed_sell_ration: { 
       label: "Ratio Penjualan", 
       color: "#00A8C6FF",
-      dataKey: "sell_ratio" 
-    },
+      dataKey: "confirmed_sell_ration" 
+    }
   };
 
   // Function to calculate totals for each metric based on raw data
@@ -152,7 +150,7 @@ export default function PerformanceProductPage() {
         ? toLocalISOString(toDate)
         : toLocalISOString(new Date(toDate));
 
-      const apiUrl = `/api/product-ads/daily?shopId=${shopId}&from=${fromISO}&to=${toISO}&limit=100000`;
+      const apiUrl = `/api/product-performance?shopId=${shopId}&from=${fromISO}&to=${toISO}&limit=100000`;
       // const apiUrl = `/api/product-ads/daily?shopId=${shopId}&from=2025-06-04T00:00:00.869&to=2025-06-04T23:59:59.99900&limit=10&biddingStrategy=manual`;
       const response = await axiosRequest.get(apiUrl);
       const data = await response.data;
@@ -180,7 +178,7 @@ export default function PerformanceProductPage() {
   // CUSTOM CHART WITH FILTER DATE & CLICK PRODUCT FEATURE
   // Handle product click
   const handleProductClick = (product) => {
-    if (selectedProduct?.campaignId === product.campaignId) {
+    if (selectedProduct?.productId === product.productId) {
       setSelectedProduct(null);
     } else {
       setSelectedProduct(product);
@@ -228,10 +226,6 @@ export default function PerformanceProductPage() {
 
     const dateArray = [];
 
-    // Calculate the difference in days between start and end dates
-    const diffTime = Math.abs(end - start);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
     // Helper function untuk get local date string
     const getLocalDateString = (date) => {
       const year = date.getFullYear();
@@ -240,10 +234,19 @@ export default function PerformanceProductPage() {
       return `${year}-${month}-${day}`;
     };
 
-    // If the difference is less than or equal to 1 day, return hourly intervals
-    if (diffDays <= 1) {
+    // Calculate the difference in days between start and end dates
+    const diffTime = Math.abs(end - start);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    // If same day (diffDays === 0), return hourly intervals
+    if (diffDays == 0) {
       return getHourlyIntervals(getLocalDateString(start));
     }
+
+    // If the difference is less than or equal to 1 day, return hourly intervals
+    // if (diffDays <= 1) {
+    //   return getHourlyIntervals(getLocalDateString(start));
+    // }
 
     // Otherwise, return daily intervals
     let currentDate = new Date(start);
@@ -257,7 +260,7 @@ export default function PerformanceProductPage() {
   };
 
   // Function to generate chart data for multiple metrics
-  function generateMultipleMetricsChartData(selectedDate = null, product = null, selectedMetrics = ["visitor"]) {
+  function generateMultipleMetricsChartData(selectedDate = null, product = null, selectedMetrics = ["pv"]) {
     let timeIntervals = [];
     let mode = "daily";
     let result = {};
@@ -285,7 +288,9 @@ export default function PerformanceProductPage() {
         toDate.setHours(23, 59, 59, 999);
       } else {
         timeIntervals = getDateRangeIntervals(comparatorDate, comparedDate);
-        mode = timeIntervals.length <= 24 ? "hourly" : "daily";
+        mode = "daily";
+        // mode = timeIntervals.length <= 24 ? "hourly" : "daily";
+        isSingleDay = false;
         fromDate = comparatorDate;
         toDate = comparedDate;
       }
@@ -324,7 +329,7 @@ export default function PerformanceProductPage() {
     // Filter data berdasarkan jika ada produk yang dipilih
     let chartDataProducts = rawData;
     if (product) {
-      chartDataProducts = rawData.filter((p) => p.campaignId == product.campaignId);
+      chartDataProducts = rawData.filter((p) => p.productId == product.productId);
     }
 
     // Generate data series berdasarkan metrik yang dipilih
@@ -352,6 +357,9 @@ export default function PerformanceProductPage() {
             const createdAt = new Date(productData.createdAt);
             const productDateStr = getLocalDateString(createdAt);
             const filterDateStr = getLocalDateString(fromDate);
+
+            // Debug log untuk troubleshooting
+                    // console.log('Hourly mode - Product date:', productDateStr, 'Filter date:', filterDateStr);
 
             // Hanya proses data yang sesuai dengan tanggal filter
             if (productDateStr !== filterDateStr) return;
@@ -390,26 +398,47 @@ export default function PerformanceProductPage() {
               const filterStartStr = Array.isArray(selectedDate) ? selectedDate[0] : getLocalDateString(fromDate);
               const filterEndStr = Array.isArray(selectedDate) ? selectedDate[selectedDate.length - 1] : getLocalDateString(toDate);
 
+              // console.log('Daily mode - Product date:', productDateStr, 'Filter range:', filterStartStr, 'to', filterEndStr);
+
               if (productDateStr >= filterStartStr && productDateStr <= filterEndStr) {
-                if (!dataByDate[dateDayKey] || new Date(dataByDate[dateDayKey].createdAt) < createdAt) {
-                  dataByDate[dateDayKey] = productData;
-                }
-              }
+                        // ✅ FIXED: Accumulate semua data untuk tanggal yang sama
+                        if (!dataByDate[dateDayKey]) {
+                            dataByDate[dateDayKey] = 0;
+                        }
+                        
+                        const value = productData[dataKey];
+                        if (value !== undefined && value !== null) {
+                            dataByDate[dateDayKey] += Number(value);
+                        }
+                    }
+
+              // if (productDateStr >= filterStartStr && productDateStr <= filterEndStr) {
+              //   if (!dataByDate[dateDayKey] || new Date(dataByDate[dateDayKey].createdAt) < createdAt) {
+              //     dataByDate[dateDayKey] = productData;
+              //   }
+              // }
           });
+
+          Object.keys(dataByDate).forEach(dateDayKey => {
+                    // Cek apakah dateDayKey ada dalam timeIntervals
+                    if (timeIntervals.includes(dateDayKey)) {
+                        dataMap[dateDayKey] += dataByDate[dateDayKey];
+                    }
+                });
           
           // Proses data terbaru untuk setiap tanggal
-          Object.keys(dataByDate).forEach(dateDayKey => {
-              const productData = dataByDate[dateDayKey];
+          // Object.keys(dataByDate).forEach(dateDayKey => {
+          //     const productData = dataByDate[dateDayKey];
               
-              // Cek apakah dateDayKey ada dalam timeIntervals
-              if (timeIntervals.includes(dateDayKey)) {
-                const value = productData[dataKey];
-                if (value !== undefined && value !== null) {
-                  // Akumulasi nilai untuk tanggal yang sama dari semua produk
-                  dataMap[dateDayKey] += Number(value);
-                }
-              }
-          });
+          //     // Cek apakah dateDayKey ada dalam timeIntervals
+          //     if (timeIntervals.includes(dateDayKey)) {
+          //       const value = productData[dataKey];
+          //       if (value !== undefined && value !== null) {
+          //         // Akumulasi nilai untuk tanggal yang sama dari semua produk
+          //         dataMap[dateDayKey] += Number(value);
+          //       }
+          //     }
+          // });
         }
       });
 
@@ -453,13 +482,32 @@ export default function PerformanceProductPage() {
   // Handle comparison date confirmation
   function handleComparisonDatesConfirm() {
     if (comparatorDate && comparedDate) {
-      setDate(null);
-      setShowCalendar(false);
-
-      // Fetch data for the new date range
-      fetchData(comparatorDate, comparedDate);
+        // Ensure dates are properly set with time
+        const fromDate = new Date(comparatorDate);
+        const toDate = new Date(comparedDate);
+        
+        // Set proper time ranges
+        fromDate.setHours(0, 0, 0, 0);
+        toDate.setHours(23, 59, 59, 999);
+        
+        console.log('Date range confirmed:', fromDate, 'to', toDate);
+        
+        setDate(null);
+        setShowCalendar(false);
+        
+        // Fetch data for the new date range
+        fetchData(fromDate, toDate);
     }
-  };
+}
+  // function handleComparisonDatesConfirm() {
+  //   if (comparatorDate && comparedDate) {
+  //     setDate(null);
+  //     setShowCalendar(false);
+
+  //     // Fetch data for the new date range
+  //     fetchData(comparatorDate, comparedDate);
+  //   }
+  // };
 
   // Update totals when raw/main data changes
   useEffect(() => {
@@ -582,6 +630,7 @@ export default function PerformanceProductPage() {
           name: selectedMetrics.length === 1 ? metrics[selectedMetrics[0]]?.label : "Total",
           type: "value",
           splitLine: { show: true },
+          nameGap: 30
         },
         series: series
       };
@@ -667,13 +716,13 @@ export default function PerformanceProductPage() {
   const allColumns = [
     { key: "name", label: "Nama" },
     { key: "insight", label: "Insight" },
-    { key: "visitor", label: "Pengunjung" },
-    { key: "add_to_cart", label: "Add To Cart" },
-    { key: "add_to_cart_pr", label: "Add To Cart (Percentage)" },
-    { key: "ready", label: "Siap Dikirim" },
-    { key: "broadOrder", label: "Konversi" },
-    { key: "sell", label: "Penjualan" },
-    { key: "sell_ratio", label: "Ratio Penjualan" },
+    { key: "pv", label: "Pengunjung" },
+    { key: "addToCartUnits", label: "Add To Cart" },
+    { key: "uv_to_add_to_cart_rate", label: "Add To Cart (Percentage)" },
+    { key: "confirmedUnits", label: "Siap Dikirim" },
+    { key: "convertion", label: "Konversi" },
+    { key: "confirmedSales", label: "Penjualan" },
+    { key: "confirmed_sell_ratio", label: "Ratio Penjualan" },
     { key: "classification", label: "Sales Classification" }
   ];
 
@@ -959,7 +1008,7 @@ export default function PerformanceProductPage() {
     // Filter by search term
     if (debouncedSearchTerm !== "") {
       filtered = filtered.filter((entry) =>
-        entry.data[0].title.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+        entry.data[0].name.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
       );
     } 
 
@@ -999,7 +1048,6 @@ export default function PerformanceProductPage() {
     }
   };
 
-  
   // Initial data loading
   useEffect(() => {
     // Determine date range based on current selection
@@ -1056,7 +1104,6 @@ export default function PerformanceProductPage() {
                     <button
                       onClick={toggleOpenCalendar}
                       className="btn btn-primary"
-
                     >
                       {comparatorDate && comparedDate
                         ? `${comparatorDate.toLocaleDateString("id-ID")} - ${comparedDate.toLocaleDateString("id-ID")}`
@@ -1206,11 +1253,11 @@ export default function PerformanceProductPage() {
                             Berjalan
                           </div>
                           <div
-                            className={`status-button-filter rounded-pill d-flex align-items-center  ${statusProductFilter === "paused"
+                            className={`status-button-filter rounded-pill d-flex align-items-center  ${statusProductFilter === "closed"
                                 ? "custom-font-color custom-border-select fw-bold"
                                 : "border border-secondary-subtle"
                               }`}
-                            onClick={() => setStatusProductFilter("paused")}
+                            onClick={() => setStatusProductFilter("closed")}
                             style={{ cursor: "pointer", fontSize: "12px", padding: "6px 12px", }}
                           >
                             Nonaktif
@@ -1345,7 +1392,7 @@ export default function PerformanceProductPage() {
                             {paginatedData.length > 0 && paginatedData !== null ? (
                               paginatedData?.map((entry, index) => (
                                 <>
-                                  <tr key={entry.id}>
+                                  <tr key={entry.productId}>
                                     {filteredData.length > 0 && filteredData !== null && (
                                       <td>{index + 1}</td>
                                     )}
@@ -1353,13 +1400,12 @@ export default function PerformanceProductPage() {
                                       <td style={{
                                         maxWidth: "400px",
                                         cursor: "pointer",
-                                        color:
-                                        selectedProduct?.id === entry.id
+                                        color: selectedProduct?.productId === entry.productId
                                           ? "#F6881F"
                                           : "",
                                       }} onClick={() => handleProductClick(entry)}>
                                         <div className="d-flex flex-column">
-                                          <span>{entry.name}</span>
+                                          <span>{entry.data[0].name}</span>
                                         </div>
                                       </td>
                                     )}
@@ -1370,71 +1416,65 @@ export default function PerformanceProductPage() {
                                         </span>
                                       </td>
                                     )}
-                                    {selectedColumns.includes("visitor") && (
+                                    {selectedColumns.includes("pv") && (
                                       <td>
                                         <div className="d-flex flex-column">
-                                          <span>{entry.uv}</span>
+                                          <span>{entry.data[0].pv}</span>
                                         </div>
                                       </td>
                                     )}
-                                    {selectedColumns.includes("add_to_cart") && (
+                                    {selectedColumns.includes("addToCartUnits") && (
                                       <td>
                                         <div className="d-flex flex-column">
-                                          <span>{entry.add_to_cart_units}</span>
+                                          <span>{entry.data[0].addToCartUnits}</span>
+                                        </div>
+                                      </td>
+                                    )}
+                                    {selectedColumns.includes("uv_to_add_to_cart_rate") && (
+                                      <td>
+                                        <div className="d-flex flex-column">
+                                          <span>{entry.data[0].uv_to_add_to_cart_rate}</span>
                                           <span className="text-success" style={{ fontSize: "10px" }}>
                                             +1.7%
                                           </span>
                                         </div>
                                       </td>
                                     )}
-                                    {selectedColumns.includes("add_to_cart_pr") && (
+                                    {selectedColumns.includes("confirmedUnits") && (
                                     <td>
                                       <div className="d-flex flex-column">
-                                        <span>{entry.uv_to_add_to_cart_rate}</span>
+                                        <span>{entry.data[0].confirmedUnits}</span>
                                         <span className="text-danger" style={{ fontSize: "10px" }}>
                                           -45.7%
                                         </span>
                                       </div>
                                     </td>
                                     )}
-                                    {selectedColumns.includes("ready") && (
+                                    {selectedColumns.includes("convertion") && (
                                       <td>
                                         <div className="d-flex flex-column">
-                                          <span>{entry.confirmed_units}</span>
+                                          <span>{entry.data[0].convertion}</span>
                                           <span className="text-danger" style={{ fontSize: "10px" }}>
                                             -5.1%
                                           </span>
                                         </div>
                                       </td>
                                     )}
-                                    {selectedColumns.includes("broadOrder") && (
+                                    {selectedColumns.includes("confirmedSales") && (
                                       <td style={{ width: "120px" }}>
                                         <div className="d-flex flex-column">
                                           <span>
                                             {
-                                              entry.data[0].broadOrder === undefined ? "-" : entry.data[0].broadOrder === null ? "0" : formatRupiahFilter(entry.data[0].broadOrder)
+                                              entry.data[0].confirmedSales === undefined ? "-" : entry.data[0].confirmedSales === null ? "0" : formatRupiahFilter(entry.data[0].confirmedSales)
                                             }
                                           </span>
-                                          <span className={`${formatValueRatio(entry.data[0].broadOrderRatio).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                            {entry.data[0].broadOrderRatio === undefined ? "-" : entry.data[0].broadOrderRatio === null ? "0" : `${formatValueRatio(entry.data[0].broadOrderRatio).rounded}%`}
-                                          </span>
                                         </div>
                                       </td>
                                     )}
-                                    {selectedColumns.includes("sell") && (
+                                    {selectedColumns.includes("confirmed_sell_ratio") && (
                                       <td>
                                         <div className="d-flex flex-column">
-                                          <span>{entry.paid_sales}</span>
-                                          <span className="text-danger" style={{ fontSize: "10px" }}>
-                                            -5.1%
-                                          </span>
-                                        </div>
-                                      </td>
-                                    )}
-                                    {selectedColumns.includes("sell_ratio") && (
-                                      <td>
-                                        <div className="d-flex flex-column">
-                                          <span>{entry.placed_to_paid_buyers_rate}</span>
+                                          <span>{entry.data[0].confirmed_sell_ratio}</span>
                                           <span className="text-danger" style={{ fontSize: "10px" }}>
                                             -5.1%
                                           </span>

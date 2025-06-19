@@ -62,6 +62,7 @@ export default function PerformanceStockPage() {
   // };
 
   const fetchData = async (fromDate, toDate) => {
+    // console.log(`Awal data for from ${fromDate} to ${toDate}`);
     const isInitialLoad = !rawData.length;
     if (isInitialLoad) {
       setIsLoading(true);
@@ -91,10 +92,12 @@ export default function PerformanceStockPage() {
           ? toLocalISOString(toDate)
           : toLocalISOString(new Date(toDate));
 
-      // const apiUrl = `/api/product-ads/daily?shopId=${shopId}&from=${fromISO}&to=${toISO}&limit=10000`;
-      const response = stockJsonData;
-      // const response = await axiosRequest.get(apiUrl);
-      const data = await response;
+      // console.log(`Fetching data from ${fromISO} to ${toISO} for shopId: ${shopId}`);
+
+      const apiUrl = `/api/product-stock/by-shop?shopId=${shopId}&from=${fromISO}&to=${toISO}&limit=100000000`;
+      // const response = stockJsonData;
+      const response = await axiosRequest.get(apiUrl);
+      const data = response.data;
       const content = data.content || [];
       setRawData(content);
       setFilteredData(content);
@@ -120,15 +123,14 @@ export default function PerformanceStockPage() {
   // Helper function to get latest stock data
   const getLatestStockData = (product) => {
     if (!product.data || product.data.length === 0) return null;
-    // Get latest data point based on createdAt
-    return product.data.reduce((latest, current) => 
+    return product.data.reduce((latest, current) =>
       new Date(current.createdAt) > new Date(latest.createdAt) ? current : latest
     );
   };
 
   // Handle product click by clicking the product in name column
   const handleProductClick = (product) => {
-    setSelectedProduct((prev) => (prev?.id === product.id ? null : product));
+    setSelectedProduct((prev) => (prev?.productId === product.productId ? null : product));
   };
 
   // Date utility for getting all days in the last 7 days
@@ -170,7 +172,7 @@ export default function PerformanceStockPage() {
     let mode = "daily";
     let fromDate, toDate;
     let isSingleDay = false;
-    
+
     // Properly declare result object
     let result = {};
 
@@ -213,10 +215,9 @@ export default function PerformanceStockPage() {
     result.timeIntervals = timeIntervals;
     result.isSingleDay = isSingleDay;
 
-    // Filter data based on selected product
     let chartDataProducts = rawData || [];
     if (product) {
-      chartDataProducts = rawData.filter((p) => p.id === product.id);
+      chartDataProducts = rawData.filter((p) => p.productId === product.productId);
     }
 
     let dataMap = {};
@@ -248,17 +249,17 @@ export default function PerformanceStockPage() {
           const hourOnlyKey = `${productYear}-${productMonth}-${productDay} ${hourKey}:00`;
 
           if (timeIntervals.includes(hourOnlyKey)) {
-            const stockValue = stockData.total_available_stock;
+            const stockValue = stockData.totalAvailableStock;
             if (stockValue !== undefined && stockValue !== null) {
               dataMap[hourOnlyKey] += Number(stockValue);
             }
           }
         });
       } else {
-        // For multiple days, get latest data per day
         const dataByDate = {};
-        
+
         productItem.data.forEach((stockData) => {
+          console.log("Processing stock data:", stockData);
           if (!stockData || !stockData.createdAt) return;
 
           const createdAt = new Date(stockData.createdAt);
@@ -276,8 +277,7 @@ export default function PerformanceStockPage() {
             : getLocalDateString(toDate);
 
           if (productDateStr >= filterStartStr && productDateStr <= filterEndStr) {
-            // Get latest data for each day
-            if (!dataByDate[dateDayKey] || 
+            if (!dataByDate[dateDayKey] ||
               new Date(dataByDate[dateDayKey].createdAt) < createdAt) {
               dataByDate[dateDayKey] = stockData;
             }
@@ -289,7 +289,7 @@ export default function PerformanceStockPage() {
           const stockData = dataByDate[dateDayKey];
 
           if (timeIntervals.includes(dateDayKey)) {
-            const stockValue = stockData.total_available_stock;
+            const stockValue = stockData.totalAvailableStock;
             if (stockValue !== undefined && stockValue !== null) {
               dataMap[dateDayKey] += Number(stockValue);
             }
@@ -334,7 +334,7 @@ export default function PerformanceStockPage() {
     }
 
     // Use rawData instead of raw data
-    const selectedProductData = rawData.find((p) => p.id === product.id);
+    const selectedProductData = rawData.find((p) => p.productId === product.productId);
     if (!selectedProductData || !selectedProductData.data) return [];
     const allVariants = new Map();
 
@@ -365,27 +365,26 @@ export default function PerformanceStockPage() {
 
           const createdAt = new Date(stockData.createdAt);
           const productDateStr = getLocalDateString(createdAt);
-          
+
           // For hourly, we need to match the selected date
           const filterDate = Array.isArray(selectedDate) ? selectedDate[0] : selectedDate;
           const filterDateStr = getLocalDateString(new Date(filterDate));
-          
+
           if (productDateStr === filterDateStr) {
             const hourKey = String(createdAt.getHours()).padStart(2, "0");
             const timeKey = `${productDateStr} ${hourKey}:00`;
-            
+
             // Find this variant in current stockData
             const currentVariant = stockData.variants.find(v => v.id === variantInfo.id);
-            
+
             if (currentVariant && timeIntervals.includes(timeKey)) {
               variantStockMap[timeKey] = currentVariant.stock || 0;
             }
           }
         });
       } else {
-        // Get latest data per day (same as generateChartData)
         const dataByDate = {};
-        
+
         selectedProductData.data.forEach((stockData) => {
           if (!stockData || !stockData.createdAt || !stockData.variants) return;
 
@@ -401,7 +400,7 @@ export default function PerformanceStockPage() {
 
           if (productDateStr >= filterStartStr && productDateStr <= filterEndStr) {
             // Get latest data for each day
-            if (!dataByDate[dateDayKey] || 
+            if (!dataByDate[dateDayKey] ||
               new Date(dataByDate[dateDayKey].createdAt) < createdAt) {
               dataByDate[dateDayKey] = stockData;
             }
@@ -414,7 +413,7 @@ export default function PerformanceStockPage() {
 
           if (timeIntervals.includes(dateDayKey) && stockData.variants) {
             const currentVariant = stockData.variants.find(v => v.id === variantInfo.id);
-            
+
             if (currentVariant) {
               variantStockMap[dateDayKey] = currentVariant.stock || 0;
             }
@@ -422,7 +421,6 @@ export default function PerformanceStockPage() {
         });
       }
 
-      // Create chart data for this variant
       const variantData = {
         name: variantInfo.name,
         id: variantInfo.id,
@@ -434,33 +432,28 @@ export default function PerformanceStockPage() {
 
       variantsData.push(variantData);
     });
-    
+
     return variantsData;
   };
 
-  // Handle date selection
   const handleDateSelection = (selectedDate, close = true) => {
     setDate(selectedDate);
     if (close) {
       setShowCalendar(false);
     }
 
-    // Determine date range for API call
     let fromDate, toDate;
-    
+
     if (Array.isArray(selectedDate)) {
-      // Last 7 days
       fromDate = new Date(selectedDate[0]);
       toDate = new Date(selectedDate[selectedDate.length - 1]);
       toDate.setHours(23, 59, 59, 999);
     } else if (selectedDate === "Bulan Ini") {
-      // Current month
       const today = new Date();
       fromDate = new Date(today.getFullYear(), today.getMonth(), 1);
       toDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
       toDate.setHours(23, 59, 59, 999);
     } else {
-      // Single day
       fromDate = new Date(selectedDate);
       toDate = new Date(selectedDate);
       toDate.setHours(23, 59, 59, 999);
@@ -472,7 +465,7 @@ export default function PerformanceStockPage() {
   useEffect(() => {
     const newChartData = generateChartData(date, selectedProduct);
     setChartData(newChartData);
-    
+
     if (selectedProduct) {
       const newVariantsChartData = generateVariantsChartData(date, selectedProduct);
       setVariantsChartData(newVariantsChartData);
@@ -483,21 +476,16 @@ export default function PerformanceStockPage() {
 
   useEffect(() => {
     if (chartRef.current && chartData.length > 0) {
-      // Configure xAxis data
       let xAxisData = chartData.map((item) => item.date);
       let rotateAxisLabel = 0;
-      
-      // Check if xAxisData includes time format with colon
+
       const includesColon = xAxisData.some((item) => item.includes(":"));
       if (includesColon) {
-        // If time format, keep only the time part
         xAxisData = xAxisData.map((item) => item.split(" ")[1]);
       } else {
-        // If date format, keep only the date part
         xAxisData = xAxisData.map((item) => item.split("-").slice(1).join("-"));
       }
 
-      // Rotate labels if there are more than 7 data points and no time format
       if (xAxisData.length > 7 && !includesColon) {
         rotateAxisLabel = 25;
       }
@@ -517,10 +505,10 @@ export default function PerformanceStockPage() {
 
       if (selectedProduct && variantsChartData.length > 0) {
         const grayColors = [
-          "#95A5A6", "#7F8C8D", "#BDC3C7", "#85929E", "#A6ACAF", 
+          "#95A5A6", "#7F8C8D", "#BDC3C7", "#85929E", "#A6ACAF",
           "#909497", "#ABB2B9", "#CCD1D1", "#D5DBDB", "#EAEDED"
         ];
-        
+
         variantsChartData.forEach((variant, index) => {
           series.push({
             name: `↳ ${variant.name}`,
@@ -528,10 +516,10 @@ export default function PerformanceStockPage() {
             smooth: true,
             showSymbol: false,
             data: variant.data.map((item) => item.totalStock),
-            lineStyle: { 
-                color: grayColors[index % grayColors.length],
-                width: 2,
-                type: 'dashed'
+            lineStyle: {
+              color: grayColors[index % grayColors.length],
+              width: 2,
+              type: 'dashed'
             },
             emphasis: { focus: 'series' }
           });
@@ -573,7 +561,7 @@ export default function PerformanceStockPage() {
           splitLine: { show: true },
           name: 'Stock',
           nameGap: 30
-      },
+        },
         series: series,
       });
 
@@ -684,9 +672,9 @@ export default function PerformanceStockPage() {
       const sortedData = [...filteredData].sort((a, b) => {
         const aLatestData = getLatestStockData(a);
         const bLatestData = getLatestStockData(b);
-        const aStock = aLatestData?.total_available_stock || 0;
-        const bStock = bLatestData?.total_available_stock || 0;
-        
+        const aStock = aLatestData?.totalAvailableStock || 0;
+        const bStock = bLatestData?.totalAvailableStock || 0;
+
         return order === "asc" ? aStock - bStock : bStock - aStock;
       });
 
@@ -750,7 +738,7 @@ export default function PerformanceStockPage() {
   }, [filteredData, currentPage, itemsPerPage]);
 
   // Handle items per page change
-  const handleItemsPerPageChange = (e) => {
+  const handleItemsPerPageChange = (e) => {ad
     const newItemsPerPage = parseInt(e.target.value, 10);
     setItemsPerPage(newItemsPerPage);
     setCurrentPage(1);
@@ -804,9 +792,8 @@ export default function PerformanceStockPage() {
                 {/* First page button (hanya muncul jika > 10 halaman) */}
                 {showFirstLastButtons && (
                   <li
-                    className={`page-item ${
-                      currentPage === 1 ? "disabled" : ""
-                    }`}
+                    className={`page-item ${currentPage === 1 ? "disabled" : ""
+                      }`}
                   >
                     <button
                       className="page-link"
@@ -847,9 +834,8 @@ export default function PerformanceStockPage() {
                   return (
                     <li
                       key={page}
-                      className={`page-item ${
-                        currentPage === page ? "active" : ""
-                      }`}
+                      className={`page-item ${currentPage === page ? "active" : ""
+                        }`}
                     >
                       <button
                         className="page-link"
@@ -863,9 +849,8 @@ export default function PerformanceStockPage() {
 
                 {/* Next button */}
                 <li
-                  className={`page-item ${
-                    currentPage === totalPages ? "disabled" : ""
-                  }`}
+                  className={`page-item ${currentPage === totalPages ? "disabled" : ""
+                    }`}
                 >
                   <button
                     className="page-link"
@@ -878,9 +863,8 @@ export default function PerformanceStockPage() {
                 </li>
                 {showFirstLastButtons && (
                   <li
-                    className={`page-item ${
-                      currentPage === totalPages ? "disabled" : ""
-                    }`}
+                    className={`page-item ${currentPage === totalPages ? "disabled" : ""
+                      }`}
                   >
                     <button
                       className="page-link"
@@ -899,9 +883,8 @@ export default function PerformanceStockPage() {
                   {/* First page button (hanya muncul jika > 10 halaman) */}
                   {showFirstLastButtons && (
                     <li
-                      className={`page-item ${
-                        currentPage === 1 ? "disabled" : ""
-                      }`}
+                      className={`page-item ${currentPage === 1 ? "disabled" : ""
+                        }`}
                     >
                       <button
                         className="page-link"
@@ -916,9 +899,8 @@ export default function PerformanceStockPage() {
 
                   {/* Previous button */}
                   <li
-                    className={`page-item ${
-                      currentPage === 1 ? "disabled" : ""
-                    }`}
+                    className={`page-item ${currentPage === 1 ? "disabled" : ""
+                      }`}
                   >
                     <button
                       className="page-link"
@@ -947,9 +929,8 @@ export default function PerformanceStockPage() {
                     return (
                       <li
                         key={page}
-                        className={`page-item ${
-                          currentPage === page ? "active" : ""
-                        }`}
+                        className={`page-item ${currentPage === page ? "active" : ""
+                          }`}
                       >
                         <button
                           className="page-link"
@@ -964,9 +945,8 @@ export default function PerformanceStockPage() {
 
                 <div className="d-flex">
                   <li
-                    className={`page-item ${
-                      currentPage === totalPages ? "disabled" : ""
-                    }`}
+                    className={`page-item ${currentPage === totalPages ? "disabled" : ""
+                      }`}
                   >
                     <button
                       className="page-link"
@@ -980,9 +960,8 @@ export default function PerformanceStockPage() {
 
                   {showFirstLastButtons && (
                     <li
-                      className={`page-item ${
-                        currentPage === totalPages ? "disabled" : ""
-                      }`}
+                      className={`page-item ${currentPage === totalPages ? "disabled" : ""
+                        }`}
                     >
                       <button
                         className="page-link"
@@ -1012,7 +991,7 @@ export default function PerformanceStockPage() {
     fromDate.setDate(today.getDate() - 7);
     const toDate = new Date();
     toDate.setHours(23, 59, 59, 999);
-    
+
     fetchData(fromDate, toDate);
   }, []);
 
@@ -1043,7 +1022,7 @@ export default function PerformanceStockPage() {
                           ? "Pilih tanggal"
                           : Array.isArray(date)
                             ? "1 Minggu terakhir"
-                            : date === "Bulan Ini" 
+                            : date === "Bulan Ini"
                               ? "Bulan ini"
                               : date}
                       </button>
@@ -1073,13 +1052,13 @@ export default function PerformanceStockPage() {
                               Hari ini
                             </p>
                             <p
-                                className="mb-2 cursor-pointer"
-                                onClick={() => {
-                                  const yesterday = new Date();
-                                  yesterday.setDate(yesterday.getDate() - 1);
-                                  handleDateSelection(yesterday.toISOString().split("T")[0]);
-                                }}
-                                style={{ cursor: 'pointer' }}
+                              className="mb-2 cursor-pointer"
+                              onClick={() => {
+                                const yesterday = new Date();
+                                yesterday.setDate(yesterday.getDate() - 1);
+                                handleDateSelection(yesterday.toISOString().split("T")[0]);
+                              }}
+                              style={{ cursor: 'pointer' }}
                             >
                               Kemarin
                             </p>
@@ -1123,356 +1102,365 @@ export default function PerformanceStockPage() {
                   </div>
                   {/* Chart */}
                   {isContentLoading ? (
-                    <div className="d-flex justify-content-center align-items-center" style={{ height: "300px" }}>
+                    <div className="d-flex justify-content-center align-items-center" style={{ height: "100vh" }}>
                       <Loading size={40} />
                     </div>
                   ) : (
-                    <div
-                      ref={chartRef}
-                      style={{ width: "100%", height: "300px" }}
-                      className="mb-2"
-                    ></div>
-                  )}
-                  {/* Filter & Table */}
-                  <div className="d-flex flex-column gap-3 gap-md-2">
-                    {/* Status filter */}
-                    <div
-                      className="d-flex align-items-center gap-1 gap-md-2 flex-wrap"
-                      style={{ width: "fit-content", listStyleType: "none" }}
-                    >
-                      <span>Status Produk</span>
-                      <div className="d-flex gap-1 gap-md-2 flex-wrap">
-                        <div
-                          className={`status-button-filter rounded-pill d-flex align-items-center  ${
-                            statusProductStockFilter === "all"
-                              ? "custom-font-color custom-border-select fw-bold"
-                              : "border border-secondary-subtle"
-                          }`}
-                          onClick={() => setStatusProductStockFilter("all")}
-                          style={{
-                            cursor: "pointer",
-                            fontSize: "12px",
-                            padding: "6px 12px",
-                          }}
-                        >
-                          Semua
-                        </div>
-                        <div
-                          className={`status-button-filter rounded-pill d-flex align-items-center ${
-                            statusProductStockFilter === "scheduled"
-                              ? "custom-font-color custom-border-select fw-bold"
-                              : "border border-secondary-subtle"
-                          }`}
-                          onClick={() => setStatusProductStockFilter("scheduled")}
-                          style={{
-                            cursor: "pointer",
-                            fontSize: "12px",
-                            padding: "6px 12px",
-                          }}
-                        >
-                          Terjadwal
-                        </div>
-                        <div
-                          className={`status-button-filter rounded-pill d-flex align-items-center  ${
-                            statusProductStockFilter === "ongoing"
-                              ? "custom-font-color custom-border-select fw-bold"
-                              : "border border-secondary-subtle"
-                          }`}
-                          onClick={() => setStatusProductStockFilter("ongoing")}
-                          style={{
-                            cursor: "pointer",
-                            fontSize: "12px",
-                            padding: "6px 12px",
-                          }}
-                        >
-                          Berjalan
-                        </div>
-                        <div
-                          className={`status-button-filter rounded-pill d-flex align-items-center  ${
-                            statusProductStockFilter === "closed"
-                              ? "custom-font-color custom-border-select fw-bold"
-                              : "border border-secondary-subtle"
-                          }`}
-                          onClick={() => setStatusProductStockFilter("closed")}
-                          style={{
-                            cursor: "pointer",
-                            fontSize: "12px",
-                            padding: "6px 12px",
-                          }}
-                        >
-                          Nonaktif
-                        </div>
-                        <div
-                          className={`status-button-filter rounded-pill d-flex align-items-center ${
-                            statusProductStockFilter === "ended"
-                              ? "custom-font-color custom-border-select fw-bold"
-                              : "border border-secondary-subtle"
-                          }`}
-                          onClick={() => setStatusProductStockFilter("ended")}
-                          style={{
-                            cursor: "pointer",
-                            fontSize: "12px",
-                            padding: "1px 12px",
-                          }}
-                        >
-                          Berakhir
-                        </div>
-                      </div>
-                    </div>
-                    {/* Other filter*/}
-                    <div className="d-flex flex-column mb-3 gap-2">
+                    <>
                       <div
-                        id="container-other-filters"
-                        className="d-flex w-full justify-content-between align-items-center"
-                      >
+                        ref={chartRef}
+                        style={{ width: "100%", height: "300px" }}
+                        className="mb-2"
+                      ></div>
+                      {/* Filter & Table */}
+                      <div className="d-flex flex-column gap-3 gap-md-2">
+                        {/* Status filter */}
                         <div
-                          id="container-other-filters-left"
-                          className="d-flex gap-2 flex-wrap"
+                          className="d-flex align-items-center gap-1 gap-md-2 flex-wrap"
+                          style={{ width: "fit-content", listStyleType: "none" }}
                         >
-                          {/* Search bar */}
-                          <div className="custom-filter-search">
-                            <input
-                              type="text"
-                              className="form-control"
-                              placeholder="Cari berdasarkan nama"
-                              value={searchTerm}
-                              onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-                          </div>
-                          {/* Clasification filter */}
-                          <div className="custom-filter-salesClassification">
-                            <Select
-                              isMulti
-                              options={typeClasificationOptions}
-                              value={selectedClassificationOption}
-                              onChange={handleClassificationChange}
-                              placeholder="Filter Klasifikasi"
-                              styles={{
-                                control: (base) => ({
-                                  ...base,
-                                  backgroundColor: "#FFFFFF00 !important",
-                                  border: "0.5px solid #d8dfe7 !important",
-                                  borderColor: "#d8dfe7 !important",
-                                  boxShadow: "none",
-                                  "&:hover": {
-                                    border: "0.5px solid #d8dfe7 !important",
-                                    boxShadow: "none",
-                                  },
-                                  "&:focus": {
-                                    border: "0.5px solid #d8dfe7 !important",
-                                    boxShadow: "none",
-                                  },
-                                  "&:active": {
-                                    border: "0.5px solid #d8dfe7 !important",
-                                    boxShadow: "none",
-                                  },
-                                  padding: "0.6px 4px",
-                                }),
-                                multiValue: (base) => ({
-                                  ...base,
-                                  backgroundColor: "#F9DBBF",
-                                }),
-                              }}
-                            />
-                          </div>
-                        </div>
-                        {/* Column filter */}
-                        <div id="container-other-filters-right">
-                          <button
-                            className="btn btn-primary dropdown-toggle w-100"
-                            type="button"
-                            onClick={() => setShowTableColumn(!showTableColumn)}
-                          >
-                            Pilih kriteria
-                          </button>
-                        </div>
-                      </div>
-                      {/* Option column filter */}
-                      {showTableColumn && (
-                        <div className="border px-2 py-2 rounded">
-                          {allColumns.map((col) => (
+                          <span>Status Produk</span>
+                          <div className="d-flex gap-1 gap-md-2 flex-wrap">
                             <div
-                              key={col.key}
-                              className="form-check form-check-inline"
+                              className={`status-button-filter rounded-pill d-flex align-items-center  ${statusProductStockFilter === "all"
+                                  ? "custom-font-color custom-border-select fw-bold"
+                                  : "border border-secondary-subtle"
+                                }`}
+                              onClick={() => setStatusProductStockFilter("all")}
+                              style={{
+                                cursor: "pointer",
+                                fontSize: "12px",
+                                padding: "6px 12px",
+                              }}
                             >
-                              <input
-                                style={{
-                                  border: "1px solid #8042D4",
-                                  width: "18px",
-                                  height: "18px",
-                                  borderRadius: "10%",
-                                }}
-                                className="form-check-input "
-                                type="checkbox"
-                                checked={selectedColumns.includes(col.key)}
-                                onChange={() => handleColumnChange(col.key)}
-                              />
-                              <label className="form-check-label fs-5 ms-1">
-                                {col.label}
-                              </label>
+                              Semua
                             </div>
-                          ))}
+                            <div
+                              className={`status-button-filter rounded-pill d-flex align-items-center ${statusProductStockFilter === "scheduled"
+                                  ? "custom-font-color custom-border-select fw-bold"
+                                  : "border border-secondary-subtle"
+                                }`}
+                              onClick={() => setStatusProductStockFilter("scheduled")}
+                              style={{
+                                cursor: "pointer",
+                                fontSize: "12px",
+                                padding: "6px 12px",
+                              }}
+                            >
+                              Terjadwal
+                            </div>
+                            <div
+                              className={`status-button-filter rounded-pill d-flex align-items-center  ${statusProductStockFilter === "ongoing"
+                                  ? "custom-font-color custom-border-select fw-bold"
+                                  : "border border-secondary-subtle"
+                                }`}
+                              onClick={() => setStatusProductStockFilter("ongoing")}
+                              style={{
+                                cursor: "pointer",
+                                fontSize: "12px",
+                                padding: "6px 12px",
+                              }}
+                            >
+                              Berjalan
+                            </div>
+                            <div
+                              className={`status-button-filter rounded-pill d-flex align-items-center  ${statusProductStockFilter === "closed"
+                                  ? "custom-font-color custom-border-select fw-bold"
+                                  : "border border-secondary-subtle"
+                                }`}
+                              onClick={() => setStatusProductStockFilter("closed")}
+                              style={{
+                                cursor: "pointer",
+                                fontSize: "12px",
+                                padding: "6px 12px",
+                              }}
+                            >
+                              Nonaktif
+                            </div>
+                            <div
+                              className={`status-button-filter rounded-pill d-flex align-items-center ${statusProductStockFilter === "ended"
+                                  ? "custom-font-color custom-border-select fw-bold"
+                                  : "border border-secondary-subtle"
+                                }`}
+                              onClick={() => setStatusProductStockFilter("ended")}
+                              style={{
+                                cursor: "pointer",
+                                fontSize: "12px",
+                                padding: "1px 12px",
+                              }}
+                            >
+                              Berakhir
+                            </div>
+                          </div>
                         </div>
-                      )}
-                    </div>
-                    {/* Container table */}
-                    <div className="table-responsive">
-                      <table
-                        className="table table-centered"
-                        style={{
-                          width: "100%",
-                          minWidth: "max-content",
-                          maxWidth: "none",
-                        }}
-                      >
-                        {/* Head table */}
-                        <thead className="table-light">
-                          <tr>
-                            {filteredData.length > 0 && <th scope="col"></th>}
-                            {allColumns
-                              .filter((col) => selectedColumns.includes(col.key))
-                              .map((col) => (
-                                <th key={col.key}>
-                                  <div className="d-flex justify-content-start gap-1 align-items-center">
+                        {/* Other filter*/}
+                        <div className="d-flex flex-column mb-3 gap-2">
+                          <div
+                            id="container-other-filters"
+                            className="d-flex w-full justify-content-between align-items-center"
+                          >
+                            <div
+                              id="container-other-filters-left"
+                              className="d-flex gap-2 flex-wrap"
+                            >
+                              {/* Search bar */}
+                              <div className="custom-filter-search">
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  placeholder="Cari berdasarkan nama"
+                                  value={searchTerm}
+                                  onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                              </div>
+                              {/* Clasification filter */}
+                              <div className="custom-filter-salesClassification">
+                                <Select
+                                  isMulti
+                                  options={typeClasificationOptions}
+                                  value={selectedClassificationOption}
+                                  onChange={handleClassificationChange}
+                                  placeholder="Filter Klasifikasi"
+                                  styles={{
+                                    control: (base) => ({
+                                      ...base,
+                                      backgroundColor: "#FFFFFF00 !important",
+                                      border: "0.5px solid #d8dfe7 !important",
+                                      borderColor: "#d8dfe7 !important",
+                                      boxShadow: "none",
+                                      "&:hover": {
+                                        border: "0.5px solid #d8dfe7 !important",
+                                        boxShadow: "none",
+                                      },
+                                      "&:focus": {
+                                        border: "0.5px solid #d8dfe7 !important",
+                                        boxShadow: "none",
+                                      },
+                                      "&:active": {
+                                        border: "0.5px solid #d8dfe7 !important",
+                                        boxShadow: "none",
+                                      },
+                                      padding: "0.6px 4px",
+                                    }),
+                                    multiValue: (base) => ({
+                                      ...base,
+                                      backgroundColor: "#F9DBBF",
+                                    }),
+                                  }}
+                                />
+                              </div>
+                            </div>
+                            {/* Column filter */}
+                            <div id="container-other-filters-right">
+                              <button
+                                className="btn btn-primary dropdown-toggle w-100"
+                                type="button"
+                                onClick={() => setShowTableColumn(!showTableColumn)}
+                              >
+                                Pilih kriteria
+                              </button>
+                            </div>
+                          </div>
+                          {/* Option column filter */}
+                          {showTableColumn && (
+                            <div className="border px-2 py-2 rounded">
+                              {allColumns.map((col) => (
+                                <div
+                                  key={col.key}
+                                  className="form-check form-check-inline"
+                                >
+                                  <input
+                                    style={{
+                                      border: "1px solid #8042D4",
+                                      width: "18px",
+                                      height: "18px",
+                                      borderRadius: "10%",
+                                    }}
+                                    className="form-check-input "
+                                    type="checkbox"
+                                    checked={selectedColumns.includes(col.key)}
+                                    onChange={() => handleColumnChange(col.key)}
+                                  />
+                                  <label className="form-check-label fs-5 ms-1">
                                     {col.label}
-                                    {col.key === "stock" && (
-                                      <div className="d-flex flex-column">
-                                        <img
-                                          src={iconArrowUp}
-                                          alt="Sort Asc"
-                                          style={{
-                                            width: "10px",
-                                            height: "10px",
-                                            cursor: "pointer",
-                                            opacity:
-                                              sortOrderData === "asc" ? 1 : 0.5,
-                                          }}
-                                          onClick={() => handleSortStock("asc")}
-                                        />
-                                        <img
-                                          src={iconArrowDown}
-                                          alt="Sort Desc"
-                                          style={{
-                                            width: "10px",
-                                            height: "10px",
-                                            cursor: "pointer",
-                                            opacity:
-                                              sortOrderData === "desc" ? 1 : 0.5,
-                                          }}
-                                          onClick={() => handleSortStock("desc")}
-                                        />
-                                      </div>
-                                    )}
-                                  </div>
-                                </th>
+                                  </label>
+                                </div>
                               ))}
-                          </tr>
-                        </thead>
-                        {/* Body Table */}
-                        <tbody>
-                          {paginatedData.length > 0 ? (
-                            paginatedData.map((entry) => {
-                              const latestStockData = getLatestStockData(entry);
-                              return (
-                                <React.Fragment key={entry.id}>
-                                  <tr>
-                                    {filteredData.length > 0 && (
-                                      <td
-                                        onClick={() => toggleRow(entry.id)}
-                                        style={{ cursor: "pointer", width: "20px" }}
-                                      >
-                                        {expandedVariantProduct[entry.id] ? <FaAngleUp /> : <FaAngleDown />}
-                                      </td>
-                                    )}
-                                    
-                                    {selectedColumns.includes("name") && (
-                                      <td
-                                        style={{
-                                          width: "400px",
-                                          cursor: "pointer",
-                                          color: selectedProduct?.id === entry.id ? "#F6881F" : "",
-                                        }}
-                                        onClick={() => handleProductClick(entry)}
-                                      >
-                                        {entry.name}
-                                      </td>
-                                    )}
-
-                                    {selectedColumns.includes("stock") && (
-                                      <td>
-                                        <div className="d-flex flex-column align-items-start">
-                                          <span>{latestStockData?.total_available_stock || 0} Stok</span>
-                                        </div>
-                                      </td>
-                                    )}
-                                    
-                                    {selectedColumns.includes("code") && (
-                                      <td>{entry.id || "-"}</td>
-                                    )}
-                                    
-                                    {selectedColumns.includes("availability") && (
-                                      <td>
-                                        <span>
-                                          {latestStockData?.availability || "-"}
-                                        </span>
-                                      </td>
-                                    )}
-                                    
-                                    {selectedColumns.includes("status") && (
-                                      <td>
-                                        <span className={`badge ${entry.state === 'ongoing' ? 'bg-success' : 'bg-secondary'}`}>
-                                          {convertStatusToLabel(entry.state)}
-                                        </span>
-                                      </td>
-                                    )}
-                                      
-                                    {selectedColumns.includes("classification") && (
-                                      <td>
-                                        <span>{latestStockData?.classification || "-"}</span>
-                                      </td>
-                                    )}
-                                  </tr>
-                                  {expandedVariantProduct[entry.id] && latestStockData?.variants && (
-                                    <tr className="bg-light">
-                                      <td
-                                        colSpan={selectedColumns.length + 1}
-                                        style={{ padding: "4px 4px", border: "none" }}
-                                      >
-                                        <ul className="list-group">
-                                          {latestStockData.variants.map((variant) => (
-                                            <li
-                                              key={variant.id}
-                                              className="list-group-item d-flex justify-content-start gap-2"
-                                            >
-                                              <span style={{ width: "8px" }}></span>
-                                              <span style={{ width: "388px" }}>
-                                                {variant.name}
-                                              </span>
-                                              <span>{variant.stock || 0} Stok</span>
-                                            </li>
-                                          ))}
-                                        </ul>
-                                      </td>
-                                    </tr>
-                                  )}
-                                </React.Fragment>
-                              );
-                            })
-                          ) : (
-                            <tr>
-                              <td colSpan={selectedColumns.length + 1} className="text-left">
-                                Data tidak tersedia
-                              </td>
-                            </tr>
+                            </div>
                           )}
-                        </tbody>
-                      </table>
-                    </div>
-                    {/* Pagination */}
-                    {filteredData.length > 0 &&
-                      filteredData !== null &&
-                      renderPagination()}
-                  </div>
+                        </div>
+                        {/* Container table */}
+                        <div className="table-responsive">
+                          <table
+                            className="table table-centered"
+                            style={{
+                              width: "100%",
+                              minWidth: "max-content",
+                              maxWidth: "none",
+                            }}
+                          >
+                            {/* Head table */}
+                            <thead className="table-light">
+                              <tr>
+                                {filteredData.length > 0 && <th scope="col"></th>}
+                                {allColumns
+                                  .filter((col) => selectedColumns.includes(col.key))
+                                  .map((col) => (
+                                    <th key={col.key}>
+                                      <div className="d-flex justify-content-start gap-1 align-items-center">
+                                        {col.label}
+                                        {col.key === "stock" && (
+                                          <div className="d-flex flex-column">
+                                            <img
+                                              src={iconArrowUp}
+                                              alt="Sort Asc"
+                                              style={{
+                                                width: "10px",
+                                                height: "10px",
+                                                cursor: "pointer",
+                                                opacity:
+                                                  sortOrderData === "asc" ? 1 : 0.5,
+                                              }}
+                                              onClick={() => handleSortStock("asc")}
+                                            />
+                                            <img
+                                              src={iconArrowDown}
+                                              alt="Sort Desc"
+                                              style={{
+                                                width: "10px",
+                                                height: "10px",
+                                                cursor: "pointer",
+                                                opacity:
+                                                  sortOrderData === "desc" ? 1 : 0.5,
+                                              }}
+                                              onClick={() => handleSortStock("desc")}
+                                            />
+                                          </div>
+                                        )}
+                                      </div>
+                                    </th>
+                                  ))}
+                              </tr>
+                            </thead>
+                            {/* Body Table */}
+                            <tbody>
+                              {paginatedData.length > 0 ? (
+                                paginatedData.map((entry) => {
+                                  const latestStockData = getLatestStockData(entry);
+                                  return (
+                                    <>
+                                      {/* <tr key={entry.id}> */}
+                                      <tr key={entry.productId}>
+                                        {filteredData.length > 0 && (
+                                          <td
+                                            onClick={() => toggleRow(latestStockData.productId)}
+                                            style={{ cursor: "pointer", width: "20px" }}
+                                          >
+                                            {expandedVariantProduct[latestStockData.productId] ? <FaAngleUp /> : <FaAngleDown />}
+                                          </td>
+                                        )}
+
+                                        {selectedColumns.includes("name") && (
+                                          <td
+                                            style={{
+                                              width: "400px",
+                                              cursor: "pointer",
+                                              color: selectedProduct?.productId === latestStockData.productId ? "#F6881F" : "",
+                                            }}
+                                            onClick={() => handleProductClick(latestStockData)}
+                                          >
+                                            {latestStockData?.name || "-"}
+                                          </td>
+                                        )}
+
+                                        {selectedColumns.includes("stock") && (
+                                          <td>
+                                            <div className="d-flex flex-column align-items-start">
+                                              <span>{latestStockData?.totalAvailableStock || 0} Stok</span>
+                                            </div>
+                                          </td>
+                                        )}
+
+                                        {selectedColumns.includes("code") && (
+                                          <td>{latestStockData?.productId || "-"}</td>
+                                        )}
+
+                                        {selectedColumns.includes("availability") && (
+                                          <td>
+                                            <span>
+                                              {latestStockData?.availability || "-"}
+                                            </span>
+                                          </td>
+                                        )}
+
+                                        {selectedColumns.includes("status") && (
+                                          <td>
+                                            {
+                                              latestStockData.state != null ? <span className="">{convertStatusToLabel(latestStockData.state)}</span> : "-"
+                                            }
+                                          </td>
+                                        )}
+
+                                        {selectedColumns.includes("classification") && (
+                                          <td>
+                                            <span>{latestStockData?.classification || "-"}</span>
+                                          </td>
+                                        )}
+                                      </tr>
+                                      {expandedVariantProduct[latestStockData.productId] && (
+                                        latestStockData?.variants && latestStockData.variants.length > 0 ? (
+                                          <tr className="bg-light">
+                                            <td
+                                              colSpan={selectedColumns.length + 1}
+                                              style={{ padding: "4px 4px", border: "none" }}
+                                            >
+                                              <ul className="list-group">
+                                                {latestStockData.variants.map((variant) => (
+                                                  <li
+                                                    key={variant.id}
+                                                    className="list-group-item d-flex justify-content-start gap-2"
+                                                  >
+                                                    <span style={{ width: "8px" }}></span>
+                                                    <span style={{ width: "388px" }}>
+                                                      {variant.name}
+                                                    </span>
+                                                    <span>{variant.stock || 0} Stok</span>
+                                                  </li>
+                                                ))}
+                                              </ul>
+                                            </td>
+                                          </tr>
+                                        ) : (
+                                          <tr className="bg-light">
+                                            <td
+                                              colSpan={selectedColumns.length + 1}
+                                              style={{ padding: "12px 4px", border: "none", borderRadius: "4px" }}
+                                            >
+                                              <span>Tidak ada varian untuk produk ini</span>
+                                            </td>
+                                          </tr>
+                                        )
+                                      )}
+                                    </>
+                                  );
+                                })
+                              ) : (
+                                <tr>
+                                  <td colSpan={selectedColumns.length + 1} className="text-left">
+                                    Data tidak tersedia
+                                  </td>
+                                </tr>
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                        {/* Pagination */}
+                        {filteredData.length > 0 &&
+                          filteredData !== null &&
+                          renderPagination()}
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             )

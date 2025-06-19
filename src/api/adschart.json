@@ -1,0 +1,110 @@
+
+{
+    "content": [
+        {
+            "campaignId": 121828260,
+            "from": "2025-06-01T20:59:29",
+            "to": "2025-06-10T20:59:29",
+            "data": [
+                {
+                    "campaignId": 121828260,
+                    "impression": 0.0,
+                    "click": 0.0,
+                    "ctr": 0.0,
+                    "broadOrderAmount": 0.0,
+                    "broadGmv": 0.0,
+                    "dailyBudget": 4.0E9,
+                    "roas": 0.0,
+                    "shopeeFrom": 1749488400,
+                    "shopeeTo": 1749574799,
+                    "createdAt": "2025-06-11T22:25:02.721"
+                }
+            ]
+        },
+        {
+            "campaignId": 320295782,
+            "from": "2025-06-01T20:59:29",
+            "to": "2025-06-10T20:59:29",
+            "data": [
+                {
+                    "campaignId": 320295782,
+                    "impression": 2793.0,
+                    "click": 116.0,
+                    "ctr": 0.041532402434658076,
+                    "broadOrderAmount": 15.0,
+                    "broadGmv": 1.908E11,
+                    "dailyBudget": 1.7E10,
+                    "roas": 11.223529411764705,
+                    "shopeeFrom": 1749488400,
+                    "shopeeTo": 1749574799,
+                    "createdAt": "2025-06-11T22:25:02.721"
+                }
+            ]
+        },
+        {
+            "campaignId": 313852402,
+            "from": "2025-06-01T20:59:29",
+            "to": "2025-06-10T20:59:29",
+            "data": [
+                {
+                    "campaignId": 313852402,
+                    "impression": 8868.0,
+                    "click": 232.0,
+                    "ctr": 0.02616147947677041,
+                    "broadOrderAmount": 13.0,
+                    "broadGmv": 1.69216E11,
+                    "dailyBudget": 1.6E10,
+                    "roas": 13.433949664850063,
+                    "shopeeFrom": 1749488400,
+                    "shopeeTo": 1749574799,
+                    "createdAt": "2025-06-11T22:25:02.721"
+                }
+            ]
+        },
+        {
+            "campaignId": 316755336,
+            "from": "2025-06-01T20:59:29",
+            "to": "2025-06-10T20:59:29",
+            "data": [
+                {
+                    "campaignId": 316755336,
+                    "impression": 6720.0,
+                    "click": 232.0,
+                    "ctr": 0.034523809523809526,
+                    "broadOrderAmount": 9.0,
+                    "broadGmv": 1.36308E11,
+                    "dailyBudget": 1.0E10,
+                    "roas": 13.6308,
+                    "shopeeFrom": 1749488400,
+                    "shopeeTo": 1749574799,
+                    "createdAt": "2025-06-11T22:25:02.721"
+                }
+            ]
+        }
+    ],
+    "pageable": {
+        "pageNumber": 0,
+        "pageSize": 20,
+        "sort": {
+            "sorted": false,
+            "empty": true,
+            "unsorted": true
+        },
+        "offset": 0,
+        "paged": true,
+        "unpaged": false
+    },
+    "last": false,
+    "totalPages": 100,
+    "totalElements": 1997,
+    "size": 20,
+    "number": 0,
+    "sort": {
+        "sorted": false,
+        "empty": true,
+        "unsorted": true
+    },
+    "first": true,
+    "numberOfElements": 20,
+    "empty": false
+}
