@@ -173,7 +173,7 @@ export default function MerchantInformationPage() {
         </div>
         <div className="card">
           <div className="card-body">
-            <h5 className="text-left pb-3">Informasi Merchant</h5>
+            <h4 className="text-left pb-3">Informasi Merchant</h4>
             <div className="d-flex gap-2 align-items-start">
               <span className="d-flex align-items-center">
                 <img
@@ -190,22 +190,22 @@ export default function MerchantInformationPage() {
               <div className="d-flex flex-column gap-1">
                 <div className="d-flex flex-column">
                   <span>Nama Toko</span>
-                  <h3>
+                  <h4>
                     {dataMerchant && JSON.parse(dataMerchant).merchants[0].merchantName}
-                  </h3>
+                  </h4>
                 </div>
                 <div>
-                  <span>Deskripsi Toko</span>
-                  <p>
+                  <span>Nama Merchant</span>
+                  <h4>
                     {dataMerchant && JSON.parse(dataMerchant).merchants[0].merchantShopeeId}
-                  </p>
+                  </h4>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="row gx-3">
+        {/* <div className="row gx-3">
           <div className="col-12 col-md-6">
             <div className="card">
               <div className="card-header">
@@ -272,7 +272,7 @@ export default function MerchantInformationPage() {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
       </BaseLayout>
     </>
   );

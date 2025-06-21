@@ -189,16 +189,8 @@ const Navbar = () => {
                                             alt="avatar" />
                                     </span>
                                 </a>
-                                <div className="dropdown-menu dropdown-menu-end">
-                                    <a className="dropdown-item d-flex align-items-center gap-1 custom-cursor-pointer">
-                                        <iconify-icon icon="solar:user-outline"
-                                            className="align-middle fs-18"></iconify-icon><span className="align-middle">My
-                                                Account</span>
-                                    </a>
-
-                                    <div className="dropdown-divider my-1"></div>
-
-                                    <button className="dropdown-item text-danger d-flex align-items-center gap-1 custom-cursor-pointer" onClick={handleLogout} disabled={isLoading}>
+                                <div className="dropdown-menu dropdown-menu-end rounded py-1">
+                                    <button className="dropdown-item text-danger d-flex align-items-center gap-1" onClick={handleLogout} disabled={isLoading} style={{ cursor: isLoading ? "not-allowed" : "pointer" }}>
                                         <iconify-icon icon="solar:logout-3-outline"
                                             className="align-middle fs-18"></iconify-icon><span
                                                 className="align-middle">Logout</span>
