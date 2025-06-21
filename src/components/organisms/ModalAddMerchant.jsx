@@ -12,10 +12,7 @@ const MerchantModalCreate = ({ onClose }) => {
     const [errors, setErrors] = useState({});
     const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState({
-        username: "",
-        email: "",
-        password: "",
-        phone: "",
+        merchantName: "",
         sector_industry: "",
         office_address: "",
         factory_address: "",
@@ -23,34 +20,34 @@ const MerchantModalCreate = ({ onClose }) => {
 
     const isEmpty = (value) => !value?.trim();
     const isEmailValid = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    const isPhoneValid = (phone) => /^\d+$/.test(phone);
+    // const isPhoneValid = (phone) => /^\d+$/.test(phone);
 
     const validatevalueformdata = () => {
         const newErrors = {};
 
-        if (isEmpty(formData.username)) {
-            newErrors.username = "Username is required";
+        if (isEmpty(formData.merchantName)) {
+            newErrors.merchantName = "Merchant name is required";
         }
 
-        if (isEmpty(formData.email)) {
-            newErrors.email = "Email is required";
-        } else if (!isEmailValid(formData.email)) {
-            newErrors.email = "Email is not valid";
-        }
+        // if (isEmpty(formData.email)) {
+        //     newErrors.email = "Email is required";
+        // } else if (!isEmailValid(formData.email)) {
+        //     newErrors.email = "Email is not valid";
+        // }
 
-        if (isEmpty(formData.password)) {
-            newErrors.password = "Password is required";
-        } else if (formData.password.length < 6) {
-            newErrors.password = "Password must be at least 6 characters";
-        }
+        // if (isEmpty(formData.password)) {
+        //     newErrors.password = "Password is required";
+        // } else if (formData.password.length < 6) {
+        //     newErrors.password = "Password must be at least 6 characters";
+        // }
 
-        if (isEmpty(formData.phone)) {
-            newErrors.phone = "Phone number is required";
-        } else if (!isPhoneValid(formData.phone)) {
-            newErrors.phone = "Phone number must contain only digits";
-        } else if (formData.phone.length < 10) {
-            newErrors.phone = "Phone number must be at least 10 digits";
-        }
+        // if (isEmpty(formData.phone)) {
+        //     newErrors.phone = "Phone number is required";
+        // } else if (!isPhoneValid(formData.phone)) {
+        //     newErrors.phone = "Phone number must contain only digits";
+        // } else if (formData.phone.length < 10) {
+        //     newErrors.phone = "Phone number must be at least 10 digits";
+        // }
 
         if (isEmpty(formData.sector_industry)) {
             newErrors.sector_industry = "Sector industry is required";
@@ -86,12 +83,10 @@ const MerchantModalCreate = ({ onClose }) => {
         try {
             await createMerchant(formData);
             setFormData({
-                username: "",
-                email: "",
-                password: "",
-                passwordConfirmation: "",
-                address: "",
-                phoneNumber: ""
+                merchantName: "",
+                sector_industry: "",
+                office_address: "",
+                factory_address: "",
             });
             onClose();
             navigate("/dashboard", { replace: true });
@@ -111,14 +106,14 @@ const MerchantModalCreate = ({ onClose }) => {
             onClick={onClose}
         >
             <div className="bg-white p-4 rounded shadow-lg" style={{ width: "420px", maxHeight: "90vh", overflowY: "auto" }} ref={modalRef} onClick={(e) => e.stopPropagation()}>
-                <h5 className="text-center">Add Merchant</h5>
+                <h5 className="text-center">Create Merchant</h5>
                 <hr />
                 <form onSubmit={handleSubmitFormData}>
                     {[
-                        { name: "username", label: "Username", type: "text" },
-                        { name: "email", label: "Email", type: "email" },
-                        { name: "password", label: "Password", type: "password" },
-                        { name: "phone", label: "Phone number", type: "text" },
+                        { name: "merchantName", label: "Merchant Name", type: "text" },
+                        // { name: "email", label: "Email", type: "email" },
+                        // { name: "password", label: "Password", type: "password" },
+                        // { name: "phone", label: "Phone number", type: "text" },
                         { name: "sector_industry", label: "Sector Industry", type: "text" },
                         { name: "office_address", label: "Office Address", type: "text" },
                         { name: "factory_address", label: "Factory Address", type: "text" },
