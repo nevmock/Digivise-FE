@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast, Toaster } from "react-hot-toast";
+import { toast } from "react-hot-toast";
 
-import { verifyOtp } from "../../resolver/auth/otp";
+import { verifyMerchantOtp } from "../../resolver/merchant/index";
 
 
 export default function OtpPage() {
@@ -27,7 +27,7 @@ export default function OtpPage() {
         }
 
         try {
-            await verifyOtp(otp);
+            await verifyMerchantOtp(otp);
             toast.success("OTP berhasil diverifikasi!");
             navigate("/dashboard");
         } catch (error) {
