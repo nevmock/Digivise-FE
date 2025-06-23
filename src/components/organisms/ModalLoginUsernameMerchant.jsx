@@ -5,14 +5,13 @@ import { toast } from "react-hot-toast";
 import { useAuth } from "../../context/Auth";
 
 
-const MerchantModalLoginWithUsername = ({ onClose, merchant}) => {
-    const { loginToMerchant, setActiveMerchant  } = useAuth();
-    const navigate = useNavigate();
+const MerchantModalLoginWithUsername = ({ onClose, merchant, onOTPRequired }) => {
+    const { loginToMerchant  } = useAuth();
     const modalRef = useRef(null);
     const [isLoading, setIsLoading] = useState(false);
     const [errors, setErrors] = useState({});
     const [formData, setFormData] = useState({
-        username: merchant?.username || "",
+        username: "",
         password: "",
     });
 
@@ -55,23 +54,23 @@ const MerchantModalLoginWithUsername = ({ onClose, merchant}) => {
         setIsLoading(true);
 
         try {
-            const merchantData = await loginToMerchant(formData.username, formData.password);
-            if (!merchantData) {
-                toast.error("Merchant tidak ditemukan, silakan coba lagi");
-                return;
-            }
+            const result = await loginToMerchant(
+                formData.username, 
+                formData.password, 
+                merchant.id
+            );
 
-            setActiveMerchant({
-                ...merchant,
-                ...merchantData
-            });
-            setFormData({ username: "", password: "" });
-            onClose();
-            navigate("/dashboard", { replace: true });
-            toast.success("Login ke merchant berhasil");
+            if (result.success && result.requiresOTP) {
+                toast.success("Kode OTP telah dikirim ke email Anda");
+                setFormData({ username: "", password: "" });
+                onClose();
+                onOTPRequired(merchant);
+            } else {
+                toast.error("Username atau password salah");
+            }
         } catch (error) {
             toast.error("Gagal login ke merchant, silakan coba lagi");
-            console.error("Gagal login, error pada server:", error);
+            console.error("Gagal login ke merchant, kesalahan pada server:", error);
         } finally {
             setIsLoading(false);
         }
@@ -79,8 +78,7 @@ const MerchantModalLoginWithUsername = ({ onClose, merchant}) => {
 
     return (
         <div
-            className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
-            style={{ background: "rgba(0,0,0,0.5)", zIndex: 1050 }}
+            className="container-modal"
             onClick={onClose}
         >
             <div
@@ -89,7 +87,7 @@ const MerchantModalLoginWithUsername = ({ onClose, merchant}) => {
                 ref={modalRef}
                 onClick={(e) => e.stopPropagation()}
             >
-                <h5 className="text-center">Merchant Login</h5>
+                <h5 className="text-center">Login to {merchant?.merchantName}</h5>
                 <hr />
                 <form onSubmit={handleSubmitFormData}>
                     <div className="mb-2">
@@ -100,6 +98,7 @@ const MerchantModalLoginWithUsername = ({ onClose, merchant}) => {
                             value={formData.username}
                             onChange={handleInputChange}
                             className={`form-control ${errors.username ? "is-invalid" : ""}`}
+                            placeholder="Enter your username"
                         />
                         <div className="invalid-feedback">{errors.username}</div>
                     </div>
@@ -112,28 +111,27 @@ const MerchantModalLoginWithUsername = ({ onClose, merchant}) => {
                             value={formData.password}
                             onChange={handleInputChange}
                             className={`form-control ${errors.password ? "is-invalid" : ""}`}
+                            placeholder="Enter your password"
                         />
                         <div className="invalid-feedback">{errors.password}</div>
                     </div>
 
-                    <button type="submit" className="btn btn-success w-100" disabled={isLoading}>
-                        {isLoading ? (
-                            <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                        ) : (
-                            "Login"
-                        )}
-                    </button>
-                    <button
-                        type="button"
-                        className="btn btn-secondary w-100 mt-2"
-                        onClick={onClose}
-                        disabled={isLoading}
-                    >
-                        Cancel
-                    </button>
-
-                    <div className="mt-3 d-flex justify-content-center align-items-center">
-                        <Link className="form-label">Login menggunakan No.Handphone</Link>
+                    <div className="mt-4">
+                        <button type="submit" className="btn btn-success w-100" disabled={isLoading}>
+                            {isLoading ? (
+                                <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            ) : (
+                                "Login"
+                            )}
+                        </button>
+                        <button
+                            type="button"
+                            className="btn btn-secondary w-100 mt-2"
+                            onClick={onClose}
+                            disabled={isLoading}
+                        >
+                            Cancel
+                        </button>
                     </div>
                 </form>
             </div>

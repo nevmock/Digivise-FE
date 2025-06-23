@@ -13,15 +13,12 @@ const MerchantModalCreate = ({ onClose }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState({
         merchantName: "",
-        sector_industry: "",
-        office_address: "",
-        factory_address: "",
+        sectorIndustry: "",
+        officeAddress: "",
+        factoryAddress: "",
     });
 
     const isEmpty = (value) => !value?.trim();
-    const isEmailValid = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    // const isPhoneValid = (phone) => /^\d+$/.test(phone);
-
     const validatevalueformdata = () => {
         const newErrors = {};
 
@@ -29,36 +26,16 @@ const MerchantModalCreate = ({ onClose }) => {
             newErrors.merchantName = "Merchant name is required";
         }
 
-        // if (isEmpty(formData.email)) {
-        //     newErrors.email = "Email is required";
-        // } else if (!isEmailValid(formData.email)) {
-        //     newErrors.email = "Email is not valid";
-        // }
-
-        // if (isEmpty(formData.password)) {
-        //     newErrors.password = "Password is required";
-        // } else if (formData.password.length < 6) {
-        //     newErrors.password = "Password must be at least 6 characters";
-        // }
-
-        // if (isEmpty(formData.phone)) {
-        //     newErrors.phone = "Phone number is required";
-        // } else if (!isPhoneValid(formData.phone)) {
-        //     newErrors.phone = "Phone number must contain only digits";
-        // } else if (formData.phone.length < 10) {
-        //     newErrors.phone = "Phone number must be at least 10 digits";
-        // }
-
-        if (isEmpty(formData.sector_industry)) {
-            newErrors.sector_industry = "Sector industry is required";
+        if (isEmpty(formData.sectorIndustry)) {
+            newErrors.sectorIndustry = "Sector industry is required";
         }
 
-        if (isEmpty(formData.office_address)) {
-            newErrors.office_address = "Office address is required";
+        if (isEmpty(formData.officeAddress)) {
+            newErrors.officeAddress = "Office address is required";
         }
 
-        if (isEmpty(formData.factory_address)) {
-            newErrors.factory_address = "Factory address is required";
+        if (isEmpty(formData.factoryAddress)) {
+            newErrors.factoryAddress = "Factory address is required";
         }
 
         setErrors(newErrors);
@@ -84,12 +61,13 @@ const MerchantModalCreate = ({ onClose }) => {
             await createMerchant(formData);
             setFormData({
                 merchantName: "",
-                sector_industry: "",
-                office_address: "",
-                factory_address: "",
+                sectorIndustry: "",
+                officeAddress: "",
+                factoryAddress: "",
             });
             onClose();
             navigate("/dashboard", { replace: true });
+            window.location.reload();
             toast.success("Merchant berhasil dibuat");
         } catch (error) {
             toast.error("Gagal membuat merchant");
@@ -101,8 +79,7 @@ const MerchantModalCreate = ({ onClose }) => {
 
     return (
         <div
-            className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
-            style={{ background: "rgba(0,0,0,0.5)", zIndex: 1050 }}
+            className="container-modal"
             onClick={onClose}
         >
             <div className="bg-white p-4 rounded shadow-lg" style={{ width: "420px", maxHeight: "90vh", overflowY: "auto" }} ref={modalRef} onClick={(e) => e.stopPropagation()}>
@@ -111,12 +88,9 @@ const MerchantModalCreate = ({ onClose }) => {
                 <form onSubmit={handleSubmitFormData}>
                     {[
                         { name: "merchantName", label: "Merchant Name", type: "text" },
-                        // { name: "email", label: "Email", type: "email" },
-                        // { name: "password", label: "Password", type: "password" },
-                        // { name: "phone", label: "Phone number", type: "text" },
-                        { name: "sector_industry", label: "Sector Industry", type: "text" },
-                        { name: "office_address", label: "Office Address", type: "text" },
-                        { name: "factory_address", label: "Factory Address", type: "text" },
+                        { name: "sectorIndustry", label: "Sector Industry", type: "text" },
+                        { name: "officeAddress", label: "Office Address", type: "text" },
+                        { name: "factoryAddress", label: "Factory Address", type: "text" },
                     ].map(({ name, label, type }) => (
                         <div className="mb-2" key={name}>
                             <label className="form-label" htmlFor={name}>

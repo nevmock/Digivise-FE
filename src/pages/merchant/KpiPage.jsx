@@ -158,7 +158,7 @@ import Loading from "../../components/atoms/Loading/Loading";
 //                 </div>
 //               </div>
 //               <div className="d-flex justify-content-end mt-3">
-//                 <button type="submit" className="btn btn-primary" onClick={handleUpdate} disabled={isUpdating}>
+//                 <button type="submit" className="btn btn-success" onClick={handleUpdate} disabled={isUpdating}>
 //                   {
 //                     isUpdating ? (
 //                       <div className="spinner-border spinner-border-sm" role="status">
@@ -263,8 +263,8 @@ export default function MerchantKpiPage() {
         await fetchKPIData(); 
       }
     } catch (error) {
-      toast.error(`Gagal memperbarui data KPI: ${error.message || "Kesalahan pada server"}`);
-      console.error("Gagal update KPI:", error);
+      toast.error("Gagal memperbarui data KPI");
+      console.error("Gagal memperbarui KPI, kesalahan pada server:", error);
     } finally {
       setIsUpdating(false);
     }
@@ -317,7 +317,7 @@ export default function MerchantKpiPage() {
             </div>
           </div>
           <div className="d-flex justify-content-end mt-3">
-            <button type="submit" className="btn btn-primary" onClick={handleUpdate} disabled={isUpdating}>
+            <button type="submit" className="btn btn-success w-100" onClick={handleUpdate} disabled={isUpdating}>
               {
                 isUpdating ? (
                   <div className="spinner-border spinner-border-sm" role="status">

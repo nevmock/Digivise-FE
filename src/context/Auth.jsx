@@ -1,35 +1,33 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 
 import { getToken } from "../resolver/auth/authApp";
 import { isTokenValid } from "../utils/jwtDecode";
-import axiosRequest from "../utils/request";
+import { 
+    createMerchant as createMerchantAPI, 
+    loginMerchant as loginMerchantAPI,
+    verifyMerchantOtp as verifyMerchantOtpAPI 
+} from "../resolver/merchant";
 
 
 const AuthContext = createContext();
 const TOKEN_KEY = "userAppToken";
 const USER_DATA_KEY = "userDataApp";
-const ACTIVE_MERCHANT_KEY = "activeUserMerchant";
+
 export const AuthProvider = ({ children }) => {
     const [isAuth, setIsAuth] = useState(false);
     const [userData, setUserData] = useState(null);
     const [isChecking, setIsChecking] = useState(true);
+    const [pendingMerchantLogin, setPendingMerchantLogin] = useState(null);
     const navigate = useNavigate();
 
     useEffect(() => {
         const token = getToken();
         const storedUser = localStorage.getItem(USER_DATA_KEY);
-        const storedActiveMerchant = localStorage.getItem(ACTIVE_MERCHANT_KEY);
 
         if (token && isTokenValid(token) && storedUser) {
-            setIsAuth(true);
             const parsedUserData = JSON.parse(storedUser);
-            
-            if (storedActiveMerchant) {
-                parsedUserData.activeMerchant = JSON.parse(storedActiveMerchant);
-            }
-            
+            setIsAuth(true);
             setUserData(parsedUserData);
         } else {
             logoutSuccess();
@@ -40,7 +38,7 @@ export const AuthProvider = ({ children }) => {
     const updateData = (data) => {
         setUserData(data);
         localStorage.setItem(USER_DATA_KEY, JSON.stringify(data));
-    }
+    };
 
     const loginSuccess = (data) => {
         setIsAuth(true);
@@ -52,64 +50,91 @@ export const AuthProvider = ({ children }) => {
     const logoutSuccess = () => {
         setIsAuth(false);
         setUserData(null);
-    };
-
-    const setActiveMerchant = (merchantObj) => {
-        const updatedUserData = {
-            ...userData,
-            activeMerchant: merchantObj,
-        };
-        localStorage.setItem(ACTIVE_MERCHANT_KEY, JSON.stringify(merchantObj));
-        updateData(updatedUserData);
+        localStorage.removeItem(USER_DATA_KEY);
+        localStorage.removeItem(TOKEN_KEY);
     };
 
     const createMerchant = async (merchantData) => {
         try {
-            const response = await axiosRequest.post("/api/merchants", merchantData);
-            if (response.status === 200 || response.data) {
-                const updatedMerchants = [...(userData.merchants || []), response.data.merchant];
+            const { merchantName, sectorIndustry, officeAddress, factoryAddress } = merchantData;
+            const response = await createMerchantAPI(merchantName, sectorIndustry, officeAddress, factoryAddress);
+
+            let newMerchant = null;
+
+            if (response && response.merchant) {
+                newMerchant = response.merchant;
+            } else if (response && response.data && response.data.merchant) {
+                newMerchant = response.data.merchant;
+            } else if (response && !response.merchant && !response.data) {
+                newMerchant = response;
+            }
+            
+            if (newMerchant && newMerchant.id) {
+                const updatedMerchants = [...(userData.merchants || []), newMerchant];
+                
                 const updatedUserData = {
                     ...userData,
                     merchants: updatedMerchants
                 };
                 updateData(updatedUserData);
-                return response.data.merchant;
+                return newMerchant;
+            } else {
+                throw new Error("Invalid response format from server");
             }
         } catch (error) {
             throw error;
         }
     };
 
-    const loginToMerchant = async (username, password) => {
-        const payload = { username, password }
+    const loginToMerchant = async (username, password, merchantId) => {
         try {
-            const response = await axios.post("/api/merchants/login", payload);
-            setActiveMerchant(response.data);
-            return response.data;
+            const response = await loginMerchantAPI(username, password);
+            
+            if (response === true) {
+                setPendingMerchantLogin({
+                    username,
+                    merchantId
+                });
+                return { success: true, requiresOTP: true };
+            }
+            
+            return { success: false };
         } catch (error) {
             throw error;
         }
     };
 
-    const loginToMerchantv2 = async (handphone) => {
-        const payload = { handphone }
-        try {
-            const response = await axios.get("http://localhost:1337/api/v1/shopee-seller/login", payload, {
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            });
-            setActiveMerchant(response.data);
-            return response.data;
-        } catch (error) {
-            throw error;
+    const verifyMerchantOTP = async (otp) => {
+        if (!pendingMerchantLogin) {
+            throw new Error("No pending merchant login");
         }
-    };
 
-    const verifyOTP = async (otp) => {
         try {
-            const response = await axiosRequest.post("/api/merchants/verify-otp", { otp });
-            return response.data;
+            const { username, merchantId } = pendingMerchantLogin;
+            const response = await verifyMerchantOtpAPI(username, merchantId, otp);
+
+            if (response.code == 200 || response.status == "OK" || response.status == 200) {
+                setPendingMerchantLogin(null);
+                
+                const selectedMerchant = userData.merchants.find(m => m.id === merchantId);
+                if (selectedMerchant) {
+                    const updatedUserData = {
+                        ...userData,
+                        activeMerchant: {
+                            ...selectedMerchant,
+                            shopeeData: response.data?.data
+                        }
+                    };
+                    updateData(updatedUserData);
+                }
+                
+                return { success: true, data: response.data, shopeeData: response.data?.data };
+            } else {
+                return { 
+                    success: false, 
+                    message: response.message || "OTP verification failed" 
+                };
+            }
         } catch (error) {
             throw error;
         }
@@ -119,7 +144,6 @@ export const AuthProvider = ({ children }) => {
         logoutSuccess();
         navigate("/", { replace: true });
     };
-    
 
     return (
         <AuthContext.Provider value={{
@@ -130,11 +154,10 @@ export const AuthProvider = ({ children }) => {
             handleUnauthorized,
             userData,
             activeMerchant: userData?.activeMerchant || null,
-            setActiveMerchant,
             createMerchant,
             loginToMerchant,
-            loginToMerchantv2,
-            verifyOTP,
+            verifyMerchantOTP,
+            pendingMerchantLogin,
             updateData
         }}>
             {children}
