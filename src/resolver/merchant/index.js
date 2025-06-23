@@ -23,9 +23,9 @@ export async function getMerchantListById(user_id) {
     }
 };
 
-export async function createMerchant(merchantName, sectorIndustry, officeAddress, factoryAddress) {
+export async function createMerchant(name, sectorIndustry, officeAddress, factoryAddress) {
     try {
-        const response = await axiosRequest.post(`/api/merchants`, { merchantName, sectorIndustry, officeAddress, factoryAddress });
+        const response = await axiosRequest.post(`/api/merchants`, { name, sectorIndustry, officeAddress, factoryAddress });
         return response.data;
     } catch (error) {
         throw error;
@@ -48,4 +48,4 @@ export async function verifyMerchantOtp(username, merchantId, otp) {
     } catch (error) {
         throw error;
     }
-}
+};

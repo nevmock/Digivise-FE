@@ -41,7 +41,7 @@ function App() {
         <Route path="/" element={<HomeRoute />} />
         <Route path="/login" element={<LoginPage />} />
         <Route element={<PrivateRoute />}>
-          <Route path="/verification-otp" element={<OtpPage />} />
+          <Route path="/verification-otp-phone" element={<OtpPage />} />
           <Route path="/dashboard" element={<HomeDashboardPage />} />
           <Route path="/dashboard/merchant-information" element={<MerchantInformationPage />} />
           <Route path="/dashboard/merchant-kpi" element={<MerchantKPIPage />} />
