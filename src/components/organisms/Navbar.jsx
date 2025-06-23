@@ -2,13 +2,15 @@ import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
+import { IoMdRefresh } from "react-icons/io";
 
 import { useAuth } from "../../context/Auth";
 import { logout } from "../../resolver/auth/authApp";
 import CreateMerchantModal from "../organisms/ModalAddMerchant";
-import LoginMerchantModal from "./ModalLoginUsernameMerchant";
-import LoginMerchantHpModal from "./ModalLoginHPMerchant";
+import LoginMerchantUsernameModal from "./ModalLoginUsernameMerchant";
+import ModalOtpByUsername from "./ModalOtpByUsername";
 import avatarProfile from "../../assets/images/users/avatar-1.jpg";
+import convertNotifySessionExpired from "../../utils/convertNotifySessionExpired";
 
 
 const Navbar = () => {
@@ -16,11 +18,10 @@ const Navbar = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
     const [showModalFormCreateMerchant, setShowModalFormCreateMerchant] = useState(false);
-    const [showModalFormLoginMerchant, setShowModalFormLoginMerchant] = useState(false);
-    const [showModalFormLoginHpMerchant, setShowModalFormLoginHpMerchant] = useState(false);
+    const [showModalFormLoginUsernameMerchant, setShowModalFormLoginUsernameMerchant] = useState(false);
+    const [showModalFormOTPUsername, setShowModalFormOTPUsername] = useState(false);
     const [selectedMerchant, setSelectedMerchant] = useState(null);
     const dropdownRef = useRef(null);
-    const modalRef = useRef(null);
     const navigate = useNavigate();
     const [themeMode, setThemeMode] = useState(() => localStorage.getItem("appModeTheme") || "light");
 
@@ -33,27 +34,27 @@ const Navbar = () => {
     };
 
     const closeModalCreateMerchant = () => setShowModalFormCreateMerchant(false);
-    const closeModalLoginMerchant = () => setShowModalFormLoginMerchant(false);
-    const closeModalLoginHpMerchant = () => setShowModalFormLoginHpMerchant(false);
+    const closeModalLoginMerchant = () => setShowModalFormLoginUsernameMerchant(false);
+    const closeModalOTPUsername = () => setShowModalFormOTPUsername(false);
 
     const handleOpenLoginModal = (merchant) => {
+        if (activeMerchant?.id === merchant.id) {
+            toast.info("Already logged in to this merchant");
+            return;
+        }
         setSelectedMerchant(merchant);
-        setShowModalFormLoginMerchant(true);
+        setShowModalFormLoginUsernameMerchant(true);
     };
-    
+
+    const handleOTPRequired = (merchant) => {
+        setSelectedMerchant(merchant);
+        setShowModalFormOTPUsername(true);
+    };
+
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (showDropdown && dropdownRef.current && !dropdownRef.current.contains(event.target)) {
                 setShowDropdown(false);
-            }   
-            if (showModalFormCreateMerchant && modalRef.current && !modalRef.current.contains(event.target)) {
-                setShowModalFormCreateMerchant(false);
-            }  
-            if (showModalFormLoginMerchant && modalRef.current && !modalRef.current.contains(event.target)) {
-                setShowModalFormLoginMerchant(false);
-            }       
-            if (showModalFormLoginHpMerchant && modalRef.current && !modalRef.current.contains(event.target)) {
-                setShowModalFormLoginHpMerchant(false);
             }
         };
 
@@ -61,7 +62,7 @@ const Navbar = () => {
         return () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
-    }, [showDropdown, showModalFormCreateMerchant, showModalFormLoginMerchant, showModalFormLoginHpMerchant]);
+    }, [showDropdown]);
 
     useEffect(() => {
         document.documentElement.setAttribute("data-bs-theme", themeMode);
@@ -78,7 +79,7 @@ const Navbar = () => {
             toast.success("Logout berhasil!");
         } catch (error) {
             toast.error("Logout gagal, silakan coba lagi");
-            console.error("Gagal logout, error pada server:", error);
+            console.error("Gagal logout, kesalahan pada server :", error);
         } finally {
             setIsLoading(false);
         }
@@ -108,11 +109,8 @@ const Navbar = () => {
                                         
                                         {showDropdown && (
                                             <div className="dropdown-menu show position-absolute shadow p-2 rounded" style={{ width: "200px" }}>
-                                                {userData.merchants.map((merchant, index) => (
-                                                    <div 
-                                                        key={index} 
-                                                        className="d-flex flex-column"
-                                                    >
+                                                {userData.merchants.map((merchant) => (
+                                                    <div key={merchant.id} className="d-flex flex-column">
                                                         <div className="d-flex align-items-center">
                                                             <img
                                                                 src={avatarProfile}
@@ -120,22 +118,31 @@ const Navbar = () => {
                                                                 width="40"
                                                                 height="40"
                                                             />
-                                                            <div className="d-flex flex-column">
+                                                            <div className="d-flex flex-column flex-grow-1">
                                                                 <strong>{merchant.merchantName}</strong>
-                                                                <label style={{ color: "#008D2FFF" }}>Session Active</label>
+                                                                {activeMerchant?.id === merchant.id ? (
+                                                                    <div className="d-flex flex-col gap-1">
+                                                                        <p className={`small text-${convertNotifySessionExpired(activeMerchant.createdAt).type == "urgent" ? "danger" : "success"}`}>
+                                                                            {convertNotifySessionExpired(activeMerchant.createdAt).text}</p>
+                                                                        <IoMdRefresh />
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="d-flex flex-column">
+                                                                        <span className="text-muted small">Not logged in</span>
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                         </div>
-                                                        {(!activeMerchant || activeMerchant.id !== merchant.id) && (
+                                                        {activeMerchant?.id !== merchant.id && (
                                                             <button
                                                                 type="button"
                                                                 onClick={() => handleOpenLoginModal(merchant)}
-                                                                className="btn btn-outline-primary fs-5 mt-1"
-                                                                style={{ padding: "0.4rem 0rem" }}
+                                                                className="btn btn-outline-primary btn-sm mt-2"
                                                             >
                                                                 Login
                                                             </button>
                                                         )}
-                                                        <hr />
+                                                        <hr className="my-2" />
                                                     </div>
                                                 ))}
                                                 <button className="btn btn-success w-100 fs-5" onClick={() => setShowModalFormCreateMerchant(true)}>Add Merchant</button>
@@ -143,11 +150,13 @@ const Navbar = () => {
                                         )}
                                     </>
                                 ) : (
-                                    <>
-                                        <button type="button" className="btn btn-success" onClick={() => setShowModalFormCreateMerchant(true)}>
-                                            Create Merchant
-                                        </button>
-                                    </>
+                                    <button 
+                                        type="button" 
+                                        className="btn btn-success" 
+                                        onClick={() => setShowModalFormCreateMerchant(true)}
+                                    >
+                                        Create Merchant
+                                    </button>
                                 )}
                             </div>
 
@@ -157,16 +166,22 @@ const Navbar = () => {
                                     document.body
                                 )
                             }
-                            {showModalFormLoginMerchant &&
+                            {showModalFormLoginUsernameMerchant &&
                                 createPortal(
-                                    <LoginMerchantModal onClose={closeModalLoginMerchant} merchant={selectedMerchant} />,
+                                    <LoginMerchantUsernameModal 
+                                        onClose={closeModalLoginMerchant} 
+                                        merchant={selectedMerchant}
+                                        onOTPRequired={handleOTPRequired}
+                                    />,
                                     document.body
                                 )
                             }
-
-                            {showModalFormLoginHpMerchant &&
+                            {showModalFormOTPUsername &&
                                 createPortal(
-                                    <LoginMerchantHpModal onClose={closeModalLoginHpMerchant} merchant={selectedMerchant} />,
+                                    <ModalOtpByUsername 
+                                        onClose={closeModalOTPUsername} 
+                                        merchant={selectedMerchant}
+                                    />,
                                     document.body
                                 )
                             }
@@ -174,9 +189,9 @@ const Navbar = () => {
                             <div className="topbar-item">
                                 <button type="button" className="topbar-button" id="light-dark-mode" onClick={toggleTheme}>
                                     {themeMode === "light" ? (
-                                        <iconify-icon icon="solar:moon-outline" class="fs-22 align-middle light-mode" />
+                                        <iconify-icon icon="solar:moon-outline" className="fs-22 align-middle light-mode" />
                                     ) : (
-                                        <iconify-icon icon="solar:sun-2-outline" class="fs-22 align-middle dark-mode" />
+                                        <iconify-icon icon="solar:sun-2-outline" className="fs-22 align-middle dark-mode" />
                                     )}
                                 </button>
                             </div>

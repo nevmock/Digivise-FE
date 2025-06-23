@@ -9,17 +9,27 @@ export const login = async (username, password) => {
     const payload = { username, password };
     try {
         const response = await axiosRequest.post("/auth/login", payload);
-        if (response.status === 200 && response.data) {
-            const { accessToken, userId, username, merchants = [] } = response.data;
+        if (response.status === 200 || response.data) {
+            const { 
+                accessToken, 
+                refreshToken,
+                userId, 
+                username, 
+                merchants = [], 
+                activeMerchant = null 
+            } = response.data;
+            
             const userData = {
                 accessToken,
+                refreshToken,
                 userId,
                 username,
-                merchants
+                merchants,
+                activeMerchant
             };
+
             localStorage.setItem(USER_DATA_KEY, JSON.stringify(userData));
             localStorage.setItem(TOKEN_KEY, accessToken);
-
             return userData;
         }
     } catch (error) {    

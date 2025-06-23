@@ -1,12 +1,12 @@
 import { useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-hot-toast";
 
 import { useAuth } from "../../context/Auth";
 
 
-const MerchantModalOTP = ({ onClose, merchant}) => {
-    const { verifyOTP, setActiveMerchant  } = useAuth();
+const MerchantModalOTPByUsername = ({ onClose, merchant}) => {
+    const { verifyMerchantOTP, pendingMerchantLogin } = useAuth();
     const navigate = useNavigate();
     const modalRef = useRef(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -16,20 +16,26 @@ const MerchantModalOTP = ({ onClose, merchant}) => {
     });
 
     const isEmpty = (value) => !value?.trim();
-
     const validateValueFormData = () => {
         const newErrors = {};
 
         if (isEmpty(formData.otp)) {
             newErrors.otp = "OTP is required";
+        } else if (formData.otp.length !== 6) {
+            newErrors.otp = "OTP must be at least 6 characters";
         }
 
-        return newErrors;
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
     };
 
     
     const handleInputChange = (e) => {
         const { name, value } = e.target;
+        if (name === 'otp' && (!/^\d*$/.test(value) || value.length > 6)) {
+            return;
+        }
+
         setFormData((prevData) => ({
             ...prevData,
             [name]: value,
@@ -46,22 +52,29 @@ const MerchantModalOTP = ({ onClose, merchant}) => {
     const handleSubmitFormData = async (e) => {
         e.preventDefault();
         if (!validateValueFormData()) return;
+
+        if (!pendingMerchantLogin) {
+            toast.error("Session expired, mohon login ulang");
+            onClose();
+            return;
+        }
         
         setIsLoading(true);
 
         try {
-            const merchantData = await verifyOTP(formData.otp);
-            setActiveMerchant({
-                ...merchant,
-                ...merchantData
-            });
-            setFormData({ otp: "" });
-            onClose();
-            navigate("/dashboard", { replace: true });
-            toast.success("Login ke merchant berhasil");
+            const result = await verifyMerchantOTP(formData.otp);
+            console.log("Hasil verifikasi OTP: ", result);
+            
+            if (result?.code === 200 || result?.status === "OK" || result?.status === 200 || result) {
+                onClose();
+                navigate("/dashboard", { replace: true });
+                toast.success(`Berhasil login ke ${merchant?.merchantName}`);
+            } else {
+                toast.error("Kode OTP tidak valid atau telah kadaluarsa");
+            }
         } catch (error) {
-            toast.error("OTP tidak valid atau telah kedaluwarsa");
-            console.error("Gagal verifikasi OTP, kesalahan pada server:", error);
+            toast.error("Gagal verifikasi OTP, silakan coba lagi");
+            console.error("Gagal verifikasi OTP, kesalahan pada server : ", error);
         } finally {
             setIsLoading(false);
         }
@@ -69,8 +82,8 @@ const MerchantModalOTP = ({ onClose, merchant}) => {
 
     return (
         <div
-            className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
-            style={{ background: "rgba(0,0,0,0.5)", zIndex: 1050 }}
+            className="container-modal"
+            style={{ zIndex: 1055 }}
             onClick={onClose}
         >
             <div
@@ -79,22 +92,27 @@ const MerchantModalOTP = ({ onClose, merchant}) => {
                 ref={modalRef}
                 onClick={(e) => e.stopPropagation()}
             >
-                <h5 className="text-center">Merchant Login</h5>
+                <h5 className="text-center">Verify OTP</h5>
                 <hr />
                 <form onSubmit={handleSubmitFormData}>
                     <div className="mb-2">
-                        <label className="form-label">Email</label>
                         <input
                             name="otp"
                             type="text"
                             value={formData.otp}
                             onChange={handleInputChange}
-                            className={`form-control ${errors.otp ? "is-invalid" : ""}`}
+                            className={`form-control text-center ${errors.otp ? "is-invalid" : ""}`}
+                            placeholder="Enter your OTP code"
+                            maxLength={6}
+                            style={{ 
+                                fontSize: "1.2rem", 
+                                letterSpacing: "0.5rem"
+                            }}
                         />
                         <div className="invalid-feedback">{errors.otp}</div>
                     </div>
 
-                    <button type="submit" className="btn btn-success w-100" disabled={isLoading}>
+                    <button type="submit" className="btn btn-success w-100 mt-2" disabled={isLoading}>
                         {isLoading ? (
                             <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                         ) : (
@@ -104,17 +122,24 @@ const MerchantModalOTP = ({ onClose, merchant}) => {
                     <button
                         type="button"
                         className="btn btn-secondary w-100 mt-2"
-                        onClick={
-                            navigate("/dashboard", { replace: true }) || onClose
-                        }
+                        onClick={() => {
+                            onClose();
+                            navigate("/dashboard", { replace: true });
+                        }}
                         disabled={isLoading}
                     >
                         Cancel
                     </button>
+
+                    <div className="mt-3 d-flex justify-content-center align-items-center">
+                        <Link className="form-label custom-login-link" onClick={() => console.log("Login No.Handphone clicked")}>
+                            Login No.Handphone &gt;
+                        </Link>
+                    </div>
                 </form>
             </div>
         </div>
     );
 };
 
-export default MerchantModalOTP;
+export default MerchantModalOTPByUsername;
