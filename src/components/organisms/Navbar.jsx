@@ -121,8 +121,8 @@ const Navbar = () => {
                                                             <div className="d-flex flex-column flex-grow-1">
                                                                 <strong>{activeMerchant?.id === merchant.id ? activeMerchant.name : merchant.merchantName}</strong>
                                                                 {activeMerchant?.id === merchant.id ? (
-                                                                    <div className="d-flex flex-col gap-1">
-                                                                        <p className={`small text-${convertNotifySessionExpired(activeMerchant.createdAt).type == "urgent" ? "danger" : "success"}`}>
+                                                                    <div className="d-flex align-items-center gap-1">
+                                                                        <p style={{ margin: 0 }} className={`text-${convertNotifySessionExpired(activeMerchant.createdAt).type == "urgent" ? "danger" : "success"}`}>
                                                                             {convertNotifySessionExpired(activeMerchant.createdAt).text}</p>
                                                                         <IoMdRefresh />
                                                                     </div>
