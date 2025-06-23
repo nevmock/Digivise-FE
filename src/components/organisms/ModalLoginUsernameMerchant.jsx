@@ -1,5 +1,4 @@
 import { useState, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 
 import { useAuth } from "../../context/Auth";
@@ -87,7 +86,7 @@ const MerchantModalLoginWithUsername = ({ onClose, merchant, onOTPRequired }) =>
                 ref={modalRef}
                 onClick={(e) => e.stopPropagation()}
             >
-                <h5 className="text-center">Login to {merchant?.merchantName}</h5>
+                <h5 className="text-center">Login To Merchant</h5>
                 <hr />
                 <form onSubmit={handleSubmitFormData}>
                     <div className="mb-2">

@@ -119,7 +119,7 @@ const Navbar = () => {
                                                                 height="40"
                                                             />
                                                             <div className="d-flex flex-column flex-grow-1">
-                                                                <strong>{merchant.merchantName}</strong>
+                                                                <strong>{activeMerchant?.id === merchant.id ? activeMerchant.name : merchant.merchantName}</strong>
                                                                 {activeMerchant?.id === merchant.id ? (
                                                                     <div className="d-flex flex-col gap-1">
                                                                         <p className={`small text-${convertNotifySessionExpired(activeMerchant.createdAt).type == "urgent" ? "danger" : "success"}`}>

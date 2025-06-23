@@ -6,10 +6,11 @@ import { useAuth } from "../../context/Auth";
 
 
 const MerchantModalOTPByUsername = ({ onClose, merchant}) => {
-    const { verifyMerchantOTP, pendingMerchantLogin } = useAuth();
+    const { verifyMerchantOTP, requestPhoneOTP, pendingMerchantLogin } = useAuth();
     const navigate = useNavigate();
     const modalRef = useRef(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [isPhoneLoading, setIsPhoneLoading] = useState(false);
     const [errors, setErrors] = useState({});
     const [formData, setFormData] = useState({
         otp: "",
@@ -63,12 +64,11 @@ const MerchantModalOTPByUsername = ({ onClose, merchant}) => {
 
         try {
             const result = await verifyMerchantOTP(formData.otp);
-            console.log("Hasil verifikasi OTP: ", result);
             
             if (result?.code === 200 || result?.status === "OK" || result?.status === 200 || result) {
                 onClose();
                 navigate("/dashboard", { replace: true });
-                toast.success(`Berhasil login ke ${merchant?.merchantName}`);
+                toast.success(`Berhasil login ke ${merchant?.name}`);
             } else {
                 toast.error("Kode OTP tidak valid atau telah kadaluarsa");
             }
@@ -77,6 +77,33 @@ const MerchantModalOTPByUsername = ({ onClose, merchant}) => {
             console.error("Gagal verifikasi OTP, kesalahan pada server : ", error);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handlePhoneLogin = async () => {
+        if (!pendingMerchantLogin) {
+            toast.error("Session expired, mohon login ulang");
+            onClose();
+            return;
+        }
+
+        setIsPhoneLoading(true);
+
+        try {
+            const result = await requestPhoneOTP();
+            if (result.data.success || result.data.code === 200 || result.data.status === "OK" || result.data.status === 200) {
+                toast.success("OTP telah dikirim ke handphone Anda");
+                onClose();
+                navigate("/verification-otp-phone");
+            } else {
+                toast.error("Gagal mengirim OTP ke handphone");
+            }
+        } catch (error) {
+            const errorMessage = error.response?.data?.message || error.message || "Failed to request phone OTP";
+            toast.error(`Gagal mengirim OTP: ${errorMessage}`);
+            console.error("Phone OTP request error:", error);
+        } finally {
+            setIsPhoneLoading(false);
         }
     };
 
@@ -106,7 +133,7 @@ const MerchantModalOTPByUsername = ({ onClose, merchant}) => {
                             maxLength={6}
                             style={{ 
                                 fontSize: "1.2rem", 
-                                letterSpacing: "0.5rem"
+                                letterSpacing: "0.2rem"
                             }}
                         />
                         <div className="invalid-feedback">{errors.otp}</div>
@@ -132,9 +159,25 @@ const MerchantModalOTPByUsername = ({ onClose, merchant}) => {
                     </button>
 
                     <div className="mt-3 d-flex justify-content-center align-items-center">
-                        <Link className="form-label custom-login-link" onClick={() => console.log("Login No.Handphone clicked")}>
-                            Login No.Handphone &gt;
-                        </Link>
+                        <button
+                            type="button"
+                            className="btn btn-link p-0 form-label custom-login-link"
+                            onClick={handlePhoneLogin}
+                            disabled={isPhoneLoading || isLoading}
+                            style={{ 
+                                textDecoration: "none",
+                                color: isPhoneLoading ? "#6c757d" : "#0d6efd"
+                            }}
+                        >
+                            {isPhoneLoading ? (
+                                <>
+                                    <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                    Sending OTP...
+                                </>
+                            ) : (
+                                "Login No.Handphone >"
+                            )}
+                        </button>
                     </div>
                 </form>
             </div>

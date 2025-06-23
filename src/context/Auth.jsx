@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 import { getToken } from "../resolver/auth/authApp";
 import { isTokenValid } from "../utils/jwtDecode";
@@ -54,10 +55,27 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem(TOKEN_KEY);
     };
 
+    const requestPhoneOTP = async () => {
+        try {
+            const response = await axios.get("http://103.150.116.30:1337/api/v1/shopee-seller/otp-phone", {
+                headers: {
+                    "Content-Type": "application/json",
+                }
+            });
+            if (response.status !== 200) {
+                throw new Error("Failed to request phone OTP");
+            }
+
+            return { success: true, data: response.data };
+        } catch (error) {
+            throw error;
+        }
+    };
+
     const createMerchant = async (merchantData) => {
         try {
-            const { merchantName, sectorIndustry, officeAddress, factoryAddress } = merchantData;
-            const response = await createMerchantAPI(merchantName, sectorIndustry, officeAddress, factoryAddress);
+            const { name, sectorIndustry, officeAddress, factoryAddress } = merchantData;
+            const response = await createMerchantAPI(name, sectorIndustry, officeAddress, factoryAddress);
 
             let newMerchant = null;
 
@@ -158,6 +176,7 @@ export const AuthProvider = ({ children }) => {
             loginToMerchant,
             verifyMerchantOTP,
             pendingMerchantLogin,
+            requestPhoneOTP,
             updateData
         }}>
             {children}

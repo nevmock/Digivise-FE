@@ -12,7 +12,7 @@ const MerchantModalCreate = ({ onClose }) => {
     const [errors, setErrors] = useState({});
     const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState({
-        merchantName: "",
+        name: "",
         sectorIndustry: "",
         officeAddress: "",
         factoryAddress: "",
@@ -22,8 +22,8 @@ const MerchantModalCreate = ({ onClose }) => {
     const validatevalueformdata = () => {
         const newErrors = {};
 
-        if (isEmpty(formData.merchantName)) {
-            newErrors.merchantName = "Merchant name is required";
+        if (isEmpty(formData.name)) {
+            newErrors.name = "Merchant name is required";
         }
 
         if (isEmpty(formData.sectorIndustry)) {
@@ -60,7 +60,7 @@ const MerchantModalCreate = ({ onClose }) => {
         try {
             await createMerchant(formData);
             setFormData({
-                merchantName: "",
+                name: "",
                 sectorIndustry: "",
                 officeAddress: "",
                 factoryAddress: "",
@@ -87,7 +87,7 @@ const MerchantModalCreate = ({ onClose }) => {
                 <hr />
                 <form onSubmit={handleSubmitFormData}>
                     {[
-                        { name: "merchantName", label: "Merchant Name", type: "text" },
+                        { name: "name", label: "Merchant Name", type: "text" },
                         { name: "sectorIndustry", label: "Sector Industry", type: "text" },
                         { name: "officeAddress", label: "Office Address", type: "text" },
                         { name: "factoryAddress", label: "Factory Address", type: "text" },
