@@ -49,7 +49,8 @@ export default function PerformanceStockPage() {
   const [isContentLoading, setIsContentLoading] = useState(false);
   const [isTableFilterLoading, setIsTableFilterLoading] = useState(false);
 
-  const getShopeeId = localStorage.getItem("shopeeId");
+  // const getShopeeId = localStorage.getItem("shopeeId");
+  const getShopeeId = "252234165";
   if (getShopeeId == null || getShopeeId === null || getShopeeId === "null" || getShopeeId === "undefined") {
       return (
       <BaseLayout>

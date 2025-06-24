@@ -54,12 +54,13 @@ export default function PerformanceProductPage() {
   const [isContentLoading, setIsContentLoading] = useState(false);
   const [isTableFilterLoading, setIsTableFilterLoading] = useState(false);
 
-  const getShopeeId = localStorage.getItem("shopeeId");
+  // const getShopeeId = localStorage.getItem("shopeeId");
+  const getShopeeId = "252234165";
   if (getShopeeId == null || getShopeeId === null || getShopeeId === "null" || getShopeeId === "undefined") {
       return (
       <BaseLayout>
         <div className="alert alert-warning">
-            Tidak ada merchant aktif. Silahkan buat merchant atau login ke merchant terlebih dahulu.
+          Tidak ada merchant aktif. Silahkan buat merchant atau login ke merchant terlebih dahulu.
         </div>
       </BaseLayout>
     );
@@ -841,7 +842,7 @@ export default function PerformanceProductPage() {
   }, [date, selectedProduct, selectedMetrics, chartRawData, comparatorDateRange, comparedDateRange, rangeParameters]);
 
   useEffect(() => {
-    if (chartRef.current && chartData.series && chartData.series.length > 0) {
+    if (chartRef?.current && chartData?.series && chartData?.series.length > 0) {
       const initChart = () => {
         try {
           const existingInstance = echarts.getInstanceByDom(chartRef.current);
@@ -851,7 +852,7 @@ export default function PerformanceProductPage() {
 
           const chartInstance = echarts.init(chartRef.current);
 
-          const series = chartData.series?.map(s => ({
+          const series = chartData?.series?.map(s => ({
             name: s.name,
             type: 'line',
             smooth: true,

@@ -26,7 +26,7 @@ const AdsTable = ({ shoppeeId }) => {
   const [filteredData, setFilteredData] = useState([]);
   const [chartData, setChartData] = useState([]);
   const chartRef = useRef(null);
-  // const shopId = "252234165";
+  const shopId = "252234165";
   const [tempCustomRoas, setTempCustomRoas] = useState({});
   // Filter
   const [comparatorDateRange, setComparatorDateRange] = useState(null);
@@ -256,7 +256,9 @@ const AdsTable = ({ shoppeeId }) => {
       const from1ISO = toLocalISOString(dateRanges.current.from);
       const to1ISO = toLocalISOString(dateRanges.current.to);
 
-      const apiUrl = `/api/product-ads/chart?shopId=${shoppeeId}&from=${from1ISO}&to=${to1ISO}&limit=100000000000000000`;
+      const apiUrl = `/api/product-ads/chart?shopId=${shopId}&from=${from1ISO}&to=${to1ISO}&limit=50`;
+      // const apiUrl = `/api/product-ads/chart?shopId=${shoppeeId}&from=${from1ISO}&to=${to1ISO}&limit=100000000000000000`;
+      console.log('API URL Chart Data:', apiUrl);
       
       const response = await axiosRequest.get(apiUrl);
       const data = await response.data;
@@ -285,7 +287,8 @@ const AdsTable = ({ shoppeeId }) => {
       const to2ISO = toLocalISOString(dateRanges?.previous?.to);
 
       const backendPage = Math.max(0, page - 1);
-      let apiUrl = `/api/product-ads?shopId=${shoppeeId}&from1=${from1ISO}&to1=${to1ISO}&from2=${from2ISO}&to2=${to2ISO}&limit=1000000&page=${backendPage}`;
+      let apiUrl = `/api/product-ads?shopId=${shopId}&from1=${from1ISO}&to1=${to1ISO}&from2=${from2ISO}&to2=${to2ISO}&limit=50&page=${backendPage}`;
+      // let apiUrl = `/api/product-ads?shopId=${shoppeeId}&from1=${from1ISO}&to1=${to1ISO}&from2=${from2ISO}&to2=${to2ISO}&limit=1000000&page=${backendPage}`;
 
       if (filters.searchQuery && filters.searchQuery.trim() !== "") {
         apiUrl += `&search=${encodeURIComponent(filters.searchQuery.trim())}`;
@@ -311,7 +314,7 @@ const AdsTable = ({ shoppeeId }) => {
         apiUrl += `&productPlacement=${filters.placement.value}`;
       }
 
-      // console.log('API URL Table Data:', apiUrl);
+      console.log('API URL Table Data:', apiUrl);
       const response = await axiosRequest.get(apiUrl);
       const data = await response.data;
       const content = data.content || [];
@@ -1493,10 +1496,10 @@ const AdsTable = ({ shoppeeId }) => {
 
 
 
-  const handleUpdateCustomRoas = async (shoppeeId, campaignId, customRoasValue) => {
+  const handleUpdateCustomRoas = async (shopId, campaignId, customRoasValue) => {
     try {
       setIsTableFilterLoading(true);
-      await updateCustomRoasProduct(shoppeeId, campaignId, customRoasValue);
+      await updateCustomRoasProduct(shopId, campaignId, customRoasValue);
       toast.success("Roas berhasil di update/custom");
       window.location.reload();
     } catch (error) {
@@ -2117,7 +2120,9 @@ const AdsTable = ({ shoppeeId }) => {
                                           }
                                         </span>
                                         <span className="text-success" style={{ fontSize: "10px" }}>
-                                          +12.7%
+                                          {
+                                            entry.data[0].dailyBudgetComparison === undefined ? "-" : entry.data[0].dailyBudgetComparison === null ? "0" : `Rp ${convertBudgetToIDR(entry.data[0].dailyBudgetComparison, "default")}`
+                                          }
                                         </span>
                                       </div>
                                     </td>
@@ -2158,9 +2163,9 @@ const AdsTable = ({ shoppeeId }) => {
                                             entry.data[0].cost === undefined ? "-" : entry.data[0].cost === null ? "0" : `Rp ${convertBudgetToIDR(entry.data[0].cost, "cost")}`
                                           }
                                         </span>
-                                        <span className={`${formatValueRatio(entry.data[0].costRatio).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
+                                        <span className={`${formatValueRatio(entry.data[0].costComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
                                           {
-                                            entry.data[0].costRatio === undefined ? "-" : entry.data[0].costRatio === null ? "0" : formatValueRatio(entry.data[0].costRatio).rounded
+                                            entry.data[0].costComparison === undefined ? "-" : entry.data[0].costComparison === null ? "0" : formatValueRatio(entry.data[0].costComparison).rounded
                                           }
                                         </span>
                                       </div>
@@ -2171,8 +2176,8 @@ const AdsTable = ({ shoppeeId }) => {
                                       <div className="d-flex flex-column">
                                         <span>
                                           {entry.data[0].broadGmv === undefined ? "-" : entry.data[0].broadGmv === null ? "0" : `Rp ${convertBudgetToIDR(entry.data[0].broadGmv, "cost")}`}</span>
-                                        <span className={`${formatValueRatio(entry.data[0].broadGmvRatio).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                          {entry.data[0].broadGmvRatio === undefined ? "-" : entry.data[0].broadGmvRatio === null ? "0" : `${formatValueRatio(entry.data[0].broadGmvRatio).rounded}%`}
+                                        <span className={`${formatValueRatio(entry.data[0].broadGmvComparisson).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
+                                          {entry.data[0].broadGmvComparison === undefined ? "-" : entry.data[0].broadGmvComparison === null ? "0" : `${formatValueRatio(entry.data[0].broadGmvComparison).rounded}%`}
                                         </span>
                                       </div>
                                     </td>
@@ -2183,8 +2188,8 @@ const AdsTable = ({ shoppeeId }) => {
                                         <span>{
                                           entry.data[0].customRoas === undefined ? "-" : entry.data[0].customRoas === null ? "0" : `${(entry.data[0].customRoas).toFixed(2)}%`
                                         }</span>
-                                        <span className={`${formatValueRatio(entry.data[0].roasRatio).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                          {entry.data[0].roasRatio === undefined ? "-" : entry.data[0].roasRatio === null ? "0" : `${formatValueRatio(entry.data[0].roasRatio).rounded}%`}
+                                        <span className={`${formatValueRatio(entry.data[0].roasComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
+                                          {entry.data[0].roasComparison === undefined ? "-" : entry.data[0].roasComparison === null ? "0" : `${formatValueRatio(entry.data[0].roasComparison).rounded}%`}
                                         </span>
                                       </div>
                                     </td>
@@ -2223,7 +2228,7 @@ const AdsTable = ({ shoppeeId }) => {
                                           const currentValue = tempCustomRoas[entry.campaignId] !== undefined
                                             ? tempCustomRoas[entry.campaignId]
                                             : entry.data[0].customRoas;
-                                          handleUpdateCustomRoas(shoppeeId, entry.campaignId, currentValue);
+                                          handleUpdateCustomRoas(shopId, entry.campaignId, currentValue);
                                         }}
                                       >
                                         Simpan
@@ -2236,8 +2241,8 @@ const AdsTable = ({ shoppeeId }) => {
                                         <span>{
                                           entry.data[0].impression === undefined ? "-" : entry.data[0].impression === null ? "0" : formatRupiahFilter(entry.data[0].impression)
                                         }</span>
-                                        <span className={`${formatValueRatio(entry.data[0].impressionRatio).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                          {entry.data[0].impressionRatio === undefined ? "-" : entry.data[0].impressionRatio === null ? "0" : `${formatValueRatio(entry.data[0].impressionRatio).rounded}%`}
+                                        <span className={`${formatValueRatio(entry.data[0].impressionComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
+                                          {entry.data[0].impressionComparison === undefined ? "-" : entry.data[0].impressionComparison === null ? "0" : `${formatValueRatio(entry.data[0].impressionComparison).rounded}%`}
                                         </span>
                                       </div>
                                     </td>
@@ -2248,8 +2253,8 @@ const AdsTable = ({ shoppeeId }) => {
                                         <span>{
                                           entry.data[0].click === undefined ? "-" : entry.data[0].click === null ? "0" : formatRupiahFilter(entry.data[0].click)
                                         }</span>
-                                        <span className={`${formatValueRatio(entry.data[0].clickRatio).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                          {entry.data[0].clickRatio === undefined ? "-" : entry.data[0].clickRatio === null ? "0" : `${formatValueRatio(entry.data[0].clickRatio).rounded}%`}
+                                        <span className={`${formatValueRatio(entry.data[0].clickComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
+                                          {entry.data[0].clickComparison === undefined ? "-" : entry.data[0].clickComparison === null ? "0" : `${formatValueRatio(entry.data[0].clickComparison).rounded}%`}
                                         </span>
                                       </div>
                                     </td>
@@ -2260,12 +2265,13 @@ const AdsTable = ({ shoppeeId }) => {
                                         <span>{
                                           entry.data[0].ctr === undefined ? "-" : entry.data[0].ctr === null ? "0" : `${entry.data[0].ctr}%`
                                         }</span>
-                                        <span className={`${formatValueRatio(entry.data[0].ctrRatio).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                          {entry.data[0].ctrRatio === undefined ? "-" : entry.data[0].ctrRatio === null ? "0" : `${formatValueRatio(entry.data[0].ctrRatio).rounded}%`}
+                                        <span className={`${formatValueRatio(entry.data[0].ctrComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
+                                          {entry.data[0].ctrComparison === undefined ? "-" : entry.data[0].ctrComparison === null ? "0" : `${formatValueRatio(entry.data[0].ctrComparison).rounded}%`}
                                         </span>
                                       </div>
                                     </td>
                                   )}
+                                  {/* blm ada */}
                                   {selectedColumns.includes("broadOrder") && (
                                     <td style={{ width: "200px" }}>
                                       <div className="d-flex flex-column">
@@ -2274,8 +2280,8 @@ const AdsTable = ({ shoppeeId }) => {
                                             entry.data[0].broadOrder === undefined ? "-" : entry.data[0].broadOrder === null ? "0" : formatRupiahFilter(entry.data[0].broadOrder)
                                           }
                                         </span>
-                                        <span className={`${formatValueRatio(entry.data[0].broadOrderRatio).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                          {entry.data[0].broadOrderRatio === undefined ? "-" : entry.data[0].broadOrderRatio === null ? "0" : `${formatValueRatio(entry.data[0].broadOrderRatio).rounded}%`}
+                                        <span className={`${formatValueRatio(entry.data[0].broadOrderComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
+                                          {entry.data[0].broadOrderComparison === undefined ? "-" : entry.data[0].broadOrderComparison === null ? "0" : `${formatValueRatio(entry.data[0].broadOrderComparison).rounded}%`}
                                         </span>
                                       </div>
                                     </td>
@@ -2286,12 +2292,13 @@ const AdsTable = ({ shoppeeId }) => {
                                         <span>{
                                           entry.data[0].cr === undefined ? "-" : entry.data[0].cr === null ? "0" : `${Number(entry.data[0].cr).toFixed(2)}%`
                                         }</span>
-                                        <span className={`${formatValueRatio(entry.data[0].crRatio).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                          {entry.data[0].crRatio === undefined ? "-" : entry.data[0].crRatio === null ? "0" : `${formatValueRatio(entry.data[0].crRatio).rounded}%`}
+                                        <span className={`${formatValueRatio(entry.data[0].crComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
+                                          {entry.data[0].crComparison === undefined ? "-" : entry.data[0].crComparison === null ? "0" : `${formatValueRatio(entry.data[0].crComparison).rounded}%`}
                                         </span>
                                       </div>
                                     </td>
                                   }
+                                  {/* blm ada */}
                                   {selectedColumns.includes("broadOrderAmount") && (
                                     <td style={{ width: "200px" }}>
                                       <div className="d-flex flex-column">
@@ -2300,8 +2307,8 @@ const AdsTable = ({ shoppeeId }) => {
                                             entry.data[0].broadOrderAmount === undefined ? "-" : entry.data[0].broadOrderAmount === null ? "0" : convertBudgetToIDR(entry.data[0].broadOrderAmount)
                                           }
                                         </span>
-                                        <span className={`${formatValueRatio(entry.data[0].broadOrderAmountRatio).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                          {entry.data[0].broadOrderAmountRatio === undefined ? "-" : entry.data[0].broadOrderAmountRatio === null ? "0" : `${formatValueRatio(entry.data[0].broadOrderAmountRatio).rounded}%`}
+                                        <span className={`${formatValueRatio(entry.data[0].broadOrderAmountComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
+                                          {entry.data[0].broadOrderAmountComparison === undefined ? "-" : entry.data[0].broadOrderAmountComparison === null ? "0" : `${formatValueRatio(entry.data[0].broadOrderAmountComparison).rounded}%`}
                                         </span>
                                       </div>
                                     </td>
@@ -2314,8 +2321,8 @@ const AdsTable = ({ shoppeeId }) => {
                                             entry.data[0].cpc === undefined ? "-" : entry.data[0].cpc === null ? "0" : `Rp ${formatRupiahFilter(entry.data[0].cpc, "cpc")}`
                                           }
                                         </span>
-                                        <span className={`${formatValueRatio(entry.data[0].cpcRatio).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                          {entry.data[0].cpcRatio === undefined ? "-" : entry.data[0].cpcRatio === null ? "0" : `${formatValueRatio(entry.data[0].cpcRatio).rounded}%`}
+                                        <span className={`${formatValueRatio(entry.data[0].cpcComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
+                                          {entry.data[0].cpcComparison === undefined ? "-" : entry.data[0].cpcComparison === null ? "0" : `${formatValueRatio(entry.data[0].cpcComparison).rounded}%`}
                                         </span>
                                       </div>
                                     </td>
@@ -2328,8 +2335,8 @@ const AdsTable = ({ shoppeeId }) => {
                                             entry.data[0].acos === undefined ? "-" : entry.data[0].acos === null ? "0" : `${Number(entry.data[0].acos).toFixed(2)}%`
                                           }
                                         </span>
-                                        <span className={`${formatValueRatio(entry.data[0].acosRatio).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                          {entry.data[0].acosRatio === undefined ? "-" : entry.data[0].acosRatio === null ? "0" : `${formatValueRatio(entry.data[0].acosRatio).rounded}%`}
+                                        <span className={`${formatValueRatio(entry.data[0].acosComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
+                                          {entry.data[0].acosComparison === undefined ? "-" : entry.data[0].acosComparison === null ? "0" : `${formatValueRatio(entry.data[0].acosComparison).rounded}%`}
                                         </span>
                                       </div>
                                     </td>
@@ -2342,8 +2349,8 @@ const AdsTable = ({ shoppeeId }) => {
                                             entry.data[0].directOrder === undefined ? "-" : entry.data[0].directOrder === null ? "0" : formatRupiahFilter(entry.data[0].directOrder, "directOrder")
                                           }
                                         </span>
-                                        <span className={`${formatValueRatio(entry.data[0].directOrderRatio).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                          {entry.data[0].directOrderRatio === undefined ? "-" : entry.data[0].directOrderRatio === null ? "0" : `${formatValueRatio(entry.data[0].directOrderRatio).rounded}%`}
+                                        <span className={`${formatValueRatio(entry.data[0].directOrderComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
+                                          {entry.data[0].directOrderComparison === undefined ? "-" : entry.data[0].directOrderComparison === null ? "0" : `${formatValueRatio(entry.data[0].directOrderComparison).rounded}%`}
                                         </span>
                                       </div>
                                     </td>
@@ -2356,8 +2363,8 @@ const AdsTable = ({ shoppeeId }) => {
                                             entry.data[0].directOrderAmount === undefined ? "-" : entry.data[0].directOrderAmount === null ? "0" : formatRupiahFilter(entry.data[0].directOrderAmount, "directOrderAmount")
                                           }
                                         </span>
-                                        <span className={`${formatValueRatio(entry.data[0].directOrderAmountRatio).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                          {entry.data[0].directOrderAmountRatio === undefined ? "-" : entry.data[0].directOrderAmountRatio === null ? "0" : `${formatValueRatio(entry.data[0].directOrderAmountRatio).rounded}%`}
+                                        <span className={`${formatValueRatio(entry.data[0].directOrderAmountComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
+                                          {entry.data[0].directOrderAmountComparison === undefined ? "-" : entry.data[0].directOrderAmountComparison === null ? "0" : `${formatValueRatio(entry.data[0].directOrderAmountComparison).rounded}%`}
                                         </span>
                                       </div>
                                     </td>
@@ -2370,8 +2377,8 @@ const AdsTable = ({ shoppeeId }) => {
                                             entry.data[0].directGmv === undefined ? "-" : entry.data[0].directGmv === null ? "0" : `Rp ${convertBudgetToIDR(entry.data[0].directGmv, "directGmv")}`
                                           }
                                         </span>
-                                        <span className={`${formatValueRatio(entry.data[0].directGmvRatio).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                          {entry.data[0].directGmvRatio === undefined ? "-" : entry.data[0].directGmvRatio === null ? "0" : `${formatValueRatio(entry.data[0].directGmvRatio).rounded}%`}
+                                        <span className={`${formatValueRatio(entry.data[0].directGmvComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
+                                          {entry.data[0].directGmvComparison === undefined ? "-" : entry.data[0].directGmvComparison === null ? "0" : `${formatValueRatio(entry.data[0].directGmvComparison).rounded}%`}
                                         </span>
                                       </div>
                                     </td>
@@ -2384,8 +2391,8 @@ const AdsTable = ({ shoppeeId }) => {
                                             entry.data[0].directRoi === undefined ? "-" : entry.data[0].directRoi === null ? "0" : `${Number(entry.data[0].directRoi).toFixed(2)}%`
                                           }
                                         </span>
-                                        <span className={`${formatValueRatio(entry.data[0].directRoiRatio).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                          {entry.data[0].directRoiRatio === undefined ? "-" : entry.data[0].directRoiRatio === null ? "0" : `${formatValueRatio(entry.data[0].directRoiRatio).rounded}%`}
+                                        <span className={`${formatValueRatio(entry.data[0].directRoiComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
+                                          {entry.data[0].directRoiComparison === undefined ? "-" : entry.data[0].directRoiComparison === null ? "0" : `${formatValueRatio(entry.data[0].directRoiComparison).rounded}%`}
                                         </span>
                                       </div>
                                     </td>
@@ -2398,8 +2405,8 @@ const AdsTable = ({ shoppeeId }) => {
                                             entry.data[0].directCir === undefined ? "-" : entry.data[0].directCir === null ? "0" : `${Number(entry.data[0].directCir).toFixed(2)}%`
                                           }
                                         </span>
-                                        <div className={`${formatValueRatio(entry.data[0].directCirRatio).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                          {entry.data[0].directCirRatio === undefined ? "-" : entry.data[0].directCirRatio === null ? "0" : `${formatValueRatio(entry.data[0].directCirRatio).rounded}%`}
+                                        <div className={`${formatValueRatio(entry.data[0].directCirComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
+                                          {entry.data[0].directCirComparison === undefined ? "-" : entry.data[0].directCirComparison === null ? "0" : `${formatValueRatio(entry.data[0].directCirComparison).rounded}%`}
                                         </div>
                                       </div>
                                     </td>
@@ -2412,8 +2419,8 @@ const AdsTable = ({ shoppeeId }) => {
                                             entry.data[0].directCr === undefined ? "-" : entry.data[0].directCr === null ? "0" : `${Number(entry.data[0].directCr).toFixed(2)}%`
                                           }
                                         </span>
-                                        <span className={`${formatValueRatio(entry.data[0].directCrRatio).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                          {entry.data[0].directCrRatio === undefined ? "-" : entry.data[0].directCrRatio === null ? "0" : `${formatValueRatio(entry.data[0].directCrRatio).rounded}%`}
+                                        <span className={`${formatValueRatio(entry.data[0].directCrComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
+                                          {entry.data[0].directCrComparison === undefined ? "-" : entry.data[0].directCrComparison === null ? "0" : `${formatValueRatio(entry.data[0].directCrComparison).rounded}%`}
                                         </span>
                                       </div>
                                     </td>
@@ -2426,8 +2433,8 @@ const AdsTable = ({ shoppeeId }) => {
                                             entry.data[0].cpdc === undefined ? "-" : entry.data[0].cpdc === null ? "0" : `Rp ${convertBudgetToIDR(entry.data[0].cpdc, "cpdc")}`
                                           }
                                         </span>
-                                        <span className={`${formatValueRatio(entry.data[0].cpdcRatio).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                          {entry.data[0].cpdcRatio === undefined ? "-" : entry.data[0].cpdcRatio === null ? "0" : `${formatValueRatio(entry.data[0].cpdcRatio).rounded}%`}
+                                        <span className={`${formatValueRatio(entry.data[0].cpdcComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
+                                          {entry.data[0].cpdcComparison === undefined ? "-" : entry.data[0].cpdcComparison === null ? "0" : `${formatValueRatio(entry.data[0].cpdcComparison).rounded}%`}
                                         </span>
                                       </div>
                                     </td>
