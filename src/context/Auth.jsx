@@ -14,6 +14,7 @@ import {
 const AuthContext = createContext();
 const TOKEN_KEY = "userAppToken";
 const USER_DATA_KEY = "userDataApp";
+const SHOP_ID = "shopeeId";
 
 export const AuthProvider = ({ children }) => {
     const [isAuth, setIsAuth] = useState(false);
@@ -38,12 +39,14 @@ export const AuthProvider = ({ children }) => {
 
     const updateData = (data) => {
         setUserData(data);
+        localStorage.setItem(SHOP_ID, data?.activeMerchant?.merchantShopeeId || null);
         localStorage.setItem(USER_DATA_KEY, JSON.stringify(data));
     };
 
     const loginSuccess = (data) => {
         setIsAuth(true);
         setUserData(data);
+        localStorage.setItem(SHOP_ID, data?.activeMerchant?.merchantShopeeId || null);
         localStorage.setItem(USER_DATA_KEY, JSON.stringify(data));
         localStorage.setItem(TOKEN_KEY, data.accessToken);
     };
