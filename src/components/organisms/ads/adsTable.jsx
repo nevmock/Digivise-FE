@@ -7,6 +7,7 @@ import * as echarts from "echarts";
 import { FaAngleLeft, FaAngleRight } from "react-icons/fa6";
 
 import axiosRequest from "../../../utils/request";
+import { useAuth } from "../../../context/Auth";
 import useDebounce from "../../../hooks/useDebounce";
 import { updateCustomRoasProduct } from "../../../resolver/ads/index";
 import convertBudgetToIDR from "../../../utils/convertBudgetIDR";
@@ -15,22 +16,23 @@ import formatRupiahFilter from "../../../utils/convertFormatRupiahFilter";
 import convertFormatCTR from "../../../utils/convertFormatToCTR";
 import formatMetricValue from "../../../utils/convertValueMetricFilter";
 import formatValueRatio from "../../../utils/convertFormatRatioValue";
+import formatStyleSalesClassification from "../../../utils/convertFormatSalesClassification";
 import Loading from "../../atoms/Loading/Loading";
 
 
-const AdsTable = () => {
+const AdsTable = ({ shoppeeId }) => {
+  console.log("AdsTable shoppeeId:", shoppeeId);
   // Data
-  const [rawData, setRawData] = useState([]);
   const [chartRawData, setChartRawData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [chartData, setChartData] = useState([]);
   const chartRef = useRef(null);
-  const userData = JSON.parse(localStorage.getItem("userDataApp"));
-  const shopId = userData?.merchants[0]?.merchantShopeeId || "252234165";
+  // const shopId = "252234165";
   const [tempCustomRoas, setTempCustomRoas] = useState({});
   // Filter
-  const [comparatorDate, setComparatorDate] = useState(null);
-  const [comparedDate, setComparedDate] = useState(null);
+  const [comparatorDateRange, setComparatorDateRange] = useState(null);
+  const [comparedDateRange, setComparedDateRange] = useState(null);
+  const [rangeParameters, setRangeParameters] = useState(null);
   const [date, setDate] = useState(getAllDaysInLast7Days());
   const [flagCustomRoasDate, setFlagCustomRoasDate] = useState("minggu_ini");
   const [showCalendar, setShowCalendar] = useState(false);
@@ -39,7 +41,6 @@ const AdsTable = () => {
   const [metricsTotals, setMetricsTotals] = useState({});
   const [statusAdsFilter, setStatusAdsFilter] = useState("all");
   const [selectedClassificationOption, setSelectedClassificationOption] = useState([]);
-  // const [selectedOptionPlacement, setSelectedOptionPlacement] = useState(null);
   const [selectedOptionPlacement, setSelectedOptionPlacement] = useState({ value: "all", label: "Semua" });
   const [selectedTypeAds, setSelectedTypeAds] = useState([{ value: "all", label: "Semua Tipe" }]);
   const [showTableColumn, setShowTableColumn] = useState(false);
@@ -50,10 +51,6 @@ const AdsTable = () => {
   const [paginatedData, setPaginatedData] = useState([]);
   const [totalPages, setTotalPages] = useState(1);
   const [totalElements, setTotalElements] = useState(0);
-  // const [currentPage, setCurrentPage] = useState(1);
-  // const [itemsPerPage, setItemsPerPage] = useState(20);
-  // const [paginatedData, setPaginatedData] = useState([]);
-  // const [totalPages, setTotalPages] = useState(1);
   // Other
   const [showAlert, setShowAlert] = useState(false);
   const [animateCalendar, setAnimateCalendar] = useState(false);
@@ -62,8 +59,8 @@ const AdsTable = () => {
   const [isTableFilterLoading, setIsTableFilterLoading] = useState(false);
 
 
-
-  // Define metrics with their display names and colors
+  
+  // Define metric key with their display names and colors
   const metrics = {
     impression: {
       label: "Iklan Dilihat",
@@ -115,52 +112,158 @@ const AdsTable = () => {
     }
   };
 
-  function calculateMetricTotalsValue(products) {
+  const toLocalISOString = (date) => {
+    // console.log('Converting date to ISO string:', date);
+    if (!date || !(date instanceof Date)) {
+      console.error('Invalid date passed to toLocalISOString:', date);
+      return null;
+    }
+    
+    const year = date?.getFullYear();
+    const month = String(date?.getMonth() + 1).padStart(2, '0');
+    const day = String(date?.getDate()).padStart(2, '0');
+    const hours = String(date?.getHours()).padStart(2, '0');
+    const minutes = String(date?.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+  };
+
+  const generateComparisonDateRanges = (currentSelection, selectionType) => {
+    let currentFrom, currentTo, previousFrom, previousTo;
+
+    switch (selectionType) {
+      case "hari_ini":
+        currentFrom = new Date();
+        currentFrom.setHours(0, 0, 0, 0);
+        currentTo = new Date();
+        currentTo.setHours(23, 59, 59, 999);
+        
+        previousFrom = new Date();
+        previousFrom.setDate(previousFrom.getDate() - 1);
+        previousFrom.setHours(0, 0, 0, 0);
+        previousTo = new Date();
+        previousTo.setDate(previousTo.getDate() - 1);
+        previousTo.setHours(23, 59, 59, 999);
+        break;
+
+      case "kemarin":
+        currentFrom = new Date();
+        currentFrom.setDate(currentFrom.getDate() - 1);
+        currentFrom.setHours(0, 0, 0, 0);
+        currentTo = new Date();
+        currentTo.setDate(currentTo.getDate() - 1);
+        currentTo.setHours(23, 59, 59, 999);
+        
+        previousFrom = new Date();
+        previousFrom.setDate(previousFrom.getDate() - 2);
+        previousFrom.setHours(0, 0, 0, 0);
+        previousTo = new Date();
+        previousTo.setDate(previousTo.getDate() - 2);
+        previousTo.setHours(23, 59, 59, 999);
+        break;
+
+      case "minggu_ini":
+        currentTo = new Date();
+        currentTo.setHours(23, 59, 59, 999);
+        currentFrom = new Date();
+        currentFrom.setDate(currentFrom.getDate() - 6);
+        currentFrom.setHours(0, 0, 0, 0);
+        
+        previousTo = new Date();
+        previousTo.setDate(previousTo.getDate() - 7);
+        previousTo.setHours(23, 59, 59, 999);
+        previousFrom = new Date();
+        previousFrom.setDate(previousFrom.getDate() - 13);
+        previousFrom.setHours(0, 0, 0, 0);
+        break;
+
+      case "bulan_ini":
+        const today = new Date();
+        currentFrom = new Date(today.getFullYear(), today.getMonth(), 1);
+        currentFrom.setHours(0, 0, 0, 0);
+        currentTo = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        currentTo.setHours(23, 59, 59, 999);
+        
+        previousFrom = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        previousFrom.setHours(0, 0, 0, 0);
+        previousTo = new Date(today.getFullYear(), today.getMonth(), 0);
+        previousTo.setHours(23, 59, 59, 999);
+        break;
+
+      case "custom_range":
+        if (Array.isArray(currentSelection)) {
+          currentFrom = new Date(currentSelection[0]);
+          currentFrom.setHours(0, 0, 0, 0);
+          currentTo = new Date(currentSelection[currentSelection.length - 1]);
+          currentTo.setHours(23, 59, 59, 999);
+        } else {
+          currentFrom = new Date(currentSelection);
+          currentFrom.setHours(0, 0, 0, 0);
+          currentTo = new Date(currentSelection);
+          currentTo.setHours(23, 59, 59, 999);
+        }
+        
+        const duration = currentTo.getTime() - currentFrom.getTime();
+        previousTo = new Date(currentFrom.getTime() - 24 * 60 * 60 * 1000);
+        previousTo.setHours(23, 59, 59, 999);
+        previousFrom = new Date(previousTo.getTime() - duration);
+        previousFrom.setHours(0, 0, 0, 0);
+        break;
+
+      default:
+        currentTo = new Date();
+        currentTo.setHours(23, 59, 59, 999);
+        currentFrom = new Date();
+        currentFrom.setDate(currentFrom.getDate() - 6);
+        currentFrom.setHours(0, 0, 0, 0);
+        
+        previousTo = new Date();
+        previousTo.setDate(previousTo.getDate() - 7);
+        previousTo.setHours(23, 59, 59, 999);
+        previousFrom = new Date();
+        previousFrom.setDate(previousFrom.getDate() - 13);
+        previousFrom.setHours(0, 0, 0, 0);
+    }
+
+    return {
+      current: { from: currentFrom, to: currentTo },
+      previous: { from: previousFrom, to: previousTo }
+    };
+  };
+
+  // Function to calculate totals for each metric based on raw data affected by time filter
+  function calculateMetricTotalsValue (products) {
+    // Make an object to store totals for each available metric
     const totals = {};
+    // Foreach metric on all available metrics
     Object.keys(metrics).forEach(metricKey => {
       totals[metricKey] = 0;
       products.forEach(product => {
-        const productData = product.data[0];
-        if (productData) {
+        if (product.data.length === 0) return;
+        product.data.forEach(productData => {
           const dataKey = metrics[metricKey].dataKey;
           const value = productData[dataKey];
           if (value !== undefined && value !== null) {
             totals[metricKey] += Number(value);
           }
-        }
+        });
       });
     });
     return totals;
   };
 
-  const fetchChartData = async (fromDate, toDate) => {
-    const toLocalISOString = (date) => {
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      const hours = String(date.getHours()).padStart(2, '0');
-      const minutes = String(date.getMinutes()).padStart(2, '0');
-      const seconds = String(date.getSeconds()).padStart(2, '0');
-
-      return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
-    };
-
+  const fetchChartData = async (dateRanges) => {
     try {
-      const fromISO = fromDate instanceof Date
-        ? toLocalISOString(fromDate)
-        : toLocalISOString(new Date(fromDate));
+      const from1ISO = toLocalISOString(dateRanges.current.from);
+      const to1ISO = toLocalISOString(dateRanges.current.to);
 
-      const toISO = toDate instanceof Date
-        ? toLocalISOString(toDate)
-        : toLocalISOString(new Date(toDate));
-
-      const apiUrl = `/api/product-ads/chart?shopId=${shopId}&from=${fromISO}&to=${toISO}&limit=100000000`;
+      const apiUrl = `/api/product-ads/chart?shoppeeId=${shoppeeId}&from=${from1ISO}&to=${to1ISO}&limit=100000000000000000`;
+      
       const response = await axiosRequest.get(apiUrl);
       const data = await response.data;
       const content = data.content || [];
 
       setChartRawData(content);
-
       const totals = calculateMetricTotalsValue(content);
       setMetricsTotals(totals);
 
@@ -168,88 +271,52 @@ const AdsTable = () => {
     } catch (error) {
       toast.error("Gagal mengambil data chart iklan produk");
       console.error('Gagal mengambil data chart iklan produk, kesalahan pada server:', error);
+      setIsLoading(false);
       return [];
     }
   };
 
-  // const fetchTableData = async (fromDate, toDate, page = 1, searchQuery = "", statusFilter = "all") => {
-  const fetchTableData = async (fromDate, toDate, page = 1, filters = {}) => {
-    // const isInitialLoad = !rawData.length;
-
-    // if (isInitialLoad) {
-    //   setIsLoading(true);
-    // } else {
-    //   setIsTableFilterLoading(true);
-    // }
-
+  const fetchTableData = async (dateRanges, page = 1, filters = {}) => {
     setIsTableFilterLoading(true);
 
-    const toLocalISOString = (date) => {
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      const hours = String(date.getHours()).padStart(2, '0');
-      const minutes = String(date.getMinutes()).padStart(2, '0');
-      const seconds = String(date.getSeconds()).padStart(2, '0');
-
-      return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
-    };
-
     try {
-      const fromISO = fromDate instanceof Date
-        ? toLocalISOString(fromDate)
-        : toLocalISOString(new Date(fromDate));
+      const from1ISO = toLocalISOString(dateRanges?.current?.from);
+      const to1ISO = toLocalISOString(dateRanges?.current?.to);
+      const from2ISO = toLocalISOString(dateRanges?.previous?.from);
+      const to2ISO = toLocalISOString(dateRanges?.previous?.to);
 
-      const toISO = toDate instanceof Date
-        ? toLocalISOString(toDate)
-        : toLocalISOString(new Date(toDate));
-
-      // Convert 1-based page to 0-based for backend
-      const backendPage = page - 1;
-      let apiUrl = `/api/product-ads/daily?shopId=${shopId}&from=${fromISO}&to=${toISO}&limit=50&page=${backendPage}`;
-
-      // if (searchQuery && searchQuery.trim() !== "") {
-      //   apiUrl += `&title=${encodeURIComponent(searchQuery.trim())}`;
-      // }
-
-      // if (statusFilter && statusFilter !== "all") {
-      //   apiUrl += `&state=${statusFilter}`;
-      // }
-      
+      const backendPage = Math.max(0, page - 1);
+      let apiUrl = `/api/product-ads?shoppeeId=${shoppeeId}&from1=${from1ISO}&to1=${to1ISO}&from2=${from2ISO}&to2=${to2ISO}&limit=1000000&page=${backendPage}`;
 
       if (filters.searchQuery && filters.searchQuery.trim() !== "") {
-          apiUrl += `&search=${encodeURIComponent(filters.searchQuery.trim())}`;
+        apiUrl += `&search=${encodeURIComponent(filters.searchQuery.trim())}`;
       }
       
-      // Add status filter if not "all"
       if (filters.statusFilter && filters.statusFilter !== "all") {
-          apiUrl += `&state=${filters.statusFilter}`;
+        apiUrl += `&state=${filters.statusFilter}`;
       }
 
-      // Add type ads filter
       if (filters.typeAds && filters.typeAds.length > 0) {
-          const typeValues = filters.typeAds.map(type => type.value);
-          if (!typeValues.includes("all")) {
-              apiUrl += `&biddingStrategy=${typeValues.join(",")}`;
-          }
+        const typeValues = filters.typeAds.map(type => type.value);
+        if (!typeValues.includes("all")) {
+          apiUrl += `&biddingStrategy=${typeValues.join(",")}`;
+        }
       }
 
-      // Add classification filter
       if (filters.classification && filters.classification.length > 0) {
-          const classificationValues = filters.classification.map(cls => cls.value);
-          apiUrl += `&classification=${classificationValues.join(",")}`;
+        const classificationValues = filters.classification.map(cls => cls.label);
+        apiUrl += `&salesClassification=${classificationValues.join(",")}`;
       }
 
-      // Add placement filter
       if (filters.placement && filters.placement.value !== "all") {
-          apiUrl += `&productPlacement=${filters.placement.value}`;
+        apiUrl += `&productPlacement=${filters.placement.value}`;
       }
 
+      // console.log('API URL Table Data:', apiUrl);
       const response = await axiosRequest.get(apiUrl);
       const data = await response.data;
       const content = data.content || [];
 
-      setRawData(content);
       setFilteredData(content);
       setTotalPages(data?.totalPages || 1);
       setTotalElements(data?.totalElements || 0);
@@ -259,51 +326,59 @@ const AdsTable = () => {
       toast.error("Gagal mengambil data tabel iklan produk");
       console.error('Gagal mengambil data tabel iklan produk, kesalahan pada server:', error);
       return [];
-    } 
-    finally {
-      // setIsLoading(false);
+    } finally {
       setIsTableFilterLoading(false);
     }
   };
 
-  const fetchData = async (fromDate, toDate, page = 0) => {
+  const fetchData = async (currentSelection, selectionType, page = 1) => {
     setIsLoading(true);
     
     try {
+      const dateRanges = generateComparisonDateRanges(currentSelection, selectionType);
+      
+      // console.log('Generated Date Ranges:', {
+      //   previous: `${dateRanges.previous.from.toISOString()} - ${dateRanges.previous.to.toISOString()}`,
+      //   current: `${dateRanges.current.from.toISOString()} - ${dateRanges.current.to.toISOString()}`
+      // });
+
       const currentFilters = {
-          searchQuery: debouncedSearchTerm,
-          statusFilter: statusAdsFilter,
-          typeAds: selectedTypeAds,
-          classification: selectedClassificationOption,
-          placement: selectedOptionPlacement
+        searchQuery: debouncedSearchTerm,
+        statusFilter: statusAdsFilter,
+        typeAds: selectedTypeAds,
+        classification: selectedClassificationOption,
+        placement: selectedOptionPlacement
       };
+
+      setRangeParameters({
+        isComparison: true,
+        current: dateRanges.current,
+        previous: dateRanges.previous,
+        selectionType: selectionType
+      });
+
       await Promise.all([
-        fetchChartData(fromDate, toDate),
-        fetchTableData(fromDate, toDate, page, currentFilters)
-        // fetchTableData(fromDate, toDate, page, debouncedSearchTerm, statusAdsFilter)
+        fetchChartData(dateRanges),
+        fetchTableData(dateRanges, page, currentFilters)
       ]);
     } catch (error) {
-      console.error("Error fetching data:", error);
       toast.error("Gagal mengambil data iklan produk");
+      console.error('Gagal mengambil data iklan produk, kesalahan pada server:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
   const buildCurrentFilters = () => {
-        return {
-            searchQuery: debouncedSearchTerm,
-            statusFilter: statusAdsFilter,
-            typeAds: selectedTypeAds,
-            classification: selectedClassificationOption,
-            placement: selectedOptionPlacement
-        };
+    return {
+      searchQuery: debouncedSearchTerm,
+      statusFilter: statusAdsFilter,
+      typeAds: selectedTypeAds,
+      classification: selectedClassificationOption,
+      placement: selectedOptionPlacement
     };
+  };
 
-
-
-
-  // CUSTOM CHART WITH FILTER DATE & CLICK PRODUCT FEATURE
   const handleAdsProductClick = (adsProduct) => {
     if (selectedProduct?.campaignId === adsProduct.campaignId) {
       setSelectedProduct(null);
@@ -313,10 +388,19 @@ const AdsTable = () => {
   };
 
   function getAllDaysInLast7Days() {
+    const getLocalDateString = (date) => {
+      const localDate = date instanceof Date ? date : new Date(date);
+      const year = localDate.getFullYear();
+      const month = String(localDate.getMonth() + 1).padStart(2, '0');
+      const day = String(localDate.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+    
+    const today = new Date();
     return Array.from({ length: 7 }, (_, i) => {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      return d.toISOString().split("T")[0];
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      return getLocalDateString(d);
     }).reverse();
   };
 
@@ -386,47 +470,62 @@ const AdsTable = () => {
       return `${year}-${month}-${day}`;
     };
 
-    if (comparatorDate && comparedDate) {
-      const sameDay = comparatorDate.toDateString() === comparedDate.toDateString();
+    const convertShopeeTimestampToDate = (timestamp) => {
+      return new Date(timestamp * 1000);
+    };
+
+    const getDataDate = (productData) => {
+      if (productData.shopeeFrom) {
+        return convertShopeeTimestampToDate(productData.shopeeFrom);
+      } else if (productData.createdAt) {
+        return new Date(productData.createdAt);
+      }
+      return null;
+    };
+
+    if (rangeParameters && rangeParameters.isComparison) {
+      fromDate = rangeParameters.current.from;
+      toDate = rangeParameters.current.to;
+      
+      const sameDay = fromDate.toDateString() === toDate.toDateString();
       if (sameDay) {
-        const dateStr = getLocalDateString(comparatorDate);
+        const dateStr = getLocalDateString(fromDate);
         timeIntervals = getHourlyIntervals(dateStr);
         mode = "hourly";
         isSingleDay = true;
-        fromDate = comparatorDate;
-        toDate = new Date(comparatorDate);
-        toDate.setHours(23, 59, 59, 999);
       } else {
-        timeIntervals = getDateRangeIntervals(comparatorDate, comparedDate);
+        timeIntervals = getDateRangeIntervals(fromDate, toDate);
         mode = "daily";
         isSingleDay = false;
-        fromDate = comparatorDate;
-        toDate = comparedDate;
       }
-    } else if (selectedDate === null || Array.isArray(selectedDate)) {
-      timeIntervals = getAllDaysInLast7Days();
-      fromDate = new Date(timeIntervals[0]);
-      toDate = new Date();
-      toDate.setHours(23, 59, 59, 999);
-    } else if (selectedDate === "Bulan Ini") {
-      timeIntervals = getAllDaysInAMonth();
-      const today = new Date();
-      fromDate = new Date(today.getFullYear(), today.getMonth(), 1);
-      toDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-      toDate.setHours(23, 59, 59, 999);
     } else {
-      timeIntervals = getHourlyIntervals(selectedDate);
-      mode = "hourly";
-      isSingleDay = true;
-      fromDate = new Date(selectedDate);
-      toDate = new Date(selectedDate);
-      toDate.setHours(23, 59, 59, 999);
+      if (selectedDate === null || Array.isArray(selectedDate)) {
+        timeIntervals = getAllDaysInLast7Days();
+        fromDate = new Date(timeIntervals[0] + 'T00:00:00');
+        toDate = new Date(timeIntervals[timeIntervals.length - 1] + 'T23:59:59');
+      } else if (selectedDate === "Bulan Ini") {
+        timeIntervals = getAllDaysInAMonth();
+        const today = new Date();
+        fromDate = new Date(today.getFullYear(), today.getMonth(), 1);
+        toDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        fromDate.setHours(0, 0, 0, 0);
+        toDate.setHours(23, 59, 59, 999);
+      } else {
+        timeIntervals = getHourlyIntervals(selectedDate);
+        mode = "hourly";
+        isSingleDay = true;
+        fromDate = new Date(selectedDate);
+        toDate = new Date(selectedDate);
+        fromDate.setHours(0, 0, 0, 0);
+        toDate.setHours(23, 59, 59, 999);
+      }
     }
 
     if (!timeIntervals || timeIntervals.length === 0) {
-      timeIntervals = [new Date().toISOString().split('T')[0]];
+      timeIntervals = [getLocalDateString(new Date())];
       fromDate = new Date();
       toDate = new Date();
+      fromDate.setHours(0, 0, 0, 0);
       toDate.setHours(23, 59, 59, 999);
     }
 
@@ -435,7 +534,7 @@ const AdsTable = () => {
     result.series = [];
 
     let chartDataProducts = chartRawData;
-    // if ads product is selected, filter the chart data
+    // if ads product is selected, filter the chart data by product campaignId
     if (ads) {
       chartDataProducts = chartRawData.filter((product) => product.campaignId == ads.campaignId);
     }
@@ -451,79 +550,65 @@ const AdsTable = () => {
         dataMap[time] = 0;
       });
 
-      // Proses data untuk setiap ads produk
       chartDataProducts?.forEach((adsProduct) => {
         if (!adsProduct.data || adsProduct.data.length === 0) return;
 
         if (isSingleDay) {
           adsProduct.data.forEach((productData) => {
-            if (!productData || !productData.createdAt) return;
-            const createdAt = new Date(productData.createdAt);
+            // should be and operator
+            if ((!productData && !productData.shopeeFrom) || !productData.createdAt) return;
+
+            const test = getDataDate(productData);
+            const createdAt = test;
+            // const createdAt = new Date(productData.createdAt);
             const productDateStr = getLocalDateString(createdAt);
             const filterDateStr = getLocalDateString(fromDate);
 
-            // Hanya proses data yang sesuai dengan tanggal filter
             if (productDateStr !== filterDateStr) return;
 
-            // Extract jam saja (tanpa menit & detik) untuk membandingkan dengan timeIntervals
             const hourKey = String(createdAt.getHours()).padStart(2, "0");
             const productYear = createdAt.getFullYear();
             const productMonth = String(createdAt.getMonth() + 1).padStart(2, "0");
             const productDay = String(createdAt.getDate()).padStart(2, "0");
-
-            // Buat key untuk pemetaan (hanya jam, tanpa menit & detik)
             const hourOnlyKey = `${productYear}-${productMonth}-${productDay} ${hourKey}:00`;
 
             if (timeIntervals.includes(hourOnlyKey)) {
               const value = productData[dataKey];
               if (value !== undefined && value !== null) {
-                // Simpan nilai di dataMap dengan key sesuai format timeIntervals
                 dataMap[hourOnlyKey] += Number(value);
               }
             }
           });
         } else {
           const dataByDate = {};
-          adsProduct.data.forEach(productData => {
-            if (!productData || !productData.createdAt) return;
+          
+          adsProduct.data.forEach((productData) => {
+            if ((!productData && !productData.shopeeFrom) || !productData.createdAt) return;
 
-            const createdAt = new Date(productData.createdAt);
-            const productYear = createdAt.getFullYear();
-            const productMonth = String(createdAt.getMonth() + 1).padStart(2, "0");
-            const productDay = String(createdAt.getDate()).padStart(2, "0");
-            const dateDayKey = `${productYear}-${productMonth}-${productDay}`;
-
+            const test = getDataDate(productData);
+            const createdAt = test;
+            // const createdAt = new Date(productData.createdAt);
             const productDateStr = getLocalDateString(createdAt);
-            const filterStartStr = Array.isArray(selectedDate) ? selectedDate[0] : getLocalDateString(fromDate);
-            const filterEndStr = Array.isArray(selectedDate) ? selectedDate[selectedDate.length - 1] : getLocalDateString(toDate);
+            const filterStartStr = getLocalDateString(fromDate);
+            const filterEndStr = getLocalDateString(toDate);
 
             if (productDateStr >= filterStartStr && productDateStr <= filterEndStr) {
-              if (!dataByDate[dateDayKey]) {
-                dataByDate[dateDayKey] = 0;
+              if (!dataByDate[productDateStr]) {
+                dataByDate[productDateStr] = 0;
               }
 
               const value = productData[dataKey];
               if (value !== undefined && value !== null) {
-                dataByDate[dateDayKey] += Number(value);
+                dataByDate[productDateStr] += Number(value);
               }
             }
           });
 
-          Object.keys(dataByDate).forEach(dateDayKey => {
-            if (timeIntervals.includes(dateDayKey)) {
-              dataMap[dateDayKey] += dataByDate[dateDayKey];
+          Object.keys(dataByDate).forEach(dateKey => {
+            if (timeIntervals.includes(dateKey)) {
+              dataMap[dateKey] += dataByDate[dateKey];
             }
           });
-
-          // Object.keys(dataByDate).forEach(dateDayKey => {
-          //     const productData = dataByDate[dateDayKey];
-          //     if (timeIntervals.includes(dateDayKey)) {
-          //       const value = productData[dataKey];
-          //       if (value !== undefined && value !== null) {
-          //         dataMap[dateDayKey] += Number(value);
-          //       }
-          //     }
-          // });
         }
       });
 
@@ -536,49 +621,6 @@ const AdsTable = () => {
       result.series.push(seriesData);
     });
     return result;
-  };
-
-  function handleDateSelection(selectedDateOption, type = "minggu_ini") {
-    setComparatorDate(null);
-    setComparedDate(null);
-    setDate(selectedDateOption);
-
-    let fromDate, toDate;
-    if (type == "minggu_ini") {
-      fromDate = new Date(selectedDateOption[0] + 'T00:00:00');
-      toDate = new Date(selectedDateOption[selectedDateOption.length - 1] + 'T23:59:59.999');
-      setFlagCustomRoasDate(type);
-    } else if (type == "bulan_ini") {
-      const today = new Date();
-      fromDate = new Date(today.getFullYear(), today.getMonth(), 1);
-      toDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-      toDate.setHours(23, 59, 59, 999);
-      setFlagCustomRoasDate(type);
-    } else {
-      fromDate = new Date(selectedDateOption + 'T00:00:00');
-      toDate = new Date(selectedDateOption + 'T23:59:59.999');
-      setFlagCustomRoasDate(type);
-    }
-
-    setShowCalendar(false);
-    setCurrentPage(1);
-    fetchData(fromDate, toDate, 1);
-  };
-
-  function handleComparisonDatesConfirm() {
-    if (comparatorDate && comparedDate) {
-      const fromDate = new Date(comparatorDate);
-      const toDate = new Date(comparedDate);
-
-      fromDate.setHours(0, 0, 0, 0);
-      toDate.setHours(23, 59, 59, 999);
-
-      setDate(null);
-      setShowCalendar(false);
-      setCurrentPage(1);
-
-      fetchData(fromDate, toDate, 1);
-    }
   };
 
   function handleMetricFilter(metricKey) {
@@ -597,35 +639,172 @@ const AdsTable = () => {
     });
   };
 
-  useEffect(() => {
-    let fromDate, toDate;
+  const handleComparatorDateChange = (date) => {
+    if (Array.isArray(date) && date.length === 2) {
+      setComparatorDateRange(date);
+    }
+  };
 
-    if (comparatorDate && comparedDate) {
-      fromDate = comparatorDate;
-      toDate = comparedDate;
-    } else if (Array.isArray(date)) {
-      fromDate = new Date(date[0]);
-      toDate = new Date(date[date.length - 1]);
-      toDate.setHours(23, 59, 59, 999);
-    } else if (date === "Bulan Ini") {
-      const today = new Date();
-      fromDate = new Date(today.getFullYear(), today.getMonth(), 1);
-      toDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-      toDate.setHours(23, 59, 59, 999);
-    } else if (date) {
-      fromDate = new Date(date);
-      toDate = new Date(date);
-      toDate.setHours(23, 59, 59, 999);
-    } else {
-      const today = new Date();
-      fromDate = new Date();
-      fromDate.setDate(today.getDate() - 7);
-      toDate = today;
+  const handleComparedDateChange = (date) => {
+    if (Array.isArray(date) && date.length === 2) {
+      setComparedDateRange(date);
+    }
+  };
+
+  const resetComparisonDates = () => {
+    setComparatorDateRange(null);
+    setComparedDateRange(null);
+    setRangeParameters(null);
+  };
+
+  const getDateButtonText = () => {
+    if (comparatorDateRange || comparedDateRange) {
+      let startText = "";
+      let endText = "";
+      
+      // Get start date text
+      if (comparatorDateRange) {
+        startText = `${comparatorDateRange[0].toLocaleDateString("id-ID")} - ${comparatorDateRange[1].toLocaleDateString("id-ID")}`;
+      }
+      
+      // Get end date text
+      if (comparedDateRange) {
+        endText = `${comparedDateRange[0].toLocaleDateString("id-ID")} - ${comparedDateRange[1].toLocaleDateString("id-ID")}`;
+      }
+      
+      // Combine texts
+      if (startText && endText) {
+        return `${startText} vs ${endText}`;
+      }
+    }
+    
+    // Default text
+    return typeof date === 'string' ? date : (Array.isArray(date) ? "1 Minggu terakhir" : "Pilih Tanggal");
+  };
+
+  const isConfirmButtonDisabled = () => {
+    const hasComparatorSelection = !!(comparatorDateRange);
+    const hasComparedSelection = !!(comparedDateRange);
+    
+    return !(hasComparatorSelection && hasComparedSelection);
+  };
+
+  const validateDateRanges = () => {
+    let hasValidSelection = false;
+    let errorMessage = "";
+
+    const hasComparatorRange = !!comparatorDateRange;
+    const hasComparedRange = !!comparedDateRange;
+
+    if ((hasComparatorRange) && !(hasComparedRange)) {
+      errorMessage = "Untuk mode perbandingan, kedua kalender harus diisi. Silakan pilih tanggal atau range di kalender kedua (Tanggal Dibanding).";
+      return { isValid: false, message: errorMessage };
     }
 
-    fetchData(fromDate, toDate, 1);
+    if ((hasComparedRange) && !(hasComparatorRange)) {
+      errorMessage = "Untuk mode perbandingan, kedua kalender harus diisi. Silakan pilih tanggal atau range di kalender pertama (Tanggal Pembanding).";
+      return { isValid: false, message: errorMessage };
+    }
+
+    if (comparatorDateRange) {
+      if (comparatorDateRange[0] > comparatorDateRange[1]) {
+        errorMessage = "Tanggal mulai tidak boleh lebih besar dari tanggal akhir pada kalender pertama";
+        return { isValid: false, message: errorMessage };
+      }
+      hasValidSelection = true;
+    }
+
+    if (comparedDateRange) {
+      if (comparedDateRange[0] > comparedDateRange[1]) {
+        errorMessage = "Tanggal mulai tidak boleh lebih besar dari tanggal akhir pada kalender kedua";
+        return { isValid: false, message: errorMessage };
+      }
+      hasValidSelection = true;
+    }
+
+    if (!hasValidSelection) {
+      errorMessage = "Pilih setidaknya satu range pada salah satu kalender";
+      return { isValid: false, message: errorMessage };
+    }
+
+    return { isValid: true, message: "" };
+  };
+
+  function handleComparisonDatesConfirm() {
+    const validation = validateDateRanges();
+    
+    if (!validation.isValid) {
+      toast.error("Filter tanggal tidak valid, silakan periksa kembali tanggal yang dipilih.");
+      console.error('Validation error:', validation.message);
+      return;
+    }
+
+    if (comparatorDateRange && comparedDateRange) {
+      const manualDateRanges = {
+        current: {
+          from: new Date(comparatorDateRange[0]),
+          to: new Date(comparatorDateRange[1])
+        },
+        previous: {
+          from: new Date(comparedDateRange[0]),
+          to: new Date(comparedDateRange[1])
+        }
+      };
+
+      manualDateRanges.current.from.setHours(0, 0, 0, 0);
+      manualDateRanges.current.to.setHours(23, 59, 59, 999);
+      manualDateRanges.previous.from.setHours(0, 0, 0, 0);
+      manualDateRanges.previous.to.setHours(23, 59, 59, 999);
+
+      setDate(null);
+      setShowCalendar(false);
+      setCurrentPage(1);
+
+      setRangeParameters({
+        isComparison: true,
+        isManual: true,
+        current: manualDateRanges.current,
+        previous: manualDateRanges.previous,
+        selectionType: "manual_comparison"
+      });
+
+      const currentFilters = {
+        searchQuery: debouncedSearchTerm,
+        statusFilter: statusAdsFilter,
+        typeAds: selectedTypeAds,
+        classification: selectedClassificationOption,
+        placement: selectedOptionPlacement
+      };
+
+      Promise.all([
+        fetchChartData(manualDateRanges),
+        fetchTableData(manualDateRanges, 1, currentFilters)
+      ]).catch(error => {
+        toast.error("Gagal mengambil data iklan produk");
+        console.error('Error in manual comparison:', error);
+      });
+    }
+  };
+
+  function handleDateSelectionPreset(selectedDateOption, type = "minggu_ini") {
+    // Reset manual comparison dates
+    setComparatorDateRange(null);
+    setComparedDateRange(null);
+    setDate(selectedDateOption);
+    setFlagCustomRoasDate(type);
+    setShowCalendar(false);
+    setCurrentPage(1);
+    
+    // Use new automatic comparison logic
+    fetchData(selectedDateOption, type, 1);
+  };
+  
+  useEffect(() => {
+    // Initial load with default "minggu_ini" preset
+    fetchData(getAllDaysInLast7Days(), "minggu_ini", 1);
   }, []);
 
+  // Update totals when raw/main data changes
   useEffect(() => {
     if (chartRawData.length > 0) {
       const totals = calculateMetricTotalsValue(chartRawData);
@@ -636,7 +815,7 @@ const AdsTable = () => {
   useEffect(() => {
     const chartData = generateMultipleMetricsChartData(date, selectedProduct, selectedMetrics);
     setChartData(chartData);
-  }, [date, selectedProduct, selectedMetrics, chartRawData]);
+  }, [date, selectedProduct, selectedMetrics, chartRawData, rangeParameters, comparatorDateRange, comparedDateRange]);
 
   useEffect(() => {
     if (chartRef.current && chartData.series && chartData.series.length > 0) {
@@ -756,7 +935,7 @@ const AdsTable = () => {
             series: series
           };
 
-          if (!hasData && (comparatorDate && comparedDate)) {
+          if ((!hasData && ((comparatorDateRange && comparedDateRange) || rangeParameters)) || (!hasData && selectedDate)) {
             option.graphic = [
               {
                 type: 'text',
@@ -781,14 +960,15 @@ const AdsTable = () => {
           };
 
         } catch (err) {
-          console.error("Error when dispose chart", err);
+          toast.error("Gagal memuat chart iklan produk");
+          console.error("Gagal menampilkan chart, kesalahan pada server :", err);
         }
       };
 
-      const timer = setTimeout(initChart, 100);
+      const timer = setTimeout(() => initChart(), 100);
       return () => clearTimeout(timer);
     }
-  }, [chartData, selectedMetrics, comparatorDate, comparedDate]);
+  }, [chartData, selectedMetrics, comparatorDateRange, comparedDateRange]);
 
   const handleStyleMatricFilterButton = (metricKey) => {
     const isActive = selectedMetrics.includes(metricKey);
@@ -810,70 +990,14 @@ const AdsTable = () => {
 
 
 
-  // SALES CLASSIFICATION ADS FEATURE
-  const typeClasificationOptions = [
-    { value: "best_seller", label: "Best Seller" },
-    { value: "middle_moving", label: "Middle Moving" },
-    { value: "slow_moving", label: "Slow Moving" },
-  ];
-
-  const handleClassificationChange = (selectedOptions) => {
-    setSelectedClassificationOption(selectedOptions || []);
-  };
-
-
-
-  // FILTER COLUMNS FEATURE
-  const allColumns = [
-    { key: "info_iklan", label: "Info iklan" },
-    { key: "dailyBudget", label: "Modal" },
-    { key: "analyze", label: "Analisis" },
-    { key: "insight", label: "Insight" },
-    { key: "cost", label: "Biaya Iklan" },
-    { key: "broadGmv", label: "Penjualan dari iklan" },
-    { key: "roas", label: "ROAS" },
-    { key: "custom_roas", label: "Custom ROAS" },
-    { key: "impression", label: "Iklan dilihat" },
-    { key: "click", label: "Jumlah Klik" },
-    { key: "ctr", label: "Presentase Klik" },
-    { key: "broadOrder", label: "Konversi" },
-    { key: "cr", label: "Tingkat Konversi" },
-    { key: "broadOrderAmount", label: "Produk Terjual" },
-    { key: "cpc", label: "Biaya per Konversi" },
-    { key: "acos", label: "ACOS (Presentase Biaya Iklan)" },
-    { key: "directOrder", label: "Konversi Langung" },
-    { key: "directOrderAmount", label: "Produk Terjual Langsung" },
-    { key: "directGmv", label: "Penjualan dari Iklan Langsung" },
-    { key: "directRoi", label: "ROAS (Efektifitas Iklan) Langsung" },
-    { key: "directCir", label: "ACOS Langsung" },
-    { key: "directCr", label: "Tingkat Konversi Langsung" },
-    { key: "cpdc", label: "Biaya per Konversi Langsung" },
-    { key: "salesClassification", label: "Sales Classification" },
-    { key: "detail", label: "Detail Iklan" }
-  ];
-
-  const [selectedColumns, setSelectedColumns] = useState(
-    allColumns.map((col) => col.key)
-  );
-
-  const handleColumnChange = (colKey) => {
-    setSelectedColumns((prev) =>
-      prev.includes(colKey)
-        ? prev.filter((key) => key !== colKey)
-        : [...prev, colKey]
-    );
-  };
-
-
-
   // PAGINATION FEATURE
   const getVisiblePageNumbers = () => {
     const pages = [];
     if (totalPages <= 10) {
-        for (let i = 1; i <= totalPages; i++) {
-          pages.push(i);
-        }
-        return pages;
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+      return pages;
     }
     
     if (currentPage <= 3) {
@@ -903,34 +1027,19 @@ const AdsTable = () => {
     if (pageNumber >= 1 && pageNumber <= totalPages && pageNumber !== currentPage) {
       setCurrentPage(pageNumber);
 
-      let fromDate, toDate;
-      if (comparatorDate && comparedDate) {
-        fromDate = comparatorDate;
-        toDate = comparedDate;
-      } else if (Array.isArray(date)) {
-        fromDate = new Date(date[0]);
-        toDate = new Date(date[date.length - 1]);
-        toDate.setHours(23, 59, 59, 999);
-      } else if (date === "Bulan Ini") {
-        const today = new Date();
-        fromDate = new Date(today.getFullYear(), today.getMonth(), 1);
-        toDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-        toDate.setHours(23, 59, 59, 999);
-      } else if (date) {
-        fromDate = new Date(date);
-        toDate = new Date(date);
-        toDate.setHours(23, 59, 59, 999);
+      if (rangeParameters && rangeParameters.isComparison) {
+        const currentFilters = buildCurrentFilters();
+        const dateRanges = {
+          current: rangeParameters.current,
+          previous: rangeParameters.previous
+        };
+        
+        fetchTableData(dateRanges, pageNumber, currentFilters);
       } else {
-        const today = new Date();
-        fromDate = new Date();
-        fromDate.setDate(today.getDate() - 7);
-        toDate = today;
+        const dateRanges = generateComparisonDateRanges(date, flagCustomRoasDate);
+        const currentFilters = buildCurrentFilters();
+        fetchTableData(dateRanges, pageNumber, currentFilters);
       }
-
-      const currentFilters = buildCurrentFilters();
-
-      fetchTableData(fromDate, toDate, pageNumber, currentFilters);
-      // fetchTableData(fromDate, toDate, pageNumber, debouncedSearchTerm, statusAdsFilter);
     }
   };
 
@@ -1147,35 +1256,74 @@ const AdsTable = () => {
   useEffect(() => {
     setCurrentPage(1);
 
-    let fromDate, toDate;
-    if (comparatorDate && comparedDate) {
-      fromDate = comparatorDate;
-      toDate = comparedDate;
-    } else if (Array.isArray(date)) {
-      fromDate = new Date(date[0]);
-      toDate = new Date(date[date.length - 1]);
-      toDate.setHours(23, 59, 59, 999);
-    } else if (date === "Bulan Ini") {
-      const today = new Date();
-      fromDate = new Date(today.getFullYear(), today.getMonth(), 1);
-      toDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-      toDate.setHours(23, 59, 59, 999);
-    } else if (date) {
-      fromDate = new Date(date);
-      toDate = new Date(date);
-      toDate.setHours(23, 59, 59, 999);
+    let dateRanges;
+    if (rangeParameters && rangeParameters.isComparison) {
+      dateRanges = {
+        current: rangeParameters.current,
+        previous: rangeParameters.previous
+      };
     } else {
-      const today = new Date();
-      fromDate = new Date();
-      fromDate.setDate(today.getDate() - 7);
-      toDate = today;
+      dateRanges = generateComparisonDateRanges(date, flagCustomRoasDate);
     }
 
     const currentFilters = buildCurrentFilters();
-    fetchTableData(fromDate, toDate, 1, currentFilters);
-    // fetchTableData(fromDate, toDate, 1, debouncedSearchTerm, statusAdsFilter);
+    fetchTableData(dateRanges, 1, currentFilters);
   }, [debouncedSearchTerm, statusAdsFilter, selectedTypeAds, selectedOptionPlacement, selectedClassificationOption]);
-  // }, [debouncedSearchTerm, statusAdsFilter]);
+
+
+
+   // SALES CLASSIFICATION ADS FEATURE
+  const typeClasificationOptions = [
+    { value: "best_seller", label: "Best Seller" },
+    { value: "middle_moving", label: "Middle Moving" },
+    { value: "slow_moving", label: "Slow Moving" },
+  ];
+
+  const handleClassificationChange = (selectedOptions) => {
+    setSelectedClassificationOption(selectedOptions || []);
+  };
+
+
+
+  // FILTER COLUMNS FEATURE
+  const allColumns = [
+    { key: "info_iklan", label: "Info iklan" },
+    { key: "dailyBudget", label: "Modal" },
+    { key: "insight", label: "Insight" },
+    { key: "salesClassification", label: "Sales Classification" },
+    { key: "cost", label: "Biaya Iklan" },
+    { key: "broadGmv", label: "Penjualan dari iklan" },
+    { key: "roas", label: "ROAS" },
+    { key: "custom_roas", label: "Custom ROAS" },
+    { key: "impression", label: "Iklan dilihat" },
+    { key: "click", label: "Jumlah Klik" },
+    { key: "ctr", label: "Presentase Klik" },
+    { key: "broadOrder", label: "Konversi" },
+    { key: "cr", label: "Tingkat Konversi" },
+    { key: "broadOrderAmount", label: "Produk Terjual" },
+    { key: "cpc", label: "Biaya per Konversi" },
+    { key: "acos", label: "ACOS (Presentase Biaya Iklan)" },
+    { key: "directOrder", label: "Konversi Langung" },
+    { key: "directOrderAmount", label: "Produk Terjual Langsung" },
+    { key: "directGmv", label: "Penjualan dari Iklan Langsung" },
+    { key: "directRoi", label: "ROAS (Efektifitas Iklan) Langsung" },
+    { key: "directCir", label: "ACOS Langsung" },
+    { key: "directCr", label: "Tingkat Konversi Langsung" },
+    { key: "cpdc", label: "Biaya per Konversi Langsung" },
+    { key: "detail", label: "Detail Iklan" }
+  ];
+
+  const [selectedColumns, setSelectedColumns] = useState(
+    allColumns.map((col) => col.key)
+  );
+
+  const handleColumnChange = (colKey) => {
+    setSelectedColumns((prev) =>
+      prev.includes(colKey)
+        ? prev.filter((key) => key !== colKey)
+        : [...prev, colKey]
+    );
+  };
 
 
 
@@ -1219,14 +1367,12 @@ const AdsTable = () => {
 
 
   // PLACEMENT ADS FILTER FEATURE
-  // Define placement options
   const placementOptions = [
     { value: "all", label: "Semua" },
     { value: "targeting", label: "Halaman Rekomendasi" },
     { value: "search_product", label: "Halaman Pencarian" },
   ];
 
-  // Handle placement change by selected options
   const handlePlacementChange = (selectedOption) => {
     setSelectedOptionPlacement(selectedOption);
   };
@@ -1238,39 +1384,169 @@ const AdsTable = () => {
 
 
 
+  // AVERAGE VALUE CALCULATION FEATURE
+  // const isMultiDayFilter = () => {
+  //   // Jika menggunakan comparator date range
+  //   if (comparatorDate && comparedDate) {
+  //     return comparatorDate.toDateString() !== comparedDate.toDateString();
+  //   }
+
+  //   // Jika menggunakan preset date options
+  //   if (Array.isArray(date)) {
+  //     // "1 Minggu terakhir" - lebih dari 1 hari
+  //     return date.length > 1;
+  //   }
+
+  //   if (date === "Bulan Ini") {
+  //     // "Bulan ini" - lebih dari 1 hari
+  //     return true;
+  //   }
+
+  //   // "Hari ini", "Kemarin", atau single date - 1 hari saja
+  //   return false;
+  // };
+  // const calculateTableValue = (entry, metricKey) => {
+  //   if (!entry.data || entry.data.length === 0) {
+  //     return null;
+  //   }
+
+  //   // Metrics yang harus ditotal (tidak di-average)
+  //   const totalMetrics = ['dailyBudget', 'cost'];
+
+  //   // Jika filter single day, ambil data terbaru saja (seperti sebelumnya)
+  //   if (!isMultiDayFilter()) {
+  //     // Ambil data terbaru berdasarkan createdAt
+  //     const sortedData = [...entry.data].sort((a, b) =>
+  //       new Date(b.createdAt) - new Date(a.createdAt)
+  //     );
+  //     return sortedData[0][metricKey];
+  //   }
+
+  //   // Jika filter multi-day, hitung average atau total
+  //   let total = 0;
+  //   let validDataCount = 0;
+
+  //   entry.data.forEach(dataItem => {
+  //     const value = dataItem[metricKey];
+  //     if (value !== undefined && value !== null && !isNaN(value)) {
+  //       total += Number(value);
+  //       validDataCount++;
+  //     }
+  //   });
+
+  //   if (validDataCount === 0) {
+  //     return null;
+  //   }
+
+  //   // Jika metric termasuk yang harus ditotal
+  //   if (totalMetrics.includes(metricKey)) {
+  //     return total;
+  //   }
+
+  //   return total / validDataCount;
+  // };
+  // const formatTableValue = (entry, metricKey, formatType = 'default') => {
+  //   const value = calculateTableValue(entry, metricKey);
+
+  //   if (value === null || value === undefined) {
+  //     return "-";
+  //   }
+
+  //   // Format berdasarkan tipe metric
+  //   switch (metricKey) {
+  //     case 'dailyBudget':
+  //     case 'cost':
+  //       // Selalu format sebagai currency
+  //       return `Rp ${convertBudgetToIDR(value, formatType)}`;
+
+  //     case 'roas':
+  //     case 'ctr':
+  //     case 'acos':
+  //       // Metrics yang biasanya dalam bentuk ratio/percentage
+  //       if (isMultiDayFilter()) {
+  //         // Jika average, tampilkan dengan 2 desimal
+  //         return Number(value).toFixed(2);
+  //       } else {
+  //         // Jika single day, tampilkan sesuai format asli
+  //         return Number(value).toFixed(2);
+  //       }
+
+  //     case 'impression':
+  //       return formatRupiahFilter(value);
+  //     case 'click':
+  //       // Metrics yang berupa angka bulat
+  //       if (isMultiDayFilter()) {
+  //         // Jika average, tampilkan dengan 1 desimal
+  //         return Number(value).toFixed(1);
+  //       } else {
+  //         // Jika single day, tampilkan sebagai integer
+  //         return Math.round(value).toLocaleString('id-ID');
+  //       }
+
+  //     default:
+  //       if (isMultiDayFilter()) {
+  //         return Number(value).toFixed(2);
+  //       } else {
+  //         return value.toString();
+  //       }
+  //   }
+  // };
+
+
+
+  const handleUpdateCustomRoas = async (shoppeeId, campaignId, customRoasValue) => {
+    try {
+      setIsTableFilterLoading(true);
+      await updateCustomRoasProduct(shoppeeId, campaignId, customRoasValue);
+      toast.success("Roas berhasil di update/custom");
+      window.location.reload();
+    } catch (error) {
+      console.error("Gagal mengupdate ROAS, kesalahan pada server:", error);
+      toast.error("Gagal menyimpan perubahan ROAS");
+    } finally {
+      setIsTableFilterLoading(false);
+    }
+  };
+
   const getStateStyle = (state) => {
     const stateMap = {
-      ongoing: {
-        backgroundColor: "#00EB3FFF",
-        textColor: "#00D138FF",
-        label: "Berjalan",
-        isAnimated: true,
-      },
-      closed: {
-        backgroundColor: "#000000FF",
-        textColor: "#000000FF",
-        label: "Nonaktif",
-        isAnimated: false,
-      },
-      ended: {
-        backgroundColor: "#000000",
-        textColor: "#000000",
-        label: "Selesai",
-        isAnimated: false,
-      },
-      all: {
-        backgroundColor: "#00EB3FFF",
-        textColor: "#00EB3FFF",
-        label: "Semua",
-        isAnimated: true,
-      },
-      scheduled: {
-        backgroundColor: "#00EB3FFF",
-        textColor: "#00EB3FFF",
-        label: "Terjadwal",
-        isAnimated: true, 
-      }
-    };
+    ongoing: {
+      backgroundColor: "#00EB3FFF",
+      textColor: "#00D138FF",
+      label: "Berjalan",
+      isAnimated: true,
+    },
+    closed: {
+      backgroundColor: "#000000FF",
+      textColor: "#000000FF",
+      label: "Nonaktif",
+      isAnimated: false,
+    },
+    ended: {
+      backgroundColor: "#000000",
+      textColor: "#000000",
+      label: "Berakhir",
+      isAnimated: false,
+    },
+    all: {
+      backgroundColor: "#00EB3FFF",
+      textColor: "#00EB3FFF",
+      label: "Semua",
+      isAnimated: true,
+    },
+    scheduled: {
+      backgroundColor: "#00EB3FFF",
+      textColor: "#00EB3FFF",
+      label: "Terjadwal",
+      isAnimated: true, 
+    },
+    deleted: {
+      backgroundColor: "#FF0000FF",
+      textColor: "#FF0000FF",
+      label: "Dihapus",
+      isAnimated: false,
+    },
+  };
 
     return stateMap[state] || {
       backgroundColor: "#000000FF",
@@ -1279,86 +1555,6 @@ const AdsTable = () => {
       isAnimated: false,
     };
   };
-
-
-
-  useEffect(() => {
-    if (debouncedSearchTerm !== "" || statusAdsFilter !== "all") {
-      setCurrentPage(1);
-
-      let fromDate, toDate;
-      if (comparatorDate && comparedDate) {
-        fromDate = comparatorDate;
-        toDate = comparedDate;
-      } else if (Array.isArray(date)) {
-        fromDate = new Date(date[0]);
-        toDate = new Date(date[date.length - 1]);
-        toDate.setHours(23, 59, 59, 999);
-      } else if (date === "Bulan Ini") {
-        const today = new Date();
-        fromDate = new Date(today.getFullYear(), today.getMonth(), 1);
-        toDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-        toDate.setHours(23, 59, 59, 999);
-      } else if (date) {
-        fromDate = new Date(date);
-        toDate = new Date(date);
-        toDate.setHours(23, 59, 59, 999);
-      } else {
-        const today = new Date();
-        fromDate = new Date();
-        fromDate.setDate(today.getDate() - 7);
-        toDate = today;
-      }
-
-      fetchTableData(fromDate, toDate, 1, debouncedSearchTerm, statusAdsFilter);
-    }
-  }, [debouncedSearchTerm, statusAdsFilter]);
-
-
-
-  // // FILTER DATA FOR TABLE FEATURE
-  // useEffect(() => {
-  //   let filtered = rawData;
-
-  //   // Filter by search term
-  //   if (debouncedSearchTerm !== "") {
-  //     filtered = filtered.filter((entry) =>
-  //       entry.data[0].title.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
-  //     );
-  //   }
-
-  //   // Filter by status
-  //   if (statusAdsFilter !== "all") {
-  //     filtered = filtered.filter((entry) => entry.data[0].state === statusAdsFilter);
-  //   }
-
-  //   // Filter by classification options
-  //   if (selectedClassificationOption.length > 0) {
-  //     const classificationValues = selectedClassificationOption.map((option) => option.value);
-  //     filtered = filtered.filter((entry) => {
-  //       const entryClassification = entry.data[0].classification;
-  //       return classificationValues.includes(entryClassification);
-  //     });
-  //   }
-
-  // const selectedAdsTypeValues = selectedTypeAds.map((ad) => ad.value);
-  // if (!selectedAdsTypeValues.includes("all")) {
-  //   filtered = filtered.filter((entry) => {
-  //     const entryBiddingStrategy = entry.data[0].biddingStrategy;
-  //     return selectedAdsTypeValues.includes(entryBiddingStrategy);
-  //   });
-  // }
-
-  // // Filter by placement (if a placement is selected and not "all")
-  // if (selectedOptionPlacement && selectedOptionPlacement.value !== "all") {
-  //   filtered = filtered.filter((entry) => entry.data[0].productPlacement === selectedOptionPlacement.value);
-  // }
-
-  //   setCurrentPage(1);
-  //   setFilteredData(filtered);
-  // }, [debouncedSearchTerm, rawData, statusAdsFilter, selectedTypeAds, selectedClassificationOption, selectedOptionPlacement]);
-
-
 
   const toggleOpenCalendar = () => {
     if (showCalendar) {
@@ -1370,234 +1566,134 @@ const AdsTable = () => {
     }
   };
 
-
-
-  // CUSTOM ROAS FEATURE
-  const handleUpdateCustomRoas = async (shopId, campaignId, customRoasValue) => {
-    try {
-      // setIsContentLoading(true);
-      await updateCustomRoasProduct(shopId, campaignId, customRoasValue);
-      toast.success("Berhasil mengupdate ROAS");
-      window.location.reload();
-    } catch (error) {
-      console.error("Gagal mengupdate ROAS, kesalahan pada server:", error);
-      toast.error("Gagal menyimpan perubahan ROAS");
-    } 
-    // finally {
-    //   // setIsContentLoading(false);
-    // }
-  };
-
-
-
-  // AVERAGE VALUE CALCULATION FEATURE
-  const isMultiDayFilter = () => {
-    // Jika menggunakan comparator date range
-    if (comparatorDate && comparedDate) {
-      return comparatorDate.toDateString() !== comparedDate.toDateString();
-    }
-
-    // Jika menggunakan preset date options
-    if (Array.isArray(date)) {
-      // "1 Minggu terakhir" - lebih dari 1 hari
-      return date.length > 1;
-    }
-
-    if (date === "Bulan Ini") {
-      // "Bulan ini" - lebih dari 1 hari
-      return true;
-    }
-
-    // "Hari ini", "Kemarin", atau single date - 1 hari saja
-    return false;
-  };
-
-  const calculateTableValue = (entry, metricKey) => {
-    if (!entry.data || entry.data.length === 0) {
-      return null;
-    }
-
-    // Metrics yang harus ditotal (tidak di-average)
-    const totalMetrics = ['dailyBudget', 'cost'];
-
-    // Jika filter single day, ambil data terbaru saja (seperti sebelumnya)
-    if (!isMultiDayFilter()) {
-      // Ambil data terbaru berdasarkan createdAt
-      const sortedData = [...entry.data].sort((a, b) =>
-        new Date(b.createdAt) - new Date(a.createdAt)
-      );
-      return sortedData[0][metricKey];
-    }
-
-    // Jika filter multi-day, hitung average atau total
-    let total = 0;
-    let validDataCount = 0;
-
-    entry.data.forEach(dataItem => {
-      const value = dataItem[metricKey];
-      if (value !== undefined && value !== null && !isNaN(value)) {
-        total += Number(value);
-        validDataCount++;
-      }
-    });
-
-    if (validDataCount === 0) {
-      return null;
-    }
-
-    // Jika metric termasuk yang harus ditotal
-    if (totalMetrics.includes(metricKey)) {
-      return total;
-    }
-
-    return total / validDataCount;
-  };
-
-  const formatTableValue = (entry, metricKey, formatType = 'default') => {
-    const value = calculateTableValue(entry, metricKey);
-
-    if (value === null || value === undefined) {
-      return "-";
-    }
-
-    // Format berdasarkan tipe metric
-    switch (metricKey) {
-      case 'dailyBudget':
-      case 'cost':
-        // Selalu format sebagai currency
-        return `Rp ${convertBudgetToIDR(value, formatType)}`;
-
-      case 'roas':
-      case 'ctr':
-      case 'acos':
-        // Metrics yang biasanya dalam bentuk ratio/percentage
-        if (isMultiDayFilter()) {
-          // Jika average, tampilkan dengan 2 desimal
-          return Number(value).toFixed(2);
-        } else {
-          // Jika single day, tampilkan sesuai format asli
-          return Number(value).toFixed(2);
-        }
-
-      case 'impression':
-        return formatRupiahFilter(value);
-      case 'click':
-        // Metrics yang berupa angka bulat
-        if (isMultiDayFilter()) {
-          // Jika average, tampilkan dengan 1 desimal
-          return Number(value).toFixed(1);
-        } else {
-          // Jika single day, tampilkan sebagai integer
-          return Math.round(value).toLocaleString('id-ID');
-        }
-
-      default:
-        if (isMultiDayFilter()) {
-          return Number(value).toFixed(2);
-        } else {
-          return value.toString();
-        }
-    }
-  };
-
-
-
-  const formatStyleSalesClassification = (classification) => {
-    if (classification === "Best Seller") {
-      return { backgroundColor: "#009127FF", color: "#FFFFFF", label: "Best Seller" };
-    } else if (classification === "Middle Moving") {
-      return { backgroundColor: "#AF8000FF", color: "#FFFFFF", label: "Middle Moving" };
-    } else if (classification === "Slow Moving") {
-      return { backgroundColor: "#960000FF", color: "#FFFFFF", label: "Slow Moving" };
-    } else {
-      return { backgroundColor: "#E3E3E3", color: "#000000", label: "Unknown" };
-    }
-  };
-
   return (
     <>
-      {
-        isLoading ? (
-          <div className="d-flex justify-content-center align-items-start vh-100">
-            <Loading size={40} />
-          </div>
-        ) : (
-          <div className="card">
-            <div className="card-body">
-              {/* Header & Date Filter */}
-              <div className="d-flex justify-content-between align-items-start pb-3">
-                <strong>{totalElements} total produk</strong>
-                <div style={{ position: "relative" }}>
-                  <button
-                    onClick={toggleOpenCalendar}
-                    className="btn btn-primary"
-                  >
-                    {comparatorDate && comparedDate
-                      ? `${comparatorDate.toLocaleDateString("id-ID")} - ${comparedDate.toLocaleDateString("id-ID")}`
-                      : (typeof date === 'string' ? date : (Array.isArray(date) ? "1 Minggu terakhir" : "Pilih Tanggal"))}
-                  </button>
-                  {showCalendar && (
-                    <div
-                      className={`card custom-calendar-behavior ${animateCalendar ? "show" : ""}`}
-                      style={{
-                        flexDirection: "row",
-                        position: "absolute",
-                        top: "44px",
-                        right: "0",
-                        zIndex: 1000,
-                        boxShadow: "0px 4px 6px rgba(0,0,0,0.1)",
-                        borderRadius: "8px",
-                        padding: "5px 10px",
-                      }}
-                    >
-                      <div
-                        className="custom-content-calendar d-flex flex-column py-2 px-1"
-                        style={{ width: "130px", listStyleType: "none" }}
-                      >
-                        <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection(new Date().toISOString().split("T")[0], "hari_ini")}>Hari ini</p>
-                        <p style={{ cursor: "pointer" }}
-                          onClick={() => {
-                            const yesterday = new Date();
-                            yesterday.setDate(yesterday.getDate() - 1);
-                            handleDateSelection(yesterday.toISOString().split("T")[0], "kemarin");
-                          }}
-                        >
-                          Kemarin
-                        </p>
-                        <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection(getAllDaysInLast7Days(), "minggu_ini")}>1 Minggu terakhir</p>
-                        <p style={{ cursor: "pointer" }} onClick={() => handleDateSelection("Bulan Ini", "bulan_ini")}>Bulan ini</p>
-                      </div>
-                      <div id="custom-calendar-behavior-barrier" style={{ width: "1px", height: "auto", backgroundColor: "#E3E3E3FF", margin: "10px 4px" }}></div>
-                      {/* Kalender pembanding */}
-                      <div>
-                        <p className="pt-2" style={{ textAlign: "center" }}>Tanggal Pembanding</p>
-                        <Calendar onChange={(date) => setComparatorDate(date)} value={comparatorDate} maxDate={comparedDate || new Date(2100, 0, 1)} />
-                      </div>
-                      {/* Kalender dibanding */}
-                      <div>
-                        <p className="pt-2" style={{ textAlign: "center" }}>Tanggal Dibanding</p>
-                        <Calendar onChange={(date) => setComparedDate(date)} value={comparedDate} minDate={comparatorDate || new Date()} />
-                      </div>
-                      {/* Confirm button for date range */}
-                      <div id="custom-calendar-behavior-button" className="d-flex align-items-end mb-1">
-                        <button
-                          className="btn btn-primary"
-                          onClick={handleComparisonDatesConfirm}
-                          disabled={!comparatorDate || !comparedDate}
-                        >
-                          Terapkan
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-              {/* {
-                isContentLoading ? (
-                  <div className="d-flex justify-content-center align-items-start vh-100">
-                    <Loading size={40} />
+      <div className="card">
+        <div className="card-body">
+          {/* Header & Date Filter */}
+          <div className="d-flex justify-content-between align-items-start pb-3">
+            <strong>{totalElements} total produk</strong>
+            <div style={{ position: "relative" }}>
+              <button
+                onClick={toggleOpenCalendar}
+                className="btn btn-primary"
+              >
+                {getDateButtonText()}
+              </button>
+              {showCalendar && (
+                <div
+                  className={`card custom-calendar-behavior ${animateCalendar ? "show" : ""}`}
+                  style={{
+                    flexDirection: "row",
+                    position: "absolute",
+                    top: "44px",
+                    right: "0",
+                    zIndex: 1000,
+                    boxShadow: "0px 4px 6px rgba(0,0,0,0.1)",
+                    borderRadius: "8px",
+                    padding: "5px 10px",
+                  }}
+                >
+                  <div>
+                      <p className="pt-2" style={{ textAlign: "center" }}>
+                          Tanggal Pembanding
+                      </p>
+                      <Calendar 
+                          selectRange={true}
+                          onChange={handleComparatorDateChange} 
+                          value={comparatorDateRange} 
+                          maxDate={
+                              comparedDateRange ? comparedDateRange[1] : 
+                              new Date(2100, 0, 1)
+                          } 
+                          minDate={new Date(2000, 0, 1)} 
+                      />
+                      {(comparatorDateRange) && (
+                          <div className="text-center mt-1">
+                              <small className="text-success">
+                                  {comparatorDateRange[0].toLocaleDateString("id-ID")} - ${comparatorDateRange[1].toLocaleDateString("id-ID")}
+                              </small>
+                          </div>
+                      )}
                   </div>
-                ) : ( */}
+                  
+                  <div>
+                      <p className="pt-2" style={{ textAlign: "center" }}>
+                          Tanggal Dibanding
+                      </p>
+                      <Calendar 
+                          selectRange={true}
+                          onChange={handleComparedDateChange} 
+                          value={comparedDateRange} 
+                          minDate={
+                            comparatorDateRange ? comparatorDateRange[0] : 
+                            new Date()
+                          } 
+                      />
+                      {(comparedDateRange) && (
+                        <div className="text-center mt-1">
+                            <small className="text-success">
+                                {comparedDateRange[0].toLocaleDateString("id-ID")} - ${comparedDateRange[1].toLocaleDateString("id-ID")}
+                            </small>
+                        </div>
+                      )}
+                  </div>
+
+                  <div id="custom-calendar-behavior-barrier" style={{ width: "1px", height: "auto", backgroundColor: "#D2D2D2FF", margin: "10px 12px" }}></div>
+                  
+                  <div id="custom-calendar-behavior-button" className="d-flex justify-content-between mb-1">
+                    <div
+                      className="custom-content-calendar d-flex flex-column py-2 px-1"
+                      style={{ width: "130px", listStyleType: "none" }}
+                    >
+                      <p style={{ cursor: "pointer" }} onClick={() => handleDateSelectionPreset(new Date().toISOString().split("T")[0], "hari_ini")}>Hari ini</p>
+                      <p style={{ cursor: "pointer" }}
+                        onClick={() => {
+                          const yesterday = new Date();
+                          yesterday.setDate(yesterday.getDate() - 1);
+                          handleDateSelectionPreset(yesterday.toISOString().split("T")[0], "kemarin");
+                        }}
+                      >
+                        Kemarin
+                      </p>
+                      <p style={{ cursor: "pointer" }} onClick={() => handleDateSelectionPreset(getAllDaysInLast7Days(), "minggu_ini")}>1 Minggu terakhir</p>
+                      <p style={{ cursor: "pointer" }} onClick={() => handleDateSelectionPreset("Bulan Ini", "bulan_ini")}>Bulan ini</p>
+                    </div>
+                    <div className="d-flex gap-1 flex-column">
+                      <button
+                        className="btn btn-secondary w-100"
+                        onClick={resetComparisonDates}
+                        disabled={!comparatorDateRange && !comparedDateRange}
+                      >
+                        Reset
+                      </button>
+                      <button
+                          className="btn btn-primary w-100"
+                          onClick={handleComparisonDatesConfirm}
+                          disabled={isConfirmButtonDisabled()}
+                          style={
+                            isConfirmButtonDisabled() ? { cursor: "not-allowed" } : { cursor: "pointer" }
+                          }
+                      >
+                          Terapkan
+                          {rangeParameters && rangeParameters.isRange && (
+                            <small className="d-block" style={{ fontSize: "10px" }}>
+                              Mode Perbandingan Range
+                            </small>
+                          )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          {
+            isLoading ? (
+              <div className="d-flex justify-content-center align-items-start vh-100">
+                <Loading size={40} />
+              </div>
+            ) : (
               <div className="d-flex flex-column gap-3">
                 {/* Matric filter */}
                 <div className="row g-3">
@@ -1640,7 +1736,7 @@ const AdsTable = () => {
                   </div>
                 )}
                 {/* Chart */}
-                <div ref={chartRef} style={{ width: "100%", height: "300px" }}></div>
+                <div ref={chartRef} style={{ width: "100%", height: "320px" }}></div>
                 {/* Filter & Table */}
                 <div className="d-flex flex-column gap-2">
                   {/* Status filter */}
@@ -1699,6 +1795,16 @@ const AdsTable = () => {
                         style={{ cursor: "pointer", fontSize: "12px", padding: "1px 12px", }}
                       >
                         Berakhir
+                      </div>
+                      <div
+                        className={`status-button-filter rounded-pill d-flex align-items-center ${statusAdsFilter === "deleted"
+                          ? "custom-font-color custom-border-select fw-bold"
+                          : "border border-secondary-subtle"
+                          }`}
+                        onClick={() => setStatusAdsFilter("deleted")}
+                        style={{ cursor: "pointer", fontSize: "12px", padding: "1px 12px", }}
+                      >
+                        Dihapus
                       </div>
                     </div>
                   </div>
@@ -1933,7 +2039,7 @@ const AdsTable = () => {
                               .filter((col) =>
                                 selectedColumns.includes(col.key) &&
                                 (col.key !== "custom_roas" ||
-                                  (flagCustomRoasDate !== "minggu_ini" && flagCustomRoasDate !== "bulan_ini"))
+                                  (flagCustomRoasDate == "hari_ini"))
                               )
                               .map((col) => (
                                 <th key={col.key}>
@@ -2007,22 +2113,9 @@ const AdsTable = () => {
                                     <td style={{ width: "180px" }}>
                                       <div className="d-flex flex-column">
                                         <span>
-                                          {formatTableValue(entry, 'dailyBudget', 'default')}
-                                          {/* {
+                                          {
                                             entry.data[0].dailyBudget === undefined ? "-" : entry.data[0].dailyBudget === null ? "0" : `Rp ${convertBudgetToIDR(entry.data[0].dailyBudget, "default")}`
-                                          } */}
-                                        </span>
-                                        <span className="text-success" style={{ fontSize: "10px" }}>
-                                          +12.7%
-                                        </span>
-                                      </div>
-                                    </td>
-                                  )}
-                                  {selectedColumns.includes("analyze") && (
-                                    <td style={{ width: "260px" }}>
-                                      <div className="d-flex flex-column">
-                                        <span>
-                                          {entry.data[0].analyze === undefined ? "-" : entry.data[0].analyze === null ? "Tidak ada keterangan" : entry.data[0].analyze}
+                                          }
                                         </span>
                                         <span className="text-success" style={{ fontSize: "10px" }}>
                                           +12.7%
@@ -2035,6 +2128,27 @@ const AdsTable = () => {
                                       <span>
                                         {entry.data[0].insight === undefined ? "-" : entry.data[0].insight === null ? "Tidak ada keterangan" : entry.data[0].insight}
                                       </span>
+                                    </td>
+                                  )}
+                                  {selectedColumns.includes("salesClassification") && (
+                                    <td style={{ width: "200px" }}>
+                                      <div className="d-flex gap-1 align-items-center">
+                                        <div
+                                          className="marker"
+                                          style={{
+                                            backgroundColor: formatStyleSalesClassification(entry.data[0].salesClassification).backgroundColor,
+                                          }}
+                                        ></div>
+                                        <span
+                                          style={{
+                                            fontSize: "14px",
+                                          }}
+                                        >
+                                          {
+                                            entry.data[0].salesClassification === undefined ? "-" : entry.data[0].salesClassification === null ? "Not Found" : formatStyleSalesClassification(entry.data[0].salesClassification).label
+                                          }
+                                        </span>
+                                      </div>
                                     </td>
                                   )}
                                   {selectedColumns.includes("cost") && (
@@ -2110,17 +2224,10 @@ const AdsTable = () => {
                                           const currentValue = tempCustomRoas[entry.campaignId] !== undefined
                                             ? tempCustomRoas[entry.campaignId]
                                             : entry.data[0].customRoas;
-                                          handleUpdateCustomRoas(shopId, entry.campaignId, currentValue);
+                                          handleUpdateCustomRoas(shoppeeId, entry.campaignId, currentValue);
                                         }}
                                       >
                                         Simpan
-                                        {/* {
-                                          isContentLoading ? (
-                                            "Updating..."
-                                          ) : (
-                                            "Simpan"
-                                          )
-                                        } */}
                                       </button>
                                     </td>
                                   )}
@@ -2326,27 +2433,6 @@ const AdsTable = () => {
                                       </div>
                                     </td>
                                   )}
-                                  {selectedColumns.includes("salesClassification") && (
-                                    <td style={{ width: "200px" }}>
-                                      <div className="d-flex gap-1 align-items-center">
-                                        <div
-                                          className="marker"
-                                          style={{
-                                            backgroundColor: formatStyleSalesClassification(entry.data[0].salesClassification).backgroundColor,
-                                          }}
-                                        ></div>
-                                        <span
-                                          style={{
-                                            fontSize: "14px",
-                                          }}
-                                        >
-                                          {
-                                            entry.data[0].salesClassification === undefined ? "-" : entry.data[0].salesClassification === null ? "Not Found" : formatStyleSalesClassification(entry.data[0].salesClassification).label
-                                          }
-                                        </span>
-                                      </div>
-                                    </td>
-                                  )}
                                   {selectedColumns.includes("detail") && (
                                     <td style={{ width: "100px" }}>
                                       {
@@ -2365,448 +2451,6 @@ const AdsTable = () => {
                             </div>
                           )}
                         </tbody>
-                        {/* <thead className="table-dark">
-                            <tr>
-                              {filteredData.length !== 0 && filteredData !== null && <th scope="col">No</th>}
-                              {allColumns
-                                .filter((col) =>
-                                  selectedColumns.includes(col.key) &&
-                                  (col.key !== "custom_roas" ||
-                                    (flagCustomRoasDate !== "minggu_ini" && flagCustomRoasDate !== "bulan_ini"))
-                                )
-                                .map((col) => (
-                                  <th key={col.key}>
-                                    <div className="d-flex justify-content-start align-items-center">
-                                      {col.label}
-                                    </div>
-                                  </th>
-                                ))
-                              }
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {filteredData.length !== 0 && filteredData !== null ? (
-                              filteredData?.map((entry, index) => (
-                                <>
-                                  <tr key={entry.campaignId}>
-                                    {filteredData.length > 0 && filteredData !== null && (
-                                      <td>{index + 1}</td>
-                                    )}
-                                    {selectedColumns.includes("info_iklan") && (
-                                      <td
-                                        className="d-flex gap-2"
-                                        style={{
-                                          width: "320px",
-                                          maxWidth: "320px",
-                                          cursor: "pointer",
-                                          color:
-                                            selectedProduct?.campaignId === entry.campaignId
-                                              ? "#F6881F"
-                                              : "",
-                                        }}
-                                        onClick={() => handleAdsProductClick(entry)}
-                                      >
-                                        <img
-                                          src={
-                                            "https://down-id.img.susercontent.com/file/" +
-                                            entry.data[0].image
-                                          }
-                                          alt={entry.data[0].title}
-                                          className="rounded"
-                                          style={{ width: "60px", height: "60px" }}
-                                        />
-                                        <div className="d-flex flex-column">
-                                          <span className="custom-table-title-paragraph">{entry.data[0].title}</span>
-                                          <span style={{ fontSize: "11px" }}>
-                                            Tidak terbatas
-                                          </span>
-                                          {(() => {
-                                            const stateStyle = getStateStyle(entry.data[0].state);
-                                            return (
-                                              <div className="d-flex gap-1 align-items-center">
-                                                <div
-                                                  className={`marker ${stateStyle.isAnimated ? "animated-circle" : ""}`}
-                                                  style={{ backgroundColor: stateStyle.backgroundColor }}
-                                                ></div>
-                                                <span
-                                                  style={{
-                                                    fontSize: "14px",
-                                                    color: stateStyle.textColor,
-                                                  }}
-                                                >
-                                                  {stateStyle.label}
-                                                </span>
-                                              </div>
-                                            );
-                                          })()}
-                                        </div>
-                                      </td>
-                                    )}
-                                    {selectedColumns.includes("dailyBudget") && (
-                                      <td style={{ width: "180px" }}>
-                                        <div className="d-flex flex-column">
-                                          <span>
-                                            {formatTableValue(entry, 'dailyBudget', 'default')}
-                                            {
-                                              entry.data[0].dailyBudget === undefined ? "-" : entry.data[0].dailyBudget === null ? "0" : `Rp ${convertBudgetToIDR(entry.data[0].dailyBudget, "default")}`
-                                            }
-                                          </span>
-                                          <span className="text-success" style={{ fontSize: "10px" }}>
-                                            +12.7%
-                                          </span>
-                                        </div>
-                                      </td>
-                                    )}
-                                    {selectedColumns.includes("analyze") && (
-                                      <td style={{ width: "260px" }}>
-                                        <div className="d-flex flex-column">
-                                          <span>
-                                            {entry.data[0].analyze === undefined ? "-" : entry.data[0].analyze === null ? "Tidak ada keterangan" : entry.data[0].analyze}
-                                          </span>
-                                          <span className="text-success" style={{ fontSize: "10px" }}>
-                                            +12.7%
-                                          </span>
-                                        </div>
-                                      </td>
-                                    )}
-                                    {selectedColumns.includes("insight") && (
-                                      <td style={{ width: "260px" }}>
-                                        <span>
-                                          {entry.data[0].insight === undefined ? "-" : entry.data[0].insight === null ? "Tidak ada keterangan" : entry.data[0].insight}
-                                        </span>
-                                      </td>
-                                    )}
-                                    {selectedColumns.includes("cost") && (
-                                      <td style={{ width: "180px" }}>
-                                        <div className="d-flex flex-column">
-                                          <span>
-                                            {
-                                              entry.data[0].cost === undefined ? "-" : entry.data[0].cost === null ? "0" : `Rp ${convertBudgetToIDR(entry.data[0].cost, "cost")}`
-                                            }
-                                          </span>
-                                          <span className={`${formatValueRatio(entry.data[0].costRatio).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                            {
-                                              entry.data[0].costRatio === undefined ? "-" : entry.data[0].costRatio === null ? "0" : formatValueRatio(entry.data[0].costRatio).rounded
-                                            }
-                                          </span>
-                                        </div>
-                                      </td>
-                                    )}
-                                    {selectedColumns.includes("broadGmv") && (
-                                      <td style={{ width: "180px" }}>
-                                        <div className="d-flex flex-column">
-                                          <span>
-                                            {entry.data[0].broadGmv === undefined ? "-" : entry.data[0].broadGmv === null ? "0" : `Rp ${convertBudgetToIDR(entry.data[0].broadGmv, "cost")}`}</span>
-                                          <span className={`${formatValueRatio(entry.data[0].broadGmvRatio).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                            {entry.data[0].broadGmvRatio === undefined ? "-" : entry.data[0].broadGmvRatio === null ? "0" : `${formatValueRatio(entry.data[0].broadGmvRatio).rounded}%`}
-                                          </span>
-                                        </div>
-                                      </td>
-                                    )}
-                                    {selectedColumns.includes("roas") && (
-                                      <td style={{ width: "120px" }}>
-                                        <div className="d-flex flex-column">
-                                          <span>{
-                                            entry.data[0].customRoas === undefined ? "-" : entry.data[0].customRoas === null ? "0" : `${(entry.data[0].customRoas).toFixed(2)}%`
-                                          }</span>
-                                          <span className={`${formatValueRatio(entry.data[0].roasRatio).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                            {entry.data[0].roasRatio === undefined ? "-" : entry.data[0].roasRatio === null ? "0" : `${formatValueRatio(entry.data[0].roasRatio).rounded}%`}
-                                          </span>
-                                        </div>
-                                      </td>
-                                    )}
-                                    {selectedColumns.includes("custom_roas") && flagCustomRoasDate !== "minggu_ini" && flagCustomRoasDate !== "bulan_ini" && (
-                                      <td style={{ width: "200px" }}>
-                                        <input
-                                          onChange={(e) => {
-                                            const newValue = e.target.value;
-                                            setTempCustomRoas(prev => ({
-                                              ...prev,
-                                              [entry.campaignId]: newValue
-                                            }));
-                                          }}
-                                          value={
-                                            tempCustomRoas[entry.campaignId] !== undefined
-                                              ? tempCustomRoas[entry.campaignId]
-                                              : (entry.data[0].customRoas === undefined ? "" :
-                                                entry.data[0].customRoas === null ? "" :
-                                                  entry.data[0].customRoas)
-                                          }
-                                          type="number"
-                                          className="form-control mb-1"
-                                          placeholder="0"
-                                          style={{ width: "100px", height: "30px" }}
-                                        />
-                                        <button
-                                          className="btn btn-success"
-                                          style={{
-                                            width: "100px",
-                                            padding: "5px 0px",
-                                            fontSize: "12px",
-                                          }}
-                                          onClick={() => {
-                                            const currentValue = tempCustomRoas[entry.campaignId] !== undefined
-                                              ? tempCustomRoas[entry.campaignId]
-                                              : entry.data[0].customRoas;
-                                            handleUpdateCustomRoas(shopId, entry.campaignId, currentValue);
-                                          }}
-                                        >
-                                          {
-                                            isContentLoading ? (
-                                              "Updating..."
-                                            ) : (
-                                              "Simpan"
-                                            )
-                                          }
-                                        </button>
-                                      </td>
-                                    )}
-                                    {selectedColumns.includes("impression") && (
-                                      <td style={{ width: "200px" }}>
-                                        <div className="d-flex flex-column">
-                                          <span>{
-                                            formatTableValue(entry, 'impression')
-                                            // entry.data[0].impression === undefined ? "-" : entry.data[0].impression === null ? "0" : formatRupiahFilter(entry.data[0].impression)
-                                          }</span>
-                                          <span className={`${formatValueRatio(entry.data[0].impressionRatio).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                            {entry.data[0].impressionRatio === undefined ? "-" : entry.data[0].impressionRatio === null ? "0" : `${formatValueRatio(entry.data[0].impressionRatio).rounded}%`}
-                                          </span>
-                                        </div>
-                                      </td>
-                                    )}
-                                    {selectedColumns.includes("click") && (
-                                      <td style={{ width: "200px" }}>
-                                        <div className="d-flex flex-column">
-                                          <span>{
-                                            entry.data[0].click === undefined ? "-" : entry.data[0].click === null ? "0" : formatRupiahFilter(entry.data[0].click)
-                                          }</span>
-                                          <span className={`${formatValueRatio(entry.data[0].clickRatio).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                            {entry.data[0].clickRatio === undefined ? "-" : entry.data[0].clickRatio === null ? "0" : `${formatValueRatio(entry.data[0].clickRatio).rounded}%`}
-                                          </span>
-                                        </div>
-                                      </td>
-                                    )}
-                                    {selectedColumns.includes("ctr") && (
-                                      <td style={{ width: "200px" }}>
-                                        <div className="d-flex flex-column">
-                                          <span>{
-                                            entry.data[0].ctr === undefined ? "-" : entry.data[0].ctr === null ? "0" : `${entry.data[0].ctr}%`
-                                          }</span>
-                                          <span className={`${formatValueRatio(entry.data[0].ctrRatio).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                            {entry.data[0].ctrRatio === undefined ? "-" : entry.data[0].ctrRatio === null ? "0" : `${formatValueRatio(entry.data[0].ctrRatio).rounded}%`}
-                                          </span>
-                                        </div>
-                                      </td>
-                                    )}
-                                    {selectedColumns.includes("broadOrder") && (
-                                      <td style={{ width: "200px" }}>
-                                        <div className="d-flex flex-column">
-                                          <span>
-                                            {
-                                              entry.data[0].broadOrder === undefined ? "-" : entry.data[0].broadOrder === null ? "0" : formatRupiahFilter(entry.data[0].broadOrder)
-                                            }
-                                          </span>
-                                          <span className={`${formatValueRatio(entry.data[0].broadOrderRatio).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                            {entry.data[0].broadOrderRatio === undefined ? "-" : entry.data[0].broadOrderRatio === null ? "0" : `${formatValueRatio(entry.data[0].broadOrderRatio).rounded}%`}
-                                          </span>
-                                        </div>
-                                      </td>
-                                    )}
-                                    {selectedColumns.includes("cr") &&
-                                      <td style={{ width: "200px" }}>
-                                        <div className="d-flex flex-column">
-                                          <span>{
-                                            entry.data[0].cr === undefined ? "-" : entry.data[0].cr === null ? "0" : `${Number(entry.data[0].cr).toFixed(2)}%`
-                                          }</span>
-                                          <span className={`${formatValueRatio(entry.data[0].crRatio).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                            {entry.data[0].crRatio === undefined ? "-" : entry.data[0].crRatio === null ? "0" : `${formatValueRatio(entry.data[0].crRatio).rounded}%`}
-                                          </span>
-                                        </div>
-                                      </td>
-                                    }
-                                    {selectedColumns.includes("broadOrderAmount") && (
-                                      <td style={{ width: "200px" }}>
-                                        <div className="d-flex flex-column">
-                                          <span>
-                                            {
-                                              entry.data[0].broadOrderAmount === undefined ? "-" : entry.data[0].broadOrderAmount === null ? "0" : convertBudgetToIDR(entry.data[0].broadOrderAmount)
-                                            }
-                                          </span>
-                                          <span className={`${formatValueRatio(entry.data[0].broadOrderAmountRatio).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                            {entry.data[0].broadOrderAmountRatio === undefined ? "-" : entry.data[0].broadOrderAmountRatio === null ? "0" : `${formatValueRatio(entry.data[0].broadOrderAmountRatio).rounded}%`}
-                                          </span>
-                                        </div>
-                                      </td>
-                                    )}
-                                    {selectedColumns.includes("cpc") && (
-                                      <td style={{ width: "200px" }}>
-                                        <div className="d-flex flex-column">
-                                          <span>
-                                            {
-                                              entry.data[0].cpc === undefined ? "-" : entry.data[0].cpc === null ? "0" : `Rp ${formatRupiahFilter(entry.data[0].cpc, "cpc")}`
-                                            }
-                                          </span>
-                                          <span className={`${formatValueRatio(entry.data[0].cpcRatio).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                            {entry.data[0].cpcRatio === undefined ? "-" : entry.data[0].cpcRatio === null ? "0" : `${formatValueRatio(entry.data[0].cpcRatio).rounded}%`}
-                                          </span>
-                                        </div>
-                                      </td>
-                                    )}
-                                    {selectedColumns.includes("acos") && (
-                                      <td style={{ width: "200px" }}>
-                                        <div className="d-flex flex-column">
-                                          <span>
-                                            {
-                                              entry.data[0].acos === undefined ? "-" : entry.data[0].acos === null ? "0" : `${Number(entry.data[0].acos).toFixed(2)}%`
-                                            }
-                                          </span>
-                                          <span className={`${formatValueRatio(entry.data[0].acosRatio).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                            {entry.data[0].acosRatio === undefined ? "-" : entry.data[0].acosRatio === null ? "0" : `${formatValueRatio(entry.data[0].acosRatio).rounded}%`}
-                                          </span>
-                                        </div>
-                                      </td>
-                                    )}
-                                    {selectedColumns.includes("directOrder") && (
-                                      <td style={{ width: "200px" }}>
-                                        <div className="d-flex flex-column">
-                                          <span>
-                                            {
-                                              entry.data[0].directOrder === undefined ? "-" : entry.data[0].directOrder === null ? "0" : formatRupiahFilter(entry.data[0].directOrder, "directOrder")
-                                            }
-                                          </span>
-                                          <span className={`${formatValueRatio(entry.data[0].directOrderRatio).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                            {entry.data[0].directOrderRatio === undefined ? "-" : entry.data[0].directOrderRatio === null ? "0" : `${formatValueRatio(entry.data[0].directOrderRatio).rounded}%`}
-                                          </span>
-                                        </div>
-                                      </td>
-                                    )}
-                                    {selectedColumns.includes("directOrderAmount") && (
-                                      <td style={{ width: "200px" }}>
-                                        <div className="d-flex flex-column">
-                                          <span>
-                                            {
-                                              entry.data[0].directOrderAmount === undefined ? "-" : entry.data[0].directOrderAmount === null ? "0" : formatRupiahFilter(entry.data[0].directOrderAmount, "directOrderAmount")
-                                            }
-                                          </span>
-                                          <span className={`${formatValueRatio(entry.data[0].directOrderAmountRatio).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                            {entry.data[0].directOrderAmountRatio === undefined ? "-" : entry.data[0].directOrderAmountRatio === null ? "0" : `${formatValueRatio(entry.data[0].directOrderAmountRatio).rounded}%`}
-                                          </span>
-                                        </div>
-                                      </td>
-                                    )}
-                                    {selectedColumns.includes("directGmv") && (
-                                      <td style={{ width: "200px" }}>
-                                        <div className="d-flex flex-column">
-                                          <span>
-                                            {
-                                              entry.data[0].directGmv === undefined ? "-" : entry.data[0].directGmv === null ? "0" : `Rp ${convertBudgetToIDR(entry.data[0].directGmv, "directGmv")}`
-                                            }
-                                          </span>
-                                          <span className={`${formatValueRatio(entry.data[0].directGmvRatio).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                            {entry.data[0].directGmvRatio === undefined ? "-" : entry.data[0].directGmvRatio === null ? "0" : `${formatValueRatio(entry.data[0].directGmvRatio).rounded}%`}
-                                          </span>
-                                        </div>
-                                      </td>
-                                    )}
-                                    {selectedColumns.includes("directRoi") && (
-                                      <td style={{ width: "200px" }}>
-                                        <div className="d-flex flex-column">
-                                          <span>
-                                            {
-                                              entry.data[0].directRoi === undefined ? "-" : entry.data[0].directRoi === null ? "0" : `${Number(entry.data[0].directRoi).toFixed(2)}%`
-                                            }
-                                          </span>
-                                          <span className={`${formatValueRatio(entry.data[0].directRoiRatio).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                            {entry.data[0].directRoiRatio === undefined ? "-" : entry.data[0].directRoiRatio === null ? "0" : `${formatValueRatio(entry.data[0].directRoiRatio).rounded}%`}
-                                          </span>
-                                        </div>
-                                      </td>
-                                    )}
-                                    {selectedColumns.includes("directCir") && (
-                                      <td style={{ width: "200px" }}>
-                                        <div className="d-flex flex-column">
-                                          <span>
-                                            {
-                                              entry.data[0].directCir === undefined ? "-" : entry.data[0].directCir === null ? "0" : `${Number(entry.data[0].directCir).toFixed(2)}%`
-                                            }
-                                          </span>
-                                          <div className={`${formatValueRatio(entry.data[0].directCirRatio).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                            {entry.data[0].directCirRatio === undefined ? "-" : entry.data[0].directCirRatio === null ? "0" : `${formatValueRatio(entry.data[0].directCirRatio).rounded}%`}
-                                          </div>
-                                        </div>
-                                      </td>
-                                    )}
-                                    {selectedColumns.includes("directCr") && (
-                                      <td style={{ width: "200px" }}>
-                                        <div className="d-flex flex-column">
-                                          <span>
-                                            {
-                                              entry.data[0].directCr === undefined ? "-" : entry.data[0].directCr === null ? "0" : `${Number(entry.data[0].directCr).toFixed(2)}%`
-                                            }
-                                          </span>
-                                          <span className={`${formatValueRatio(entry.data[0].directCrRatio).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                            {entry.data[0].directCrRatio === undefined ? "-" : entry.data[0].directCrRatio === null ? "0" : `${formatValueRatio(entry.data[0].directCrRatio).rounded}%`}
-                                          </span>
-                                        </div>
-                                      </td>
-                                    )}
-                                    {selectedColumns.includes("cpdc") && (
-                                      <td style={{ width: "200px" }}>
-                                        <div className="d-flex flex-column">
-                                          <span>
-                                            {
-                                              entry.data[0].cpdc === undefined ? "-" : entry.data[0].cpdc === null ? "0" : `Rp ${convertBudgetToIDR(entry.data[0].cpdc, "cpdc")}`
-                                            }
-                                          </span>
-                                          <span className={`${formatValueRatio(entry.data[0].cpdcRatio).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                            {entry.data[0].cpdcRatio === undefined ? "-" : entry.data[0].cpdcRatio === null ? "0" : `${formatValueRatio(entry.data[0].cpdcRatio).rounded}%`}
-                                          </span>
-                                        </div>
-                                      </td>
-                                    )}
-                                    {selectedColumns.includes("classification") && (
-                                      (index === 0 ? (
-                                        <td style={{ width: "200px" }}>
-                                          <div className="d-flex gap-1 align-items-center">
-                                            <div
-                                              className="marker"
-                                              style={{
-                                                backgroundColor: "#007BFF",
-                                              }}
-                                            ></div>
-                                            <span
-                                              style={{
-                                                fontSize: "14px",
-                                              }}
-                                            >
-                                              Middle Moving
-                                            </span>
-                                          </div>
-                                        </td>
-                                      ) : (
-                                        <td style={{ width: "200px" }}>
-                                          <span> </span>
-                                        </td>
-                                      ))
-                                    )}
-                                    {selectedColumns.includes("detail") && (
-                                      <td style={{ width: "100px" }}>
-                                        {
-                                          <Link to={`/dashboard/performance/ads/detail/${entry.campaignId}`}>
-                                            <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24"><path fill="currentColor" d="m16 8.4l-8.9 8.9q-.275.275-.7.275t-.7-.275t-.275-.7t.275-.7L14.6 7H7q-.425 0-.712-.288T6 6t.288-.712T7 5h10q.425 0 .713.288T18 6v10q0 .425-.288.713T17 17t-.712-.288T16 16z"></path></svg>
-                                          </Link>
-                                        }
-                                      </td>
-                                    )}
-                                  </tr>
-                                </>
-                              ))
-                            ) : (
-                              <div className="w-100 d-flex justify-content-center">
-                                <span>Data tidak tersedia</span>
-                              </div>
-                            )}
-                          </tbody> */}
                       </table>
                     </div>
                   </div>
@@ -2814,12 +2458,10 @@ const AdsTable = () => {
                   {paginatedData.length > 0 && paginatedData  !== null && renderPagination()}
                 </div>
               </div>
-              {/* )
-              } */}
-            </div>
-          </div>
-        )
-      }
+            )
+          }
+        </div>
+      </div>
     </>
   );
 };
