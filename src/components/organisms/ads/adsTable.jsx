@@ -258,7 +258,7 @@ const AdsTable = ({ shoppeeId }) => {
 
       const apiUrl = `/api/product-ads/chart?shopId=${shopId}&from=${from1ISO}&to=${to1ISO}&limit=50`;
       // const apiUrl = `/api/product-ads/chart?shopId=${shoppeeId}&from=${from1ISO}&to=${to1ISO}&limit=100000000000000000`;
-      console.log('API URL Chart Data:', apiUrl);
+      // console.log('API URL Chart Data:', apiUrl);
       
       const response = await axiosRequest.get(apiUrl);
       const data = await response.data;
@@ -314,7 +314,7 @@ const AdsTable = ({ shoppeeId }) => {
         apiUrl += `&productPlacement=${filters.placement.value}`;
       }
 
-      console.log('API URL Table Data:', apiUrl);
+      // console.log('API URL Table Data:', apiUrl);
       const response = await axiosRequest.get(apiUrl);
       const data = await response.data;
       const content = data.content || [];
