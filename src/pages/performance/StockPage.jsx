@@ -22,7 +22,6 @@ export default function PerformanceStockPage() {
   const [filteredData, setFilteredData] = useState([]);
   const [chartData, setChartData] = useState([]);
   const chartRef = useRef(null);
-  // const getShopeeId = "252234165";
   const [variantsChartData, setVariantsChartData] = useState([]);
   // Filter
   const [date, setDate] = useState(getAllDaysInLast7Days());
@@ -172,7 +171,7 @@ export default function PerformanceStockPage() {
     const from2ISO = toLocalISOString(from2);
     const to2ISO = toLocalISOString(to2);
     
-    let apiUrl = `${baseUrl}?getShopeeId=${getShopeeId}&from1=${from1ISO}&to1=${to1ISO}&from2=${from2ISO}&to2=${to2ISO}&limit=${limit}`;
+    let apiUrl = `${baseUrl}?shopId=${getShopeeId}&from1=${from1ISO}&to1=${to1ISO}&from2=${from2ISO}&to2=${to2ISO}&limit=${limit}`;
     
     if (page !== null) {
       const backendPage = Math.max(0, page - 1);
@@ -188,7 +187,7 @@ export default function PerformanceStockPage() {
     const from1ISO = toLocalISOString(from1);
     const to1ISO = toLocalISOString(to1);
     
-    const apiUrl = `${baseUrl}?getShopeeId=${getShopeeId}&from=${from1ISO}&to=${to1ISO}&limit=${limit}`;
+    const apiUrl = `${baseUrl}?shopId=${getShopeeId}&from=${from1ISO}&to=${to1ISO}&limit=${limit}`;
     
     return apiUrl;
   };
