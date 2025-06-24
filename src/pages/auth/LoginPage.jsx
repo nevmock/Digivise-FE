@@ -43,6 +43,7 @@ export default function LoginPage() {
             loginSuccess(response);
             toast.success("Login berhasil!");
             navigate("/dashboard");
+            window.location.reload();
         } catch (error) {
             toast.error("Login gagal, silakan coba lagi");
             console.error("Gagal login, kesalahan pada server:", error);

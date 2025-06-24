@@ -67,8 +67,8 @@ const MerchantModalCreate = ({ onClose }) => {
             });
             onClose();
             navigate("/dashboard", { replace: true });
-            window.location.reload();
             toast.success("Merchant berhasil dibuat");
+            window.location.reload();
         } catch (error) {
             toast.error("Gagal membuat merchant");
             console.error("Error saat membuat merchant, kesalahan pada server", error);

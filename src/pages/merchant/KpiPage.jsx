@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, act } from "react";
 import { toast } from "react-hot-toast";
 
 import { useAuth } from "../../context/Auth";
@@ -10,27 +10,45 @@ import Loading from "../../components/atoms/Loading/Loading";
 
 
 export default function MerchantKpiPage() {
-  const { userData, activeMerchant } = useAuth();
+  const { userData } = useAuth();
   const [kpiData, setKpiData] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const isMounted = useRef(false);
+  const [userNow, setUserNow] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  if (!activeMerchant) {
-    return (
-      <BaseLayout>
-        <div className="alert alert-warning">
-          Tidak ada merchant aktif. Silahkan buat merchant atau login ke merchant terlebih dahulu.
-        </div>
-      </BaseLayout>
-    );
+
+  const fetchGetCurrentUser = async () => {
+    setIsLoading(true);
+    try {
+      const response = await axiosRequest.get(`/api/users/${userData.userId}`);
+      if (response.status === 200 || response.code === 200 || response.status === "OK" || response.code === "OK") {
+        const currentUser = response.data;
+        setUserNow(currentUser);
+      } else {
+        console.error("Failed to fetch current user, status:", response.status);
+      }
+
+    } catch (error) {
+      console.error("Error fetching current user:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  useEffect(() => {
+    fetchGetCurrentUser();
+  }, [userData.userId]);
 
   useEffect(() => {
     return () => {
       isMounted.current = false;
     };
   }, []);
+
+  const merchantData = userNow && userNow.merchants !== null && userNow.activeMerchant !== null;
+  const activeMerchant = userNow?.activeMerchant;
+  const shopid = activeMerchant?.merchantShopeeId;
   
   const transformApiDataToKpiList = (apiData) => {
     return [
@@ -62,7 +80,7 @@ export default function MerchantKpiPage() {
       isMounted.current = true;
       const merchantId = userData?.activeMerchant?.id;
       const response = await getKpiData(merchantId);
-      if (response && isMounted.current) {
+      if ((response && isMounted.current) || response?.status === 200 || response?.code === 200 || response?.status === "OK" || response?.code === "OK") {
         const transformed = transformApiDataToKpiList(response);
         setKpiData(transformed);
       }
@@ -80,16 +98,11 @@ export default function MerchantKpiPage() {
   };
 
   const handleUpdate = async () => {
-    if (!activeMerchant) {
-      toast.error("Tidak ada merchant aktif, Silakan login terlebih dahulu.");
-      return;
-    }
-
     try {
       setIsUpdating(true);
 
-      const merchantId = activeMerchant?.id;
-      const userId = userData?.userId;
+      const merchantId = userNow?.activeMerchant?.id;
+      const userId = userNow?.id;
 
       if (!userId) {
         throw new Error("Data user ID tidak ditemukan");
@@ -120,8 +133,20 @@ export default function MerchantKpiPage() {
   };
 
   useEffect(() => {
-    fetchKPIData();
+    if (activeMerchant) {
+      fetchKPIData();
+    }
   }, [activeMerchant]);
+
+  if (!merchantData) {
+    return (
+      <BaseLayout>
+        <div className="alert alert-warning">
+          Tidak ada merchant aktif. Silahkan buat merchant atau login ke merchant terlebih dahulu.
+        </div>
+      </BaseLayout>
+    );
+  };
 
   return (
     <BaseLayout>

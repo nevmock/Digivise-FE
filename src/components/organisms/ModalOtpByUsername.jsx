@@ -64,8 +64,9 @@ const MerchantModalOTPByUsername = ({ onClose, merchant}) => {
 
         try {
             const result = await verifyMerchantOTP(formData.otp);
+            // console.log("Result verify OTP:", result);
             
-            if (result?.code === 200 || result?.status === "OK" || result?.status === 200 || result) {
+            if (result?.success === true || result?.code === 0 || result?.message.contains("succ")){
                 onClose();
                 navigate("/dashboard", { replace: true });
                 toast.success(`Berhasil login ke ${merchant?.name}`);
