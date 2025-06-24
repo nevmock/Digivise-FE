@@ -1772,8 +1772,8 @@ export default function PerformanceProductPage() {
                                         <td>
                                           <div className="d-flex flex-column">
                                             <span>{entry.data[0].pv === undefined || entry.data[0].pv === null ? "-" : entry.data[0].pv}</span>
-                                            <span className={`${formatValueRatio(entry.data[0].pv).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                              {entry.data[0].pv === undefined ? "-" : entry.data[0].pv === null ? "0" : `${formatValueRatio(entry.data[0].pv).rounded}%`}
+                                            <span className={`${formatValueRatio(entry.data[0].pvComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
+                                              {entry.data[0].pvComparison === undefined ? "-" : entry.data[0].pvComparison === null ? "0" : `${formatValueRatio(entry.data[0].pvComparison).rounded}%`}
                                             </span>
                                           </div>
                                         </td>
@@ -1782,8 +1782,8 @@ export default function PerformanceProductPage() {
                                         <td>
                                           <div className="d-flex flex-column">
                                             <span>{entry.data[0].addToCartUnits === undefined || entry.data[0].addToCartUnits === null ? "-" : entry.data[0].addToCartUnits}</span>
-                                            <span className={`${formatValueRatio(entry.data[0].addToCartUnits).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                              {entry.data[0].addToCartUnits === undefined ? "-" : entry.data[0].addToCartUnits === null ? "0" : `${formatValueRatio(entry.data[0].addToCartUnits).rounded}%`}
+                                            <span className={`${formatValueRatio(entry.data[0].addToCartUnitsComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
+                                              {entry.data[0].addToCartUnitsComparison === undefined ? "-" : entry.data[0].addToCartUnitsComparison === null ? "0" : `${formatValueRatio(entry.data[0].addToCartUnitsComparison).rounded}%`}
                                             </span>
                                           </div>
                                         </td>
@@ -1802,8 +1802,8 @@ export default function PerformanceProductPage() {
                                         <td>
                                           <div className="d-flex flex-column">
                                             <span>{entry.data[0].placedUnits === undefined || entry.data[0].placedUnits === null ? "-" : entry.data[0].placedUnits}</span>
-                                            <span className={`${formatValueRatio(entry.data[0].placedUnits).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                              {entry.data[0].placedUnits === undefined ? "-" : entry.data[0].placedUnits === null ? "0" : `${formatValueRatio(entry.data[0].placedUnits).rounded}%`}
+                                            <span className={`${formatValueRatio(entry.data[0].placedUnitsComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
+                                              {entry.data[0].placedUnitsComparison === undefined ? "-" : entry.data[0].placedUnitsComparison === null ? "0" : `${formatValueRatio(entry.data[0].placedUnitsComparison).rounded}%`}
                                             </span>
                                           </div>
                                         </td>
@@ -1843,7 +1843,7 @@ export default function PerformanceProductPage() {
                                           <div className="d-flex flex-column">
                                             <span>{entry.data[0].confirmedSales === undefined || entry.data[0].confirmedSales === null ? "-" : entry.data[0].confirmedSales}</span>
                                             <span className={`${formatValueRatio(entry.data[0].confirmedSales).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                              {entry.data[0].confirmedSales === undefined ? "-" : entry.data[0].confirmedSales === null ? "0" : `${formatValueRatio(entry.data[0].confirmedSales).rounded}%`}
+                                              {entry.data[0].confirmedSalesComparison === undefined ? "-" : entry.data[0].confirmedSalesComparison === null ? "0" : `${formatValueRatio(entry.data[0].confirmedSalesComparison).rounded}%`}
                                             </span>
                                           </div>
                                         </td>
@@ -1852,8 +1852,8 @@ export default function PerformanceProductPage() {
                                         <td>
                                           <div className="d-flex flex-column">
                                             <span>{entry.data[0].placedSales === undefined || entry.data[0].placedSales === null ? "-" : entry.data[0].placedSales}</span>
-                                            <span className={`${formatValueRatio(entry.data[0].placedSales).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                              {entry.data[0].placedSales === undefined ? "-" : entry.data[0].placedSales === null ? "0" : `${formatValueRatio(entry.data[0].placedSales).rounded}%`}
+                                            <span className={`${formatValueRatio(entry.data[0].placedSalesComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
+                                              {entry.data[0].placedSalesComparison === undefined ? "-" : entry.data[0].placedSalesComparison === null ? "0" : `${formatValueRatio(entry.data[0].placedSalesComparison).rounded}%`}
                                             </span>
                                           </div>
                                         </td>
