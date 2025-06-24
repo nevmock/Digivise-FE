@@ -13,7 +13,6 @@ export default function DetailAds() {
     const navigate = useNavigate();
     const { campaignId } = useParams();
     // Data
-    const shopId = "252234165";
     const [filteredData, setFilteredData] = useState([]);
     const [productData, setProductData] = useState([]);
     const [keywordsData, setKeywordsData] = useState([]);
@@ -41,6 +40,17 @@ export default function DetailAds() {
     const [isLoading, setIsLoading] = useState(false);
     const [isContentLoading, setIsContentLoading] = useState(false);
     const [isTableFilterLoading, setIsTableFilterLoading] = useState(false);
+
+    const getShopeeId = localStorage.getItem("shopeeId");
+    if (getShopeeId == null || getShopeeId === null || getShopeeId === "null" || getShopeeId === "undefined") {
+        return (
+            <BaseLayout>
+                <div className="alert alert-warning">
+                    Tidak ada merchant aktif. Silahkan buat merchant atau login ke merchant terlebih dahulu.
+                </div>
+            </BaseLayout>
+        );
+    };
 
     // CUSTOM CHART WITH FILTER DATE, CLICK PRODUCT FEATURE
     // Define metrics with their display names and colors
@@ -219,7 +229,7 @@ export default function DetailAds() {
             const from1ISO = toLocalISOString(dateRanges.current.from);
             const to1ISO = toLocalISOString(dateRanges.current.to);
 
-            const apiUrl = `/api/product-keyword?shopId=${shopId}&campaignId=${campaignId}&from=${from1ISO}&to=${to1ISO}&limit=50`;
+            const apiUrl = `/api/product-keyword?shopId=${getShopeeId}&campaignId=${campaignId}&from=${from1ISO}&to=${to1ISO}&limit=50`;
 
             const response = await axiosRequest.get(apiUrl);
             const data = await response.data;
@@ -251,7 +261,7 @@ export default function DetailAds() {
             const to2ISO = toLocalISOString(dateRanges?.previous?.to);
 
             const backendPage = Math.max(0, page - 1);
-            const apiUrl = `/api/product-keyword?shopId=${shopId}&campaignId=${campaignId}&from1=${from1ISO}&to1=${to1ISO}&from2=${from2ISO}&to2=${to2ISO}&limit=50&page=${backendPage}`;
+            const apiUrl = `/api/product-keyword?shopId=${getShopeeId}&campaignId=${campaignId}&from1=${from1ISO}&to1=${to1ISO}&from2=${from2ISO}&to2=${to2ISO}&limit=50&page=${backendPage}`;
 
             console.log("API URL Table Data:", apiUrl);
             const response = await axiosRequest.get(apiUrl);

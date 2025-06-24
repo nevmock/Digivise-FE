@@ -21,7 +21,6 @@ import Loading from "../../atoms/Loading/Loading";
 
 
 const AdsTable = ({ shoppeeId }) => {
-  console.log("AdsTable shoppeeId:", shoppeeId);
   // Data
   const [chartRawData, setChartRawData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
@@ -257,7 +256,7 @@ const AdsTable = ({ shoppeeId }) => {
       const from1ISO = toLocalISOString(dateRanges.current.from);
       const to1ISO = toLocalISOString(dateRanges.current.to);
 
-      const apiUrl = `/api/product-ads/chart?shoppeeId=${shoppeeId}&from=${from1ISO}&to=${to1ISO}&limit=100000000000000000`;
+      const apiUrl = `/api/product-ads/chart?shopId=${shoppeeId}&from=${from1ISO}&to=${to1ISO}&limit=100000000000000000`;
       
       const response = await axiosRequest.get(apiUrl);
       const data = await response.data;
@@ -286,7 +285,7 @@ const AdsTable = ({ shoppeeId }) => {
       const to2ISO = toLocalISOString(dateRanges?.previous?.to);
 
       const backendPage = Math.max(0, page - 1);
-      let apiUrl = `/api/product-ads?shoppeeId=${shoppeeId}&from1=${from1ISO}&to1=${to1ISO}&from2=${from2ISO}&to2=${to2ISO}&limit=1000000&page=${backendPage}`;
+      let apiUrl = `/api/product-ads?shopId=${shoppeeId}&from1=${from1ISO}&to1=${to1ISO}&from2=${from2ISO}&to2=${to2ISO}&limit=1000000&page=${backendPage}`;
 
       if (filters.searchQuery && filters.searchQuery.trim() !== "") {
         apiUrl += `&search=${encodeURIComponent(filters.searchQuery.trim())}`;
