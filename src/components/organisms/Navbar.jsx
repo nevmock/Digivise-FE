@@ -111,6 +111,7 @@ const Navbar = () => {
     };
 
     const activeMerchant = userNow?.activeMerchant || null;
+    console.log(activeMerchant)
 
     return (
         <>
@@ -151,12 +152,12 @@ const Navbar = () => {
                                                                     <p style={{ margin: 0 }} className={`text-${convertNotifySessionExpired(merchant.lastLogin).type == "urgent" ? "danger" : "success"}`}>
                                                                         {convertNotifySessionExpired(merchant.lastLogin).text}</p>
                                                                     <div style={{ cursor: "pointer" }} onClick={() => handleOpenLoginModal(merchant)}>
-                                                                        <IoMdRefresh />
+                                                                        <IoMdRefresh size={20} />
                                                                     </div>
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        {activeMerchant?.id !== merchant.id && (
+                                                        {activeMerchant?.id !== merchant?.id && (
                                                             <button
                                                                 type="button"
                                                                 onClick={() => handleOpenLoginModal(merchant)}

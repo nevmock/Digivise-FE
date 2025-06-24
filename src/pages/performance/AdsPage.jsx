@@ -36,7 +36,8 @@ export default function PerformanceAdsPage() {
     // const merchantData = userNow && userNow.merchants !== null && userNow.activeMerchant !== null;
 
 
-    const getShopeeId = localStorage.getItem("shopeeId");
+    // const getShopeeId = localStorage.getItem("shopeeId");
+    const getShopeeId = "252234165";
     if (getShopeeId == null || getShopeeId === null || getShopeeId === "null" || getShopeeId === "undefined") {
         return (
             <BaseLayout>
@@ -45,7 +46,7 @@ export default function PerformanceAdsPage() {
                 </div>
             </BaseLayout>
         );
-    };
+    }
 
     return (
         <>
