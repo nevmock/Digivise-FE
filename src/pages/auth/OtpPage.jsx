@@ -15,7 +15,7 @@ export default function OtpPage() {
     useEffect(() => {
         if (!pendingMerchantLogin) {
             toast.success("Tidak ada login merchant yang tertunda");
-            navigate("/dashboard", { replace: true });
+            navigate("/dashboard", { replace: true }, window.location.reload());
         }
     }, [pendingMerchantLogin, navigate]);
 
@@ -67,8 +67,9 @@ export default function OtpPage() {
 
         try {
             const result = await verifyMerchantOTP(otp);
+            console.log("Result verify OTP:", result);
             
-            if (result?.success || result) {
+            if (result?.success === true || result?.status === 200 || result?.status === "success" || result?.status === "OK" || result?.code === "OK") {
                 const name = userData?.merchants?.find(
                     m => m.id === pendingMerchantLogin.merchantId
                 )?.name || "merchant";
@@ -76,11 +77,10 @@ export default function OtpPage() {
                 toast.success(`Berhasil login ke ${name} via handphone!`);
                 navigate("/dashboard", { replace: true });
             } else {
-                toast.error(result?.message || "Kode OTP tidak valid atau telah kadaluarsa");
+                toast.error("Gagal verifikasi OTP, silakan coba lagi");
             }
         } catch (error) {
-            const errorMessage = error.response?.data?.message || error.message || "Gagal verifikasi OTP";
-            toast.error(errorMessage);
+            toast.error("Gagal verifikasi OTP:");
             console.error("Gagal verifikasi OTP, server error:", error);
         } finally {
             setIsLoading(false);
@@ -160,7 +160,7 @@ export default function OtpPage() {
                                         <button
                                             type="button"
                                             className="btn btn-link"
-                                            onClick={() => navigate("/dashboard", { replace: true })}
+                                            onClick={() => navigate("/dashboard", { replace: true }, window.location.reload())}
                                             disabled={isLoading}
                                         >
                                             Back to Dashboard

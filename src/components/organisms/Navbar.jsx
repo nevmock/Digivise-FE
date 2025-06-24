@@ -6,6 +6,7 @@ import { IoMdRefresh } from "react-icons/io";
 
 import { useAuth } from "../../context/Auth";
 import { logout } from "../../resolver/auth/authApp";
+import axiosRequest from "../../utils/request";
 import CreateMerchantModal from "../organisms/ModalAddMerchant";
 import LoginMerchantUsernameModal from "./ModalLoginUsernameMerchant";
 import ModalOtpByUsername from "./ModalOtpByUsername";
@@ -14,8 +15,7 @@ import convertNotifySessionExpired from "../../utils/convertNotifySessionExpired
 
 
 const Navbar = () => {
-    const { userData, activeMerchant, logoutSuccess } = useAuth();
-    const [isLoading, setIsLoading] = useState(false);
+    const { userData, logoutSuccess } = useAuth();
     const [showDropdown, setShowDropdown] = useState(false);
     const [showModalFormCreateMerchant, setShowModalFormCreateMerchant] = useState(false);
     const [showModalFormLoginUsernameMerchant, setShowModalFormLoginUsernameMerchant] = useState(false);
@@ -24,6 +24,31 @@ const Navbar = () => {
     const dropdownRef = useRef(null);
     const navigate = useNavigate();
     const [themeMode, setThemeMode] = useState(() => localStorage.getItem("appModeTheme") || "light");
+    const [userNow, setUserNow] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
+
+
+    const fetchGetCurrentUser = async () => {
+        setIsLoading(true);
+        try {
+        const response = await axiosRequest.get(`/api/users/${userData.userId}`);
+        if (response.status === 200 || response) {
+            const currentUser = response.data;
+            setUserNow(currentUser);
+        } else {
+            console.error("Gagal mengambil data pengguna saat ini, status:", response.status);
+        }
+
+        } catch (error) {
+        console.error("Error fetching current user:", error);
+        } finally {
+        setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchGetCurrentUser();
+    }, [userData.userId]);
 
     const toggleTheme = () => {
         setThemeMode(prev => (prev === "light" ? "dark" : "light"));
@@ -85,6 +110,8 @@ const Navbar = () => {
         }
     };
 
+    const activeMerchant = userNow?.activeMerchant || null;
+
     return (
         <>
             <header className="app-topbar">
@@ -101,7 +128,7 @@ const Navbar = () => {
                         </div>
                         <div className="d-flex align-items-center gap-2">
                             <div className="topbar-item position-relative" ref={dropdownRef}>
-                                {userData?.merchants && userData.merchants.length > 0 ? (
+                                {userNow?.merchants && userNow?.merchants.length > 0 ? (
                                     <>
                                         <button type="button" className="btn btn-primary" onClick={toggleDropdown}>
                                             Switch Merchant
@@ -109,7 +136,7 @@ const Navbar = () => {
                                         
                                         {showDropdown && (
                                             <div className="dropdown-menu show position-absolute shadow p-2 rounded" style={{ width: "200px" }}>
-                                                {userData.merchants.map((merchant) => (
+                                                {userNow?.merchants.map((merchant) => (
                                                     <div key={merchant.id} className="d-flex flex-column">
                                                         <div className="d-flex align-items-center">
                                                             <img
@@ -119,18 +146,14 @@ const Navbar = () => {
                                                                 height="40"
                                                             />
                                                             <div className="d-flex flex-column flex-grow-1">
-                                                                <strong>{activeMerchant?.id === merchant.id ? activeMerchant.name : merchant.merchantName}</strong>
-                                                                {activeMerchant?.id === merchant.id ? (
-                                                                    <div className="d-flex align-items-center gap-1">
-                                                                        <p style={{ margin: 0 }} className={`text-${convertNotifySessionExpired(activeMerchant.createdAt).type == "urgent" ? "danger" : "success"}`}>
-                                                                            {convertNotifySessionExpired(activeMerchant.createdAt).text}</p>
+                                                                <strong>{activeMerchant?.id === merchant.id ? activeMerchant.name : merchant.name}</strong>
+                                                                <div className="d-flex align-items-center gap-1">
+                                                                    <p style={{ margin: 0 }} className={`text-${convertNotifySessionExpired(merchant.lastLogin).type == "urgent" ? "danger" : "success"}`}>
+                                                                        {convertNotifySessionExpired(merchant.lastLogin).text}</p>
+                                                                    <div style={{ cursor: "pointer" }} onClick={() => handleOpenLoginModal(merchant)}>
                                                                         <IoMdRefresh />
                                                                     </div>
-                                                                ) : (
-                                                                    <div className="d-flex flex-column">
-                                                                        <span className="text-muted small">Not logged in</span>
-                                                                    </div>
-                                                                )}
+                                                                </div>
                                                             </div>
                                                         </div>
                                                         {activeMerchant?.id !== merchant.id && (

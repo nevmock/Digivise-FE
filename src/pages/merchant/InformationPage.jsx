@@ -1,15 +1,40 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useAuth } from "../../context/Auth";
+import axiosRequest from "../../utils/request";
 import BaseLayout from "../../components/organisms/BaseLayout";
 import Loading from "../../components/atoms/Loading/Loading";
 
 
 export default function MerchantInformationPage() {
-  const { activeMerchant, userData } = useAuth();
+  const { userData } = useAuth();
+  const [userNow, setUserNow] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  
-  const merchantData = activeMerchant;
+
+  const fetchGetCurrentUser = async () => {
+    setIsLoading(true);
+    try {
+      const response = await axiosRequest.get(`/api/users/${userData.userId}`);
+      if (response.status === 200) {
+        const currentUser = response.data;
+        setUserNow(currentUser);
+      } else {
+        console.error("Failed to fetch current user, status:", response.status);
+      }
+
+    } catch (error) {
+      console.error("Error fetching current user:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchGetCurrentUser();
+  }, [userData.userId]);
+
+
+  const merchantData = userNow && userNow.merchants !== null && userNow.activeMerchant !== null;
   if (!merchantData) {
     return (
       <BaseLayout>
@@ -51,16 +76,16 @@ export default function MerchantInformationPage() {
                     </span>
                     <div className="d-flex flex-column gap-1">
                       <div className="d-flex flex-column">
-                        <span>Nama Toko</span>
+                        <span>Nama Merchant</span>
                         <h3>
-                          {merchantData.name}
+                          {userNow?.activeMerchant.merchantName}
                         </h3>
                       </div>
-                      <div>
-                        <span>Merchant ID</span>
-                        <p>
-                          {merchantData.id}
-                        </p>
+                      <div className="d-flex flex-column">
+                        <span>Nama Alias Merchant</span>
+                        <h3>
+                          {userNow?.activeMerchant.name}
+                        </h3>
                       </div>
                     </div>
                   </div>
