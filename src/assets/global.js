@@ -26,7 +26,7 @@ function GlobalScripts() {
                             resolve();
                         };
                         
-                        script.onerror = () => reject(`❌ Error loading: ${src}`);
+                        script.onerror = () => reject(`Error load source : ${src}`);
                         
                         document.head.appendChild(script); // Pakai head, bukan body
                     });
@@ -37,19 +37,13 @@ function GlobalScripts() {
                 // Cek apakah ThemeLayout class ada di window
                 if (typeof window.ThemeLayout !== 'undefined') {
                     
-                    // Jika belum ada instance, buat
+                    // Jika belum ada instance, buat baru
                     if (!window.themeLayout) {
                         window.themeLayout = new window.ThemeLayout();
                         window.themeLayout.init();
                     }
                 } else {
-                    console.error("❌ ThemeLayout class still not found");
-                    
-                    // console.log("Available window properties:", 
-                    //     Object.keys(window).filter(key => 
-                    //         key.includes('Theme') || key.includes('theme')
-                    //     )
-                    // );
+                    console.error("ThemeLayout class still not found");
                 }
                 
             } catch (error) {
@@ -68,7 +62,6 @@ function GlobalScripts() {
                 }
             });
             
-            // Cleanup global variables jika perlu
             if (window.themeLayout) {
                 delete window.themeLayout;
             }

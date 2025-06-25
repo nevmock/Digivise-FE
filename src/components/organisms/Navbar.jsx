@@ -31,13 +31,13 @@ const Navbar = () => {
     const fetchGetCurrentUser = async () => {
         setIsLoading(true);
         try {
-        const response = await axiosRequest.get(`/api/users/${userData.userId}`);
-        if (response.status === 200 || response) {
-            const currentUser = response.data;
-            setUserNow(currentUser);
-        } else {
-            console.error("Gagal mengambil data pengguna saat ini, status:", response.status);
-        }
+            const response = await axiosRequest.get(`/api/users/${userData.userId}`);
+            if (response.status === 200 || response) {
+                const currentUser = response.data;
+                setUserNow(currentUser);
+            } else {
+                console.error("Gagal mengambil data pengguna saat ini, status:", response.status);
+            }
 
         } catch (error) {
         console.error("Error fetching current user:", error);
@@ -63,10 +63,6 @@ const Navbar = () => {
     const closeModalOTPUsername = () => setShowModalFormOTPUsername(false);
 
     const handleOpenLoginModal = (merchant) => {
-        if (activeMerchant?.id === merchant.id) {
-            toast.info("Already logged in to this merchant");
-            return;
-        }
         setSelectedMerchant(merchant);
         setShowModalFormLoginUsernameMerchant(true);
     };
@@ -111,7 +107,6 @@ const Navbar = () => {
     };
 
     const activeMerchant = userNow?.activeMerchant || null;
-    console.log(activeMerchant)
 
     return (
         <>
@@ -136,9 +131,18 @@ const Navbar = () => {
                                         </button>
                                         
                                         {showDropdown && (
-                                            <div className="dropdown-menu show position-absolute shadow p-2 rounded" style={{ width: "200px" }}>
+                                            <div className="dropdown-menu show position-absolute shadow p-2 rounded" style={{ width: "220px" }}>
                                                 {userNow?.merchants.map((merchant) => (
-                                                    <div key={merchant.id} className="d-flex flex-column">
+                                                    <div key={merchant.id} id="custom-hover-login-navbar" className="d-flex flex-column mb-2 position-relative"
+                                                        style={{
+                                                            cursor: "pointer",
+                                                            borderRadius: "5px",
+                                                            justifyContent: "center",
+                                                            padding: "8px 8px", 
+                                                            backgroundColor: activeMerchant?.id === merchant.id ? "#7F42D421" : "transparent"
+                                                        }}
+                                                    >
+                                                        <span className="custom-tooltip">Login ke {merchant.name}</span>
                                                         <div className="d-flex align-items-center">
                                                             <img
                                                                 src={avatarProfile}
@@ -147,29 +151,25 @@ const Navbar = () => {
                                                                 height="40"
                                                             />
                                                             <div className="d-flex flex-column flex-grow-1">
-                                                                <strong>{activeMerchant?.id === merchant.id ? activeMerchant.name : merchant.name}</strong>
-                                                                <div className="d-flex align-items-center gap-1">
-                                                                    <p style={{ margin: 0 }} className={`text-${convertNotifySessionExpired(merchant.lastLogin).type == "urgent" ? "danger" : "success"}`}>
+                                                                <div className="d-flex flex-column gap-1">
+                                                                    <strong>{activeMerchant?.id === merchant.id ? activeMerchant.name : merchant.name}</strong>
+                                                                    <p style={{ margin: 0, fontSize: "11px" }} className={`text-${convertNotifySessionExpired(merchant.lastLogin).type == "urgent" ? "danger" : "success"}`}>
                                                                         {convertNotifySessionExpired(merchant.lastLogin).text}</p>
-                                                                    <div style={{ cursor: "pointer" }} onClick={() => handleOpenLoginModal(merchant)}>
-                                                                        <IoMdRefresh size={20} />
-                                                                    </div>
                                                                 </div>
                                                             </div>
+                                                            <div className="flex-grow-1" style={{ cursor: "pointer" }} onClick={() => handleOpenLoginModal(merchant)}>
+                                                                <IoMdRefresh size={30} />
+                                                            </div>
                                                         </div>
-                                                        {activeMerchant?.id !== merchant?.id && (
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => handleOpenLoginModal(merchant)}
-                                                                className="btn btn-outline-primary btn-sm mt-2"
-                                                            >
-                                                                Login
-                                                            </button>
-                                                        )}
-                                                        <hr className="my-2" />
+                                                        <hr
+                                                            style={{ 
+                                                                margin: "8px 0 0 0",
+                                                                display: activeMerchant?.id === merchant.id ? "none" : "block",
+                                                            }}
+                                                        />
                                                     </div>
                                                 ))}
-                                                <button className="btn btn-success w-100 fs-5" onClick={() => setShowModalFormCreateMerchant(true)}>Add Merchant</button>
+                                                <button className="btn btn-success w-100 fs-5 mt-2" onClick={() => setShowModalFormCreateMerchant(true)}>Add Merchant</button>
                                             </div>
                                         )}
                                     </>

@@ -67,20 +67,20 @@ export default function OtpPage() {
 
         try {
             const result = await verifyMerchantOTP(otp);
-            console.log("Result verify OTP:", result);
+            console.log("Result from verifyMerchantOTP:", result);
             
             if (result?.success === true || result?.status === 200 || result?.status === "success" || result?.status === "OK" || result?.code === "OK") {
                 const name = userData?.merchants?.find(
                     m => m.id === pendingMerchantLogin.merchantId
                 )?.name || "merchant";
 
-                toast.success(`Berhasil login ke ${name} via handphone!`);
-                navigate("/dashboard", { replace: true });
+                toast.success(`Berhasil login ke ${name} via handphone`);
+                navigate("/dashboard", { replace: true }, window.location.reload());
             } else {
                 toast.error("Gagal verifikasi OTP, silakan coba lagi");
             }
         } catch (error) {
-            toast.error("Gagal verifikasi OTP:");
+            toast.error("Gagal verifikasi OTP",  error.message);
             console.error("Gagal verifikasi OTP, server error:", error);
         } finally {
             setIsLoading(false);
@@ -97,9 +97,22 @@ export default function OtpPage() {
         );
     }
 
+    console.log("Pending Merchant Login:", pendingMerchantLogin);
+
+    userData?.merchants?.forEach(m => {
+        console.log("Merchant:", m);
+    });
+
+    userData?.merchants?.find(m => {
+        console.log("Checking Merchant:", m.id, "against", pendingMerchantLogin.merchantId);
+        return m.id === pendingMerchantLogin.merchantId;
+    });
+
     const name = userData?.merchants?.find(
-        m => m.id === pendingMerchantLogin.merchantId
-    )?.name || "merchant";
+        m => m.id == pendingMerchantLogin.merchantId
+    )?.name;
+
+    console.log("Merchant Name:", name);
 
     return (
         <div className="account-pages py-5 bg-white vh-100 d-flex justify-content-center align-items-center">
@@ -147,10 +160,10 @@ export default function OtpPage() {
                                             disabled={isLoading}
                                         >
                                             {isLoading ? (
-                                                <>
+                                                <div className="d-flex align-items-center justify-content-center gap-2">
                                                     <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                                                     Verifying...
-                                                </>
+                                                </div>
                                             ) : (
                                                 "Verify"
                                             )}
