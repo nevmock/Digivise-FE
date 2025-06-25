@@ -48,7 +48,6 @@ export default function MerchantKpiPage() {
 
   const merchantData = userNow && userNow.merchants !== null && userNow.activeMerchant !== null;
   const activeMerchant = userNow?.activeMerchant;
-  const shopid = activeMerchant?.merchantShopeeId;
   
   const transformApiDataToKpiList = (apiData) => {
     return [
@@ -123,6 +122,7 @@ export default function MerchantKpiPage() {
       }
     } catch (error) {
       if (isMounted.current) {
+        toast.error("Gagal memperbarui data KPI");
         console.error("Gagal memperbarui data KPI, kesalahan pada server", error);
       }
     } finally {
@@ -181,11 +181,11 @@ export default function MerchantKpiPage() {
                 </div>
               </div>
               <div className="d-flex justify-content-end mt-3">
-                <button type="submit" className="btn btn-success" onClick={handleUpdate} disabled={isUpdating}>
+                <button type="submit" className="w-100 btn btn-success" onClick={handleUpdate} disabled={isUpdating}>
                   {
                     isUpdating ? (
                       <div className="spinner-border spinner-border-sm" role="status">
-                        <span className="visually-hidden">Loading...</span>
+                        <span className="visually-hidden">Updating...</span>
                       </div>
                     ) : (
                       "Update"

@@ -67,7 +67,6 @@ export default function OtpPage() {
 
         try {
             const result = await verifyMerchantOTP(otp);
-            console.log("Result from verifyMerchantOTP:", result);
             
             if (result?.success === true || result?.status === 200 || result?.status === "success" || result?.status === "OK" || result?.code === "OK") {
                 const name = userData?.merchants?.find(
@@ -97,23 +96,6 @@ export default function OtpPage() {
         );
     }
 
-    console.log("Pending Merchant Login:", pendingMerchantLogin);
-
-    userData?.merchants?.forEach(m => {
-        console.log("Merchant:", m);
-    });
-
-    userData?.merchants?.find(m => {
-        console.log("Checking Merchant:", m.id, "against", pendingMerchantLogin.merchantId);
-        return m.id === pendingMerchantLogin.merchantId;
-    });
-
-    const name = userData?.merchants?.find(
-        m => m.id == pendingMerchantLogin.merchantId
-    )?.name;
-
-    console.log("Merchant Name:", name);
-
     return (
         <div className="account-pages py-5 bg-white vh-100 d-flex justify-content-center align-items-center">
             <div className="background-bubbles">
@@ -129,7 +111,7 @@ export default function OtpPage() {
                                 <div className="text-center">
                                     <h1 className="fw-bold text-dark mb-2">OTP Verification</h1>
                                     <p className="text-muted">
-                                        Enter the 6-digit code sent to your phone for <strong>{name}</strong>
+                                        Enter the 6-digit code
                                     </p>
                                 </div>
                                 <form className="mt-5" onSubmit={handleSubmitVerifyOTP}>

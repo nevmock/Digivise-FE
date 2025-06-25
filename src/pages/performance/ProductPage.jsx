@@ -9,9 +9,9 @@ import { useAuth } from "../../context/Auth";
 import axiosRequest from "../../utils/request";
 import useDebounce from "../../hooks/useDebounce";
 import BaseLayout from "../../components/organisms/BaseLayout";
-import convertBudgetToIDR from "../../utils/convertBudgetIDR";
+import convertBudgetToIDR from "../../utils/convertFromatToIDR";
 import converTypeAds from "../../utils/convertTypeAds";
-import formatRupiahFilter from "../../utils/convertFormatRupiahFilter";
+import formatRupiahFilter from "../../utils/convertFormatToENG";
 import convertFormatCTR from "../../utils/convertFormatToCTR";
 import formatMetricValue from "../../utils/convertValueMetricFilter";
 import formatValueRatio from "../../utils/convertFormatRatioValue";
@@ -19,9 +19,6 @@ import Loading from "../../components/atoms/Loading/Loading";
 
 
 export default function PerformanceProductPage() {
-  const { userData } = useAuth();
-  const [userNow, setUserNow] = useState(null);
-  const [shopDataId, setShopDataId] = useState(null);
   // Data
   const [chartRawData, setChartRawData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
@@ -54,8 +51,8 @@ export default function PerformanceProductPage() {
   const [isContentLoading, setIsContentLoading] = useState(false);
   const [isTableFilterLoading, setIsTableFilterLoading] = useState(false);
 
-  // const getShopeeId = localStorage.getItem("shopeeId");
-  const getShopeeId = "252234165";
+  const getShopeeId = localStorage.getItem("shopeeId");
+  // const getShopeeId = "252234165";
   if (getShopeeId == null || getShopeeId === null || getShopeeId === "null" || getShopeeId === "undefined") {
       return (
       <BaseLayout>
@@ -65,40 +62,6 @@ export default function PerformanceProductPage() {
       </BaseLayout>
     );
   };
-
-
-  // const fetchGetCurrentUser = async () => {
-  //   setIsLoading(true);
-  //   try {
-  //     const response = await axiosRequest.get(`/api/users/${userData.userId}`);
-  //     if (response.status === 200 || response.status === 201 || response.code === 200) {
-  //       const currentUser = response.data;
-  //       setUserNow(currentUser);
-  //     } else {
-  //       console.error("Failed to fetch current user, status:", response.status);
-  //     }
-
-  //   } catch (error) {
-  //     console.error("Error fetching current user:", error);
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   fetchGetCurrentUser();
-  // }, [userData.userId]);
-
-  // const merchantData = userNow && userNow?.merchants && userNow?.activeMerchant !== null;
-  // if (!merchantData) {
-  //   return (
-  //     <BaseLayout>
-  //       <div className="alert alert-warning">
-  //         Tidak ada merchant aktif. Silahkan buat merchant atau login ke merchant terlebih dahulu.
-  //       </div>
-  //     </BaseLayout>
-  //   );
-  // };
 
   // Define metrics with their display names and colors
   const metrics = {
@@ -150,7 +113,6 @@ export default function PerformanceProductPage() {
   };
 
   const toLocalISOString = (date) => {
-    // console.log('Converting date to ISO string:', date);
     const year = date?.getFullYear();
     const month = String(date?.getMonth() + 1).padStart(2, '0');
     const day = String(date?.getDate()).padStart(2, '0');
@@ -288,7 +250,7 @@ export default function PerformanceProductPage() {
       const from1ISO = toLocalISOString(dateRanges.current.from);
       const to1ISO = toLocalISOString(dateRanges.current.to);
 
-      const apiUrl = `/api/product-performance/chart?shopId=${getShopeeId}&from=${from1ISO}&to=${to1ISO}&limit=100000000000000000`;
+      const apiUrl = `/api/product-performance/chart?shopId=${getShopeeId}&from=${from1ISO}&to=${to1ISO}&limit=100000000000000000000`;
 
       const response = await axiosRequest.get(apiUrl);
       const data = await response.data;
@@ -319,18 +281,11 @@ export default function PerformanceProductPage() {
       let apiUrl = `/api/product-performance?shopId=${getShopeeId}&from1=${from1ISO}&to1=${to1ISO}&from2=${from2ISO}&to2=${to2ISO}&limit=1000000&page=${backendPage}`;
 
       if (filters.searchQuery && filters.searchQuery.trim() !== "") {
-        apiUrl += `&search=${encodeURIComponent(filters.searchQuery.trim())}`;
+        apiUrl += `&name=${encodeURIComponent(filters.searchQuery.trim())}`;
       }
       
       if (filters.statusFilter && filters.statusFilter !== "all") {
         apiUrl += `&state=${filters.statusFilter}`;
-      }
-
-      if (filters.typeAds && filters.typeAds.length > 0) {
-        const typeValues = filters.typeAds.map(type => type.value);
-        if (!typeValues.includes("all")) {
-          apiUrl += `&biddingStrategy=${typeValues.join(",")}`;
-        }
       }
 
       if (filters.classification && filters.classification.length > 0) {
@@ -338,11 +293,6 @@ export default function PerformanceProductPage() {
         apiUrl += `&salesClassification=${classificationValues.join(",")}`;
       }
 
-      if (filters.placement && filters.placement.value !== "all") {
-        apiUrl += `&productPlacement=${filters.placement.value}`;
-      }
-
-      // console.log('API URL Table Data:', apiUrl);
       const response = await axiosRequest.get(apiUrl);
       const data = await response.data;
       const content = data.content || [];
@@ -576,12 +526,12 @@ export default function PerformanceProductPage() {
       });
 
       chartDataProducts?.forEach((product) => {
-        if (!product.data || product.data.length === 0) return;
+        if (product.data.length === 0 || !product.data) return;
         
         if (isSingleDay) {
           product?.data.forEach(productData => {
             // should be and operator
-            if ((!productData && !productData.shopeeFrom) || !productData.createdAt) return;
+            if (!productData.shopeeFrom || !productData.createdAt) return;
 
             const test = getDataDate(productData);
             const createdAt = test;
@@ -608,7 +558,7 @@ export default function PerformanceProductPage() {
           const dataByDate = {};
           
           product?.data.forEach((productData) => {
-            if ((!productData && !productData.shopeeFrom) || !productData.createdAt) return;
+            if (!productData.shopeeFrom || !productData.createdAt) return;
 
             const test = getDataDate(productData);
             const createdAt = test;

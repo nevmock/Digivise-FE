@@ -33,7 +33,6 @@ export default function MerchantInformationPage() {
     fetchGetCurrentUser();
   }, [userData.userId]);
 
-
   const merchantData = userNow && userNow.merchants !== null && userNow.activeMerchant !== null;
   if (!merchantData) {
     return (
@@ -77,15 +76,21 @@ export default function MerchantInformationPage() {
                     <div className="d-flex flex-column gap-1">
                       <div className="d-flex flex-column">
                         <span>Nama Merchant</span>
-                        <h3>
-                          {userNow?.activeMerchant.merchantName}
-                        </h3>
+                        <h4>
+                          {userNow?.activeMerchant?.merchantName || "-"}
+                        </h4>
                       </div>
                       <div className="d-flex flex-column">
                         <span>Nama Alias Merchant</span>
-                        <h3>
-                          {userNow?.activeMerchant.name}
-                        </h3>
+                        <h4>
+                          {userNow?.activeMerchant?.name || "-"}
+                        </h4>
+                      </div>
+                      <div className="d-flex flex-column">
+                        <span>Nama Alias Merchant</span>
+                        <h4>
+                          {userNow?.activeMerchant?.merchantShopeeId || "-"}
+                        </h4>
                       </div>
                     </div>
                   </div>

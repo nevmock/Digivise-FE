@@ -64,7 +64,6 @@ const MerchantModalOTPByUsername = ({ onClose, merchant}) => {
 
         try {
             const result = await verifyMerchantOTP(formData.otp);
-            console.log("Result from verifyMerchantOTP:", result);
 
             if (result?.success === true || result?.code === 0 || result?.message.includes("succ") || result?.status === "OK" || result?.status === 200) {
                 onClose();
@@ -92,7 +91,6 @@ const MerchantModalOTPByUsername = ({ onClose, merchant}) => {
 
         try {
             const result = await requestPhoneOTP();
-            console.log("Result from requestPhoneOTP:", result);
             if (result.data.success || result.data.code === 200 || result.data.status === "OK" || result.data.status === 200) {
                 toast.success("OTP telah dikirim ke handphone Anda");
                 onClose();
@@ -120,10 +118,10 @@ const MerchantModalOTPByUsername = ({ onClose, merchant}) => {
                 ref={modalRef}
                 onClick={(e) => e.stopPropagation()}
             >
-                <h5 className="text-center">Verify OTP</h5>
+                <h5 className="text-center mb-2">Verify OTP</h5>
                 <hr />
                 <form onSubmit={handleSubmitFormData}>
-                    <div className="mb-3">
+                    <div className="mb-1">
                         <input
                             name="otp"
                             type="text"
