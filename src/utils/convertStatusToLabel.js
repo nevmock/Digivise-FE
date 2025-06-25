@@ -1,7 +1,5 @@
 const convertStatusToLabel = (status) => {
     switch (status) {
-        case "all":
-            return "Semua";
         case "scheduled":
             return "Terjadwal";
         case "ongoing":

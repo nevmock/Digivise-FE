@@ -66,7 +66,7 @@ export const AuthProvider = ({ children }) => {
                 }
             });
 
-            if (response.status !== 200 || response.data.status !== "OK" || response.data.status !== 200) {
+            if (response.data.code != 200 || response.data.status != "OK") {
                 throw new Error("Failed to request phone OTP");
             }
 
@@ -135,7 +135,7 @@ export const AuthProvider = ({ children }) => {
             const { username, merchantId } = pendingMerchantLogin;
             const response = await verifyMerchantOtpAPI(username, merchantId, otp);
 
-            if (response.code == 200 || response.status == 200 || response.status == "OK" || response.status == 200) {
+            if (response.code == 200 || response.status == 200 || response.status == "OK" || response.code == 200) {
                 setPendingMerchantLogin(null);
                 
                 const selectedMerchant = userData.merchants.find(m => m.id === merchantId);
