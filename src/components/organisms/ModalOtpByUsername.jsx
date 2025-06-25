@@ -64,11 +64,10 @@ const MerchantModalOTPByUsername = ({ onClose, merchant}) => {
 
         try {
             const result = await verifyMerchantOTP(formData.otp);
-            // console.log("Result verify OTP:", result);
-            
+
             if (result?.success === true || result?.code === 0 || result?.message.contains("succ")){
                 onClose();
-                navigate("/dashboard", { replace: true });
+                navigate("/dashboard", { replace: true }, window.location.reload());
                 toast.success(`Berhasil login ke ${merchant?.name}`);
             } else {
                 toast.error("Kode OTP tidak valid atau telah kadaluarsa");
@@ -123,7 +122,7 @@ const MerchantModalOTPByUsername = ({ onClose, merchant}) => {
                 <h5 className="text-center">Verify OTP</h5>
                 <hr />
                 <form onSubmit={handleSubmitFormData}>
-                    <div className="mb-2">
+                    <div className="mb-3">
                         <input
                             name="otp"
                             type="text"
@@ -152,7 +151,7 @@ const MerchantModalOTPByUsername = ({ onClose, merchant}) => {
                         className="btn btn-secondary w-100 mt-2"
                         onClick={() => {
                             onClose();
-                            navigate("/dashboard", { replace: true });
+                            navigate("/dashboard", { replace: true }, window.location.reload());
                         }}
                         disabled={isLoading}
                     >
