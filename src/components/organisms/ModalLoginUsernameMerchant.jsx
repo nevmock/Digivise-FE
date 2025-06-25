@@ -59,7 +59,7 @@ const MerchantModalLoginWithUsername = ({ onClose, merchant, onOTPRequired }) =>
                 merchant.id
             );
 
-            if (result.success && result.requiresOTP) {
+            if (result.success == true && result.requiresOTP == true) {
                 toast.success("Kode OTP telah dikirim ke email Anda");
                 setFormData({ username: "", password: "" });
                 onClose();
@@ -118,7 +118,10 @@ const MerchantModalLoginWithUsername = ({ onClose, merchant, onOTPRequired }) =>
                     <div className="mt-4">
                         <button type="submit" className="btn btn-success w-100" disabled={isLoading}>
                             {isLoading ? (
-                                <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                <div className="d-flex gap-1 align-items-center justify-content-center">
+                                    <span>Loading...</span>
+                                    <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                </div>
                             ) : (
                                 "Login"
                             )}

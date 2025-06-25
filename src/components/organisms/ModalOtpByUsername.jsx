@@ -64,8 +64,9 @@ const MerchantModalOTPByUsername = ({ onClose, merchant}) => {
 
         try {
             const result = await verifyMerchantOTP(formData.otp);
+            console.log("Result from verifyMerchantOTP:", result);
 
-            if (result?.success === true || result?.code === 0 || result?.message.contains("succ")){
+            if (result?.success === true || result?.code === 0 || result?.message.includes("succ") || result?.status === "OK" || result?.status === 200) {
                 onClose();
                 navigate("/dashboard", { replace: true }, window.location.reload());
                 toast.success(`Berhasil login ke ${merchant?.name}`);
@@ -83,7 +84,7 @@ const MerchantModalOTPByUsername = ({ onClose, merchant}) => {
     const handlePhoneLogin = async () => {
         if (!pendingMerchantLogin) {
             toast.error("Session expired, mohon login ulang");
-            onClose();
+            onClose();  
             return;
         }
 
@@ -91,6 +92,7 @@ const MerchantModalOTPByUsername = ({ onClose, merchant}) => {
 
         try {
             const result = await requestPhoneOTP();
+            console.log("Result from requestPhoneOTP:", result);
             if (result.data.success || result.data.code === 200 || result.data.status === "OK" || result.data.status === 200) {
                 toast.success("OTP telah dikirim ke handphone Anda");
                 onClose();
@@ -99,9 +101,8 @@ const MerchantModalOTPByUsername = ({ onClose, merchant}) => {
                 toast.error("Gagal mengirim OTP ke handphone");
             }
         } catch (error) {
-            const errorMessage = error.response?.data?.message || error.message || "Failed to request phone OTP";
-            toast.error(`Gagal mengirim OTP: ${errorMessage}`);
-            console.error("Phone OTP request error:", error);
+            toast.error("Gagal mengirim OTP, silahkan coba lagi");
+            console.error("Gagal mengirim OTP ke nomor handphone:", error);
         } finally {
             setIsPhoneLoading(false);
         }
@@ -141,7 +142,10 @@ const MerchantModalOTPByUsername = ({ onClose, merchant}) => {
 
                     <button type="submit" className="btn btn-success w-100 mt-2" disabled={isLoading}>
                         {isLoading ? (
-                            <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            <div className="d-flex align-items-center gap-1 justify-content-center">
+                                <span>Verifying...</span>
+                                <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            </div>
                         ) : (
                             "Veirify OTP"
                         )}
@@ -170,10 +174,10 @@ const MerchantModalOTPByUsername = ({ onClose, merchant}) => {
                             }}
                         >
                             {isPhoneLoading ? (
-                                <>
+                                <div className="d-flex align-items-center gap-1 justify-content-center">
+                                    <span>Sending OTP...</span>
                                     <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-                                    Sending OTP...
-                                </>
+                                </div>
                             ) : (
                                 "Login No.Handphone >"
                             )}
