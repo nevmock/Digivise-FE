@@ -5,10 +5,9 @@ import Select from "react-select";
 import toast from "react-hot-toast";
 import { FaAngleLeft, FaAngleRight, FaAngleDown, FaAngleUp } from "react-icons/fa6";
 
-import { useAuth } from "../../context/Auth";
 import convertStatusToLabel from "../../utils/convertStatusToLabel";
+import formatTableValue from "../../utils/formatTableValue";
 import axiosRequest from "../../utils/request";
-import stockJsonData from "../../api/stock.json";
 import useDebounce from "../../hooks/useDebounce";
 import BaseLayout from "../../components/organisms/BaseLayout";
 import iconArrowUp from "../../assets/icon/arrow-up.png";
@@ -49,8 +48,8 @@ export default function PerformanceStockPage() {
   const [isContentLoading, setIsContentLoading] = useState(false);
   const [isTableFilterLoading, setIsTableFilterLoading] = useState(false);
 
-  // const getShopeeId = localStorage.getItem("shopeeId");
-  const getShopeeId = "252234165";
+  const getShopeeId = localStorage.getItem("shopeeId");
+  // const getShopeeId = "252234165";
   if (getShopeeId == null || getShopeeId === null || getShopeeId === "null" || getShopeeId === "undefined") {
       return (
       <BaseLayout>
@@ -62,13 +61,13 @@ export default function PerformanceStockPage() {
   };
 
 
+
   // CUSTOM CHART WITH FILTER DATE & CLICK PRODUCT FEATURE
   function getAllDaysInLast7Days() {
     const getLocalDateString = (date) => {
-      const localDate = date instanceof Date ? date : new Date(date);
-      const year = localDate.getFullYear();
-      const month = String(localDate.getMonth() + 1).padStart(2, '0');
-      const day = String(localDate.getDate()).padStart(2, '0');
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
       return `${year}-${month}-${day}`;
     };
     
@@ -99,20 +98,20 @@ export default function PerformanceStockPage() {
   };
 
   function getDateRangeIntervals(startDate, endDate) {
-    // Set start and end dates to the beginning and end of the day
-    const start = startDate instanceof Date ? new Date(startDate) : new Date(startDate);
-    const end = endDate instanceof Date ? new Date(endDate) : new Date(endDate);
-    // Set start to the beginning of the day and end to the end of the day
-    start.setHours(0, 0, 0, 0);
-    end.setHours(23, 59, 59, 999);
-
-    const dateArray = [];
     const getLocalDateString = (date) => {
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const day = String(date.getDate()).padStart(2, '0');
       return `${year}-${month}-${day}`;
     };
+
+    const start = startDate instanceof Date ? new Date(startDate) : new Date(startDate);
+    const end = endDate instanceof Date ? new Date(endDate) : new Date(endDate);
+
+    start.setHours(0, 0, 0, 0);
+    end.setHours(23, 59, 59, 999);
+
+    const dateArray = [];
 
     // Calculate the difference in days between start and end dates
     const diffTime = Math.abs(end - start);
@@ -148,11 +147,9 @@ export default function PerformanceStockPage() {
     
     const durationMs = end.getTime() - start.getTime();
     
-     // Current period (from1, to1) - numerator/pembanding
     const from1 = new Date(start);
     const to1 = new Date(end);
-    
-    // Previous period (from2, to2) - denominator/pembanding sebelumnya
+
     const from2 = new Date(start.getTime() - durationMs);
     const to2 = new Date(start.getTime() - 1);
     
@@ -255,15 +252,12 @@ export default function PerformanceStockPage() {
         getShopeeId,
         currentFromDate,
         currentToDate,
-        100000000
+        1000000000
       );
 
-      // console.log('Fetching CHART API URL:', apiUrl);
-      
       const response = await axiosRequest.get(apiUrl);
       const data = response.data;
       const content = data.content || [];
-      // console.log('Chart data fetched:', content);
 
       setChartRawData(content);
       
@@ -299,7 +293,7 @@ export default function PerformanceStockPage() {
       );
 
       if (filters.searchQuery && filters.searchQuery.trim() !== "") {
-        apiUrl += `&search=${encodeURIComponent(filters.searchQuery.trim())}`;
+        apiUrl += `&name=${encodeURIComponent(filters.searchQuery.trim())}`;
       }
       
       if (filters.statusFilter && filters.statusFilter !== "all") {
@@ -311,12 +305,9 @@ export default function PerformanceStockPage() {
         apiUrl += `&classification=${classificationValues.join(",")}`;
       }
 
-      // console.log('Fetching TABLE API URL:', apiUrl);
-
       const response = await axiosRequest.get(apiUrl);
       const data = response.data;
       const content = data.content || [];
-      // console.log('Table data fetched:', content);
 
       setFilteredData(content);
       setTotalPages(data?.totalPages || 1);
@@ -433,7 +424,20 @@ export default function PerformanceStockPage() {
       }
     }
 
-    if (!timeIntervals || timeIntervals.length === 0) {
+    const convertShopeeTimestampToDate = (timestamp) => {
+      return new Date(timestamp * 1000);
+    };
+
+    const getDataDate = (productData) => {
+      if (productData.shopeeFrom) {
+        return convertShopeeTimestampToDate(productData.shopeeFrom);
+      } else if (productData.createdAt) {
+        return new Date(productData.createdAt);
+      }
+      return null;
+    };
+
+    if (timeIntervals.length === 0 || !timeIntervals.length) {
       timeIntervals = [new Date().toISOString().split("T")[0]];
       fromDate = new Date();
       toDate = new Date();
@@ -452,15 +456,14 @@ export default function PerformanceStockPage() {
     });
 
     chartDataProducts?.forEach((productItem) => {
-      if (!productItem.data || productItem.data.length === 0) return;
+      if (productItem.data.length === 0 || !productItem.data) return;
 
       if (isSingleDay) {
         productItem.data.forEach((stockData) => {
-          if (!stockData && !stockData.createdAt) return;
+          if (stockData.createdAt === null || stockData.shopeeFrom === null) return;
 
-          // const test = getDataDate(stockData);
-          // const createdAt = test;
-          const createdAt = new Date(stockData.createdAt);
+          const test = getDataDate(stockData);
+          const createdAt = test;
           const productDateStr = getLocalDateString(createdAt);
           const filterDateStr = getLocalDateString(fromDate);
 
@@ -475,7 +478,7 @@ export default function PerformanceStockPage() {
 
           if (timeIntervals.includes(hourOnlyKey)) {
             const stockValue = stockData.totalAvailableStock;
-            if (stockValue !== undefined && stockValue !== null) {
+            if (stockValue !== null) {
               dataMap[hourOnlyKey] += Number(stockValue);
             }
           }
@@ -484,18 +487,16 @@ export default function PerformanceStockPage() {
         const dataByDate = {};
 
         productItem.data.forEach((stockData) => {
-          if (!stockData && !stockData.createdAt) return;
+          if (stockData.createdAt === null || stockData.shopeeFrom === null) return;
 
-          // const test = getDataDate(stockData);
-          // const createdAt = test;
-          const createdAt = new Date(stockData.createdAt);
+          const test = getDataDate(stockData);
+          const createdAt = test;
           const productYear = createdAt.getFullYear();
           const productMonth = String(createdAt.getMonth() + 1).padStart(2, "0");
           const productDay = String(createdAt.getDate()).padStart(2, "0");
           const dateDayKey = `${productYear}-${productMonth}-${productDay}`;
 
           const productDateStr = getLocalDateString(createdAt);
-          // const filterStartStr = Array.isArray(selectedDate) ? selectedDate[0] : timeIntervals[0];
           const filterStartStr = getLocalDateString(fromDate);
           const filterEndStr = getLocalDateString(toDate);
 
@@ -559,18 +560,18 @@ export default function PerformanceStockPage() {
       }
     }
 
-    // const convertShopeeTimestampToDate = (timestamp) => {
-    //   return new Date(timestamp * 1000);
-    // };
+    const convertShopeeTimestampToDate = (timestamp) => {
+      return new Date(timestamp * 1000);
+    };
 
-    // const getDataDate = (productData) => {
-    //   if (productData.shopeeFrom) {
-    //     return convertShopeeTimestampToDate(productData.shopeeFrom);
-    //   } else if (productData.createdAt) {
-    //     return new Date(productData.createdAt);
-    //   }
-    //   return null;
-    // };
+    const getDataDate = (productData) => {
+      if (productData.shopeeFrom) {
+        return convertShopeeTimestampToDate(productData.shopeeFrom);
+      } else if (productData.createdAt) {
+        return new Date(productData.createdAt);
+      }
+      return null;
+    };
 
     const selectedProductData = chartRawData.find((p) => p.productId === product.productId);
     if (!selectedProductData || !selectedProductData.data) return [];
@@ -578,8 +579,8 @@ export default function PerformanceStockPage() {
     // Check if product has variants in its data
     const allVariants = new Map();
     selectedProductData?.data.forEach((stockData) => {
-      if (stockData?.variants) {
-        stockData.variants.forEach((variant) => {
+      if (stockData?.modelStocks) {
+        stockData.modelStocks.forEach((variant) => {
           if (!allVariants.has(variant.id)) {
             allVariants.set(variant.id, {
               id: variant.id,
@@ -601,9 +602,10 @@ export default function PerformanceStockPage() {
 
       if (mode === "hourly") {
         selectedProductData.data.forEach((stockData) => {
-          if (!stockData || !stockData.createdAt || !stockData.variants) return;
+          if (!stockData.modelStocks || !stockData.createdAt || !stockData.shopeeFrom) return;
 
-          const createdAt = new Date(stockData.createdAt);
+          const test = getDataDate(stockData);
+          const createdAt = test;
           const productDateStr = getLocalDateString(createdAt);
 
           const filterDate = dateMode === 'single' ? date : Array.isArray(selectedDate) ? selectedDate[0] : selectedDate;
@@ -612,10 +614,10 @@ export default function PerformanceStockPage() {
           if (productDateStr === filterDateStr) {
             const hourKey = String(createdAt.getHours()).padStart(2, "0");
             const timeKey = `${productDateStr} ${hourKey}:00`;
-            const currentVariant = stockData.variants.find(v => v.id === variantInfo.id);
+            const currentVariant = stockData.modelStocks.find(v => v.id === variantInfo.id);
 
             if (currentVariant && timeIntervals.includes(timeKey)) {
-              variantStockMap[timeKey] = currentVariant.stock || 0;
+              variantStockMap[timeKey] = currentVariant?.totalAvailableStock || 0;
             }
           }
         });
@@ -623,9 +625,10 @@ export default function PerformanceStockPage() {
         const dataByDate = {};
 
         selectedProductData.data.forEach((stockData) => {
-          if (!stockData || !stockData.createdAt || !stockData.variants) return;
+          if (!stockData.modelStocks || !stockData.createdAt || !stockData.shopeeFrom) return;
 
-          const createdAt = new Date(stockData.createdAt);
+          const test = getDataDate(stockData);
+          const createdAt = test;
           const productYear = createdAt.getFullYear();
           const productMonth = String(createdAt.getMonth() + 1).padStart(2, "0");
           const productDay = String(createdAt.getDate()).padStart(2, "0");
@@ -646,14 +649,14 @@ export default function PerformanceStockPage() {
         Object.keys(dataByDate).forEach((dateDayKey) => {
           const stockData = dataByDate[dateDayKey];
 
-          if (timeIntervals.includes(dateDayKey) && stockData.variants) {
-            const currentVariant = stockData.variants.find(v => v.id === variantInfo.id);
+          if (timeIntervals.includes(dateDayKey) && stockData.modelStocks) {
+            const currentVariant = stockData.modelStocks.find(v => v.id === variantInfo.id);
             if (currentVariant) {
-              variantStockMap[dateDayKey] = currentVariant.stock || 0;
+              variantStockMap[dateDayKey] = currentVariant.totalAvailableStock || 0;
             }
           }
         });
-      }
+      };
 
       const variantData = {
         name: variantInfo.name,
@@ -684,6 +687,15 @@ export default function PerformanceStockPage() {
       return new Date(date).toLocaleDateString('id-ID');
     }
     return "Pilih tanggal";
+  };
+
+  const getLocalDateString = (date) => {
+    if (!date) return null;
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   const handleDateSelection = (selectedDate, mode = 'preset', close = true) => {
@@ -789,6 +801,12 @@ export default function PerformanceStockPage() {
     const newItemsPerPage = parseInt(e.target.value, 10);
     setItemsPerPage(newItemsPerPage);
     setCurrentPage(1);
+
+    const { fromDate, toDate } = getCurrentDateRange();
+    if (fromDate && toDate) {
+      const currentFilters = buildCurrentFilters();
+      fetchTableData(fromDate, toDate, 1, currentFilters);
+    }
   };
 
   const renderPagination = () => {
@@ -799,11 +817,11 @@ export default function PerformanceStockPage() {
     return (
       <div className="custom-container-pagination mt-3">
         <div className="custom-pagination-select d-flex align-items-center gap-2">
-          <span
+          {/* <span
             style={{
               display: `${getWidthWindow < 768 ? 'none' : 'block'}`
             }}
-          >Tampilan</span>
+          >Tampilan</span> */}
           <select
             className="form-select"
             value={itemsPerPage}
@@ -828,7 +846,7 @@ export default function PerformanceStockPage() {
                   {showFirstLastButtons && (
                     <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
                       <button
-                        className="page-link"
+                        className="page-link sm-me-2"
                         onClick={() => handlePageChange(1)}
                         disabled={currentPage === 1}
                         title="Ke halaman pertama"
@@ -884,7 +902,7 @@ export default function PerformanceStockPage() {
                   {showFirstLastButtons && (
                     <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
                       <button
-                        className="page-link"
+                        className="page-link sm-ms-2"
                         onClick={() => handlePageChange(totalPages)}
                         disabled={currentPage === totalPages}
                         title="Ke halaman terakhir"
@@ -901,7 +919,7 @@ export default function PerformanceStockPage() {
                     {showFirstLastButtons && (
                       <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
                         <button
-                          className="page-link"
+                          className="d-none sm-d-block page-link"
                           onClick={() => handlePageChange(1)}
                           disabled={currentPage === 1}
                           title="Ke halaman pertama"
@@ -962,7 +980,7 @@ export default function PerformanceStockPage() {
                     {showFirstLastButtons && (
                       <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
                         <button
-                          className="page-link"
+                          className="d-none sm-d-block page-link"
                           onClick={() => handlePageChange(totalPages)}
                           disabled={currentPage === totalPages}
                           title="Ke halaman terakhir"
@@ -1027,7 +1045,6 @@ export default function PerformanceStockPage() {
 
 
 
-  // SORTING STOCK FEATURE
   const handleSortStock = (order) => {
     if (sortOrderData === order) {
       setSortOrderData(null);
@@ -1047,9 +1064,21 @@ export default function PerformanceStockPage() {
     }
   };
 
+  const toggleOpenCalendar = () => {
+    if (showCalendar) {
+      setAnimateCalendar(false);
+      setTimeout(() => setShowCalendar(false), 100);
+    } else {
+      setShowCalendar(true);
+      setTimeout(() => setAnimateCalendar(true), 100);
+    }
+  };
+
 
 
   useEffect(() => {
+    if (!chartRawData.length) return;
+
     const currentDate = dateMode === 'preset' ? date : 
       dateMode === 'range' ? dateRange : 
       date;
@@ -1066,104 +1095,173 @@ export default function PerformanceStockPage() {
   }, [date, dateRange, dateMode, selectedProduct, chartRawData]);
 
   useEffect(() => {
-    if (chartRef.current && chartData.length > 0) {
-      const chartInstance = echarts.getInstanceByDom(chartRef.current) || echarts.init(chartRef.current);
+    if (!chartRef.current || !chartData.length) return;
 
-      let xAxisData = chartData.map((item) => item.date);
-      let rotateAxisLabel = 0;
+    let chartInstance = echarts.getInstanceByDom(chartRef.current);
 
-      const includesColon = xAxisData.some((item) => item.includes(":"));
-      if (includesColon) {
-        xAxisData = xAxisData.map((item) => item.split(" ")[1]);
-      } else {
-        xAxisData = xAxisData.map((item) => item.split("-").slice(1).join("-"));
-      }
+    if (chartInstance) {
+      chartInstance.dispose();
+    }
 
-      if (xAxisData.length > 7 && !includesColon) {
-        rotateAxisLabel = 25;
-      }
+    chartInstance = echarts.init(chartRef.current);
 
-      const series = [
-        {
-          name: selectedProduct ? selectedProduct.name : "Total Stock",
+
+
+    // Configure date style
+    let xAxisData = chartData.map((item) => item.date);
+    const includesColon = xAxisData.some((item) => item.includes(":"));
+
+    if (includesColon) {
+      xAxisData = xAxisData.map((item) => item.split(" ")[1]);
+    } else {
+      xAxisData = xAxisData.map((item) => item.split("-").slice(1).join("/"));
+    }
+
+    // Configure margin left dynamically based on max Y value
+    const allValues = chartData.map(d => d.totalStock);
+    variantsChartData.forEach(v => {
+      v.data.forEach(d => allValues.push(d.totalStock));
+    });
+
+    const maxYValue = Math.max(...allValues);
+    let dynamicLeft = 35;
+    if (maxYValue >= 1000) dynamicLeft = 50;
+    if (maxYValue >= 1_000_000) dynamicLeft = 70;
+    if (maxYValue >= 10_000_000) dynamicLeft = 90;
+    if (maxYValue >= 100_000_000) dynamicLeft = 120;
+    if (maxYValue >= 1_000_000_000) dynamicLeft = 150;
+    if (maxYValue >= 10_000_000_000) dynamicLeft = 180;
+
+
+
+    const series = [
+      {
+        name: selectedProduct ? selectedProduct.name : "Total Stock",
+        type: "line",
+        smooth: true,
+        showSymbol: false,
+        data: chartData.map((item) => item.totalStock),
+        lineStyle: { color: "#5470C6", width: 2.5 },
+        emphasis: { focus: 'series' }
+      },
+    ];
+
+    if (selectedProduct && variantsChartData.length > 0) {
+      const grayColors = [
+        "#95A5A6", "#7F8C8D", "#BDC3C7", "#85929E", "#A6ACAF",
+        "#909497", "#ABB2B9", "#CCD1D1", "#D5DBDB", "#EAEDED"
+      ];
+
+      variantsChartData.forEach((variant, index) => {
+        series.push({
+          name: `↳ ${variant.name}`,
           type: "line",
           smooth: true,
           showSymbol: false,
-          data: chartData.map((item) => item.totalStock),
-          lineStyle: { color: "#5470C6", width: 1.5 },
+          data: variant.data.map((item) => item.totalStock),
+          lineStyle: {
+            color: grayColors[index % grayColors.length],
+            width: 1.5,
+            type: 'dashed'
+          },
           emphasis: { focus: 'series' }
-        },
-      ];
-
-      if (selectedProduct && variantsChartData.length > 0) {
-        const grayColors = [
-          "#95A5A6", "#7F8C8D", "#BDC3C7", "#85929E", "#A6ACAF",
-          "#909497", "#ABB2B9", "#CCD1D1", "#D5DBDB", "#EAEDED"
-        ];
-
-        variantsChartData.forEach((variant, index) => {
-          series.push({
-            name: `↳ ${variant.name}`,
-            type: "line",
-            smooth: true,
-            showSymbol: false,
-            data: variant.data.map((item) => item.totalStock),
-            lineStyle: {
-              color: grayColors[index % grayColors.length],
-              width: 2,
-              type: 'dashed'
-            },
-            emphasis: { focus: 'series' }
-          });
         });
-      }
-
-      chartInstance.setOption({
-        toolbox: { feature: { saveAsImage: {} } },
-        grid: { left: 60, right: 50, bottom: selectedProduct ? 80 : 50, containLabel: false },
-        tooltip: {
-          trigger: "axis",
-          formatter: function (params) {
-            let result = `<strong>${params[0].axisValue}</strong><br/>`;
-            params.forEach((param) => {
-              result += `${param.seriesName}: <strong>${param.value}</strong> Stok<br/>`;
-            });
-            return result;
-          },
-          backgroundColor: 'rgba(50, 50, 50, 0.9)',
-          borderColor: '#777',
-          textStyle: { color: '#fff' }
-        },
-        legend: {
-          data: series.map(s => s.name),
-          bottom: 0,
-          type: 'scroll',
-        },
-        xAxis: {
-          type: "category",
-          data: xAxisData,
-          boundaryGap: false,
-          axisLabel: {
-            interval: 0,
-            rotate: rotateAxisLabel,
-          },
-        },
-        yAxis: {
-          type: "value",
-          splitLine: { show: true },
-          name: 'Stock',
-          nameGap: 30
-        },
-        series: series,
       });
-
-      return () => {
-        if (chartInstance && !chartInstance.isDisposed()) {
-          chartInstance.dispose();
-        }
-      };
-      // return () => chartInstance.dispose();
     }
+
+    chartInstance.setOption({
+      toolbox: { feature: { saveAsImage: {} } },
+      grid: { left: dynamicLeft, right: 50, bottom: 70, containLabel: false },
+      tooltip: {
+        trigger: "axis",
+        extraCssText: 'box-shadow: none;',
+        backgroundColor: "transparent",
+        borderWidth: 0,
+        formatter: function (params) {
+          const date = params[0].axisValue;
+          let tooltipHTML = `
+            <div style="
+              background: white;
+              border-radius: 6px;
+              box-shadow: 0 0 4px rgba(0,0,0,0.1);
+              overflow: hidden;
+              font-family: sans-serif;
+            ">
+              <div style="
+                background: #EDEDEDFF;
+                padding: 6px 12px;
+                font-weight: bold;
+                font-size: 13px;
+                border-bottom: 1px solid #dddddd;
+                color: #101010FF;
+              ">${date}</div>
+              <div style="padding: 6px 12px; font-size: 13px;">
+          `;
+
+          params.forEach((param) => {
+            tooltipHTML += `
+              <div style="display: flex; align-items: center; justify-content: space-between; margin: 4px 0; gap: 4px;">
+                <div style="display: flex; align-items: center;">
+                  <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${param.color}; margin-right:6px;"></span>
+                  ${param.seriesName}
+                </div>
+                <strong>${formatTableValue(param.value, "number")}</strong>
+              </div>
+            `;
+          });
+
+          tooltipHTML += `</div></div>`;
+          return tooltipHTML;
+        },
+      },
+      legend: {
+        data: series.map(s => s.name),
+        bottom: 0,
+        type: 'scroll',
+        icon: 'circle',
+        itemWidth: 8,
+      },
+      xAxis: {
+        type: "category",
+        data: xAxisData,
+        boundaryGap: false,
+        axisLabel: {
+          interval: 0,
+          formatter: function (value, index) {
+            const total = xAxisData.length;
+            let modulus = 1;
+            if (total > 56) modulus = 5;
+            else if (total > 42) modulus = 4;
+            else if (total > 28) modulus = 3;
+            else if (total > 14) modulus = 2;
+
+            return index % modulus === 0 ? value : '';
+          },
+          rotate: 0,
+        },
+      },
+      yAxis: {
+        type: "value",
+        splitLine: { show: true },
+        name: 'Stock',
+        nameGap: 30
+      },
+      series: series,
+    });
+
+    const handleResize = () => {
+      if (chartInstance && !chartInstance.isDisposed()) {
+        chartInstance.resize();
+      }
+    };
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (chartInstance && !chartInstance.isDisposed()) {
+        chartInstance.dispose();
+      }
+    };
   }, [chartData, variantsChartData, selectedProduct]);
 
   useEffect(() => {
@@ -1180,18 +1278,6 @@ export default function PerformanceStockPage() {
     }
   }, [filteredData, itemsPerPage, totalElements]);
 
-  // useEffect(() => {
-  //   if (filteredData.length > 0) {
-  //     setPaginatedData(filteredData);
-      
-  //     const calculatedTotalPages = Math.ceil(totalElements / itemsPerPage);
-  //     setTotalPages(calculatedTotalPages || 1);
-  //   } else {
-  //     setPaginatedData([]);
-  //     setTotalPages(1);
-  //   }
-  // }, [filteredData, totalElements, itemsPerPage]);
-
   useEffect(() => {
     setCurrentPage(1);
 
@@ -1206,7 +1292,8 @@ export default function PerformanceStockPage() {
     selectedClassificationOption,
     dateMode, 
     date, 
-    dateRange
+    dateRange,
+    itemsPerPage
   ]);
 
   useEffect(() => {
@@ -1233,17 +1320,17 @@ export default function PerformanceStockPage() {
                 <h5>{totalElements} total produk</h5>
                 <div style={{ position: "relative" }}>
                   <button
-                    onClick={() => setShowCalendar(!showCalendar)}
+                    onClick={toggleOpenCalendar}
                     className="btn btn-primary"
                   >
                     {formatDateDisplay()}
                   </button>
                   {showCalendar && (
                     <div
-                      className="d-flex custom-calendar-behavior-v2"
+                      className={`d-flex custom-calendar-behavior-v2 ${animateCalendar ? "show" : ""}`}
                       style={{
                         position: "absolute",
-                        top: "40px",
+                        top: "50px",
                         right: "0",
                         zIndex: 1000,
                         background: "white",
@@ -1252,6 +1339,48 @@ export default function PerformanceStockPage() {
                         padding: "10px 10px",
                       }}
                     >
+                      <Calendar
+                        selectRange={true}
+                        onChange={(selectedDate) => {
+                          if (Array.isArray(selectedDate)) {
+                            if (selectedDate[0] && selectedDate[1]) {
+                              const startDate = getLocalDateString(selectedDate[0]);
+                              const endDate = getLocalDateString(selectedDate[1]);
+                              
+                              if (startDate === endDate) {
+                                handleDateSelection(startDate, 'single');
+                              } else {
+                                handleDateSelection([startDate, endDate], 'range');
+                              }
+                            } else if (selectedDate[0]) {
+                              const singleDate = getLocalDateString(selectedDate[0]);
+                              handleDateSelection(singleDate, 'single');
+                            }
+                          } else if (selectedDate instanceof Date) {
+                            handleDateSelection(getLocalDateString(selectedDate), 'single');
+                          }
+                        }}
+                        value={(() => {
+                          if (dateMode === 'range' && dateRange[0] && dateRange[1]) {
+                            return [new Date(dateRange[0]), new Date(dateRange[1])];
+                          } else if (dateMode === 'single' && date && date !== "Bulan Ini" && !Array.isArray(date)) {
+                            return new Date(date);
+                          } else if (dateMode === 'preset' && date && date !== "Bulan Ini" && !Array.isArray(date)) {
+                            return new Date(date);
+                          }
+                          return null;
+                        })()}
+                        maxDate={new Date()}
+                      />
+                      <div
+                        id="custom-calendar-behavior-barrier-v2"
+                        style={{
+                          width: "1px",
+                          height: "auto",
+                          backgroundColor: "#E3E3E3FF",
+                          margin: "10px 14px 0",
+                        }}
+                      ></div>
                       <div
                         className="custom-content-calendar-v2 d-flex flex-column py-2 px-1"
                         style={{ width: "130px", listStyleType: "none" }}
@@ -1288,50 +1417,7 @@ export default function PerformanceStockPage() {
                         >
                           Bulan ini
                         </p>
-                        <hr />
                       </div>
-                      <div
-                        id="custom-calendar-behavior-barrier-v2"
-                        style={{
-                          width: "1px",
-                          height: "auto",
-                          backgroundColor: "#E3E3E3FF",
-                          margin: "10px 10px 0",
-                        }}
-                      ></div>
-                      <Calendar
-                        selectRange={true}
-                        onChange={(selectedDate) => {
-                          if (Array.isArray(selectedDate)) {
-                            if (selectedDate[0] && selectedDate[1]) {
-                              const startDate = selectedDate[0].toISOString().split("T")[0];
-                              const endDate = selectedDate[1].toISOString().split("T")[0];
-                              
-                              if (startDate === endDate) {
-                                handleDateSelection(startDate, 'single');
-                              } else {
-                                handleDateSelection([startDate, endDate], 'range');
-                              }
-                            } else if (selectedDate[0]) {
-                              const singleDate = selectedDate[0].toISOString().split("T")[0];
-                              handleDateSelection(singleDate, 'single');
-                            }
-                          } else if (selectedDate instanceof Date) {
-                            handleDateSelection(selectedDate.toISOString().split("T")[0], 'single');
-                          }
-                        }}
-                        value={(() => {
-                          if (dateMode === 'range' && dateRange[0] && dateRange[1]) {
-                            return [new Date(dateRange[0]), new Date(dateRange[1])];
-                          } else if (dateMode === 'single' && date && date !== "Bulan Ini" && !Array.isArray(date)) {
-                            return new Date(date);
-                          } else if (dateMode === 'preset' && date && date !== "Bulan Ini" && !Array.isArray(date)) {
-                            return new Date(date);
-                          }
-                          return null;
-                        })()}
-                        maxDate={new Date()}
-                      />
                     </div>
                   )}
                 </div>
@@ -1344,18 +1430,18 @@ export default function PerformanceStockPage() {
                 <>
                   <div
                     ref={chartRef}
-                    style={{ width: "100%", height: "320px" }}
+                    style={{ width: "100%", height: "340px" }}
                     className="mb-2"
                   ></div>
                   {/* Filter & Table */}
                   <div className="d-flex flex-column gap-3 gap-md-2">
                     {/* Status filter */}
                     <div
-                      className="d-flex align-items-center gap-1 gap-md-2 flex-wrap"
+                      className="d-flex align-items-center gap-1 gap-md-2 flex-wrap mt-2"
                       style={{ width: "fit-content", listStyleType: "none" }}
                     >
                       <span>Status Produk</span>
-                      <div className="d-flex gap-1 gap-md-2 flex-wrap">
+                      <div className="d-flex gap-1 md-gap-2 flex-wrap">
                         <div
                           className={`status-button-filter rounded-pill d-flex align-items-center  ${statusProductStockFilter === "all"
                               ? "custom-font-color custom-border-select fw-bold"
@@ -1421,7 +1507,7 @@ export default function PerformanceStockPage() {
                           style={{
                             cursor: "pointer",
                             fontSize: "12px",
-                            padding: "1px 12px",
+                            padding: "6px 12px",
                           }}
                         >
                           Berakhir
@@ -1435,7 +1521,7 @@ export default function PerformanceStockPage() {
                           style={{
                             cursor: "pointer",
                             fontSize: "12px",
-                            padding: "1px 12px",
+                            padding: "6px 12px",
                           }}
                         >
                           Dihapus
@@ -1443,7 +1529,7 @@ export default function PerformanceStockPage() {
                       </div>
                     </div>
                     {/* Other filter*/}
-                    <div className="d-flex flex-column mb-3 gap-2">
+                    <div className="d-flex flex-column mb-1 sm-mb-3 gap-2">
                       <div
                         id="container-other-filters"
                         className="d-flex w-full justify-content-between align-items-center"
@@ -1516,7 +1602,7 @@ export default function PerformanceStockPage() {
                           {allColumns.map((col) => (
                             <div
                               key={col.key}
-                              className="form-check form-check-inline"
+                              className="form-check form-check-inline my-1"
                             >
                               <input
                                 style={{
@@ -1525,7 +1611,7 @@ export default function PerformanceStockPage() {
                                   height: "18px",
                                   borderRadius: "10%",
                                 }}
-                                className="form-check-input "
+                                className="form-check-input"
                                 type="checkbox"
                                 checked={selectedColumns.includes(col.key)}
                                 onChange={() => handleColumnChange(col.key)}
@@ -1661,14 +1747,14 @@ export default function PerformanceStockPage() {
                                       )}
                                     </tr>
                                     {expandedVariantProduct[latestStockData.productId] && (
-                                      latestStockData?.variants && latestStockData.variants.length > 0 ? (
+                                      latestStockData?.modelStocks && latestStockData.modelStocks.length > 0 ? (
                                         <tr className="bg-light">
                                           <td
                                             colSpan={selectedColumns.length + 1}
                                             style={{ padding: "4px 4px", border: "none" }}
                                           >
                                             <ul className="list-group">
-                                              {latestStockData.variants.map((variant) => (
+                                              {latestStockData.modelStocks.map((variant) => (
                                                 <li
                                                   key={variant.id}
                                                   className="list-group-item d-flex justify-content-start gap-2"
@@ -1677,7 +1763,7 @@ export default function PerformanceStockPage() {
                                                   <span style={{ width: "388px" }}>
                                                     {variant.name}
                                                   </span>
-                                                  <span>{variant.stock || 0} Stok</span>
+                                                  <span>{variant.totalAvailableStock || 0} Stok</span>
                                                 </li>
                                               ))}
                                             </ul>

@@ -64,11 +64,12 @@ const MerchantModalOTPByUsername = ({ onClose, merchant}) => {
 
         try {
             const result = await verifyMerchantOTP(formData.otp);
+            console.log("dimodal. Hasil verifikasi OTP: ", result);
 
             if (result?.success === true || result?.code === 0 || result?.message.includes("succ") || result?.status === "OK" || result?.status === 200) {
                 onClose();
                 navigate("/dashboard", { replace: true }, window.location.reload());
-                toast.success(`Berhasil login ke ${merchant?.name}`);
+                toast.success("Login berhasil");
             } else {
                 toast.error("Kode OTP tidak valid atau telah kadaluarsa");
             }
@@ -121,7 +122,7 @@ const MerchantModalOTPByUsername = ({ onClose, merchant}) => {
                 <h5 className="text-center mb-2">Verify OTP</h5>
                 <hr />
                 <form onSubmit={handleSubmitFormData}>
-                    <div className="mb-1">
+                    <div className="my-3">
                         <input
                             name="otp"
                             type="text"

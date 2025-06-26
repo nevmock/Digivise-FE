@@ -134,6 +134,7 @@ export const AuthProvider = ({ children }) => {
         try {
             const { username, merchantId } = pendingMerchantLogin;
             const response = await verifyMerchantOtpAPI(username, merchantId, otp);
+            console.log("di auth verifyMerchantOtpAPI response:", response);
 
             if (response.code == 200 || response.status == 200 || response.status == "OK" || response.code == 200) {
                 setPendingMerchantLogin(null);

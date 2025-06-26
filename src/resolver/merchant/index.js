@@ -44,6 +44,7 @@ export async function loginMerchant(username, password) {
 export async function verifyMerchantOtp(username, merchantId, otp) {
     try {
         const response = await axiosRequest.post(`/api/merchants/otp-login`, { username, merchantId, otp });
+        console.log("di index verifyMerchantOtp response:", response);
         return response.data;
     } catch (error) {
         throw error;

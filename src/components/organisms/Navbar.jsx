@@ -169,7 +169,7 @@ const Navbar = () => {
                                                         />
                                                     </div>
                                                 ))}
-                                                <button className="btn btn-success w-100 fs-5 mt-2" onClick={() => setShowModalFormCreateMerchant(true)}>Add Merchant</button>
+                                                <button className="btn btn-success w-100 fs-5" onClick={() => setShowModalFormCreateMerchant(true)}>Add Merchant</button>
                                             </div>
                                         )}
                                     </>
