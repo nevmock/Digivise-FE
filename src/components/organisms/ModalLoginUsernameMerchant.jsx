@@ -88,7 +88,7 @@ const MerchantModalLoginWithUsername = ({ onClose, merchant, onOTPRequired }) =>
             >
                 <h5 className="text-center">Login To Merchant</h5>
                 <hr />
-                <form onSubmit={handleSubmitFormData}>
+                <form onSubmit={handleSubmitFormData} className="mt-4">
                     <div className="mb-2">
                         <label className="form-label">Username</label>
                         <input

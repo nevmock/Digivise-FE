@@ -1,14 +1,14 @@
-import React, { useState, useEffect, useCallback, useRef, use } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import * as echarts from "echarts";
 import Calendar from "react-calendar";
 import Select from "react-select";
 import toast from "react-hot-toast";
 import { FaAngleLeft, FaAngleRight, FaAngleDown, FaAngleUp } from "react-icons/fa6";
 
-import convertStatusToLabel from "../../utils/convertStatusToLabel";
-import formatTableValue from "../../utils/formatTableValue";
 import axiosRequest from "../../utils/request";
 import useDebounce from "../../hooks/useDebounce";
+import convertStatusToLabel from "../../utils/convertStatusToLabel";
+import formatTableValue from "../../utils/formatTableValue";
 import BaseLayout from "../../components/organisms/BaseLayout";
 import iconArrowUp from "../../assets/icon/arrow-up.png";
 import iconArrowDown from "../../assets/icon/arrow-down.png";
@@ -49,7 +49,7 @@ export default function PerformanceStockPage() {
   const [isTableFilterLoading, setIsTableFilterLoading] = useState(false);
 
   const getShopeeId = localStorage.getItem("shopeeId");
-  // const getShopeeId = "252234165";
+  // const getShopeeId = "252412120";
   if (getShopeeId == null || getShopeeId === null || getShopeeId === "null" || getShopeeId === "undefined") {
       return (
       <BaseLayout>
@@ -248,16 +248,18 @@ export default function PerformanceStockPage() {
       }
 
       const apiUrl = buildChartApiUrl(
-        '/api/product-stock/by-shop',
+        '/api/product-stock/chart',
+        // '/api/product-stock/by-shop',
         getShopeeId,
         currentFromDate,
         currentToDate,
-        1000000000
+        1000000000000
       );
 
       const response = await axiosRequest.get(apiUrl);
       const data = response.data;
-      const content = data.content || [];
+      // const content = data.content || [];
+      const content = Array.isArray(data) ? data : [];
 
       setChartRawData(content);
       
@@ -460,7 +462,7 @@ export default function PerformanceStockPage() {
 
       if (isSingleDay) {
         productItem.data.forEach((stockData) => {
-          if (stockData.createdAt === null || stockData.shopeeFrom === null) return;
+          if (stockData.createdAt === null) return;
 
           const test = getDataDate(stockData);
           const createdAt = test;
@@ -487,7 +489,7 @@ export default function PerformanceStockPage() {
         const dataByDate = {};
 
         productItem.data.forEach((stockData) => {
-          if (stockData.createdAt === null || stockData.shopeeFrom === null) return;
+          if (stockData.createdAt === null) return;
 
           const test = getDataDate(stockData);
           const createdAt = test;
@@ -579,8 +581,8 @@ export default function PerformanceStockPage() {
     // Check if product has variants in its data
     const allVariants = new Map();
     selectedProductData?.data.forEach((stockData) => {
-      if (stockData?.modelStocks) {
-        stockData.modelStocks.forEach((variant) => {
+      if (stockData?.modelStock) {
+        stockData.modelStock.forEach((variant) => {
           if (!allVariants.has(variant.id)) {
             allVariants.set(variant.id, {
               id: variant.id,
@@ -602,7 +604,7 @@ export default function PerformanceStockPage() {
 
       if (mode === "hourly") {
         selectedProductData.data.forEach((stockData) => {
-          if (!stockData.modelStocks || !stockData.createdAt || !stockData.shopeeFrom) return;
+          if (!stockData.modelStock || !stockData.createdAt) return;
 
           const test = getDataDate(stockData);
           const createdAt = test;
@@ -614,7 +616,7 @@ export default function PerformanceStockPage() {
           if (productDateStr === filterDateStr) {
             const hourKey = String(createdAt.getHours()).padStart(2, "0");
             const timeKey = `${productDateStr} ${hourKey}:00`;
-            const currentVariant = stockData.modelStocks.find(v => v.id === variantInfo.id);
+            const currentVariant = stockData.modelStock.find(v => v.id === variantInfo.id);
 
             if (currentVariant && timeIntervals.includes(timeKey)) {
               variantStockMap[timeKey] = currentVariant?.totalAvailableStock || 0;
@@ -625,7 +627,7 @@ export default function PerformanceStockPage() {
         const dataByDate = {};
 
         selectedProductData.data.forEach((stockData) => {
-          if (!stockData.modelStocks || !stockData.createdAt || !stockData.shopeeFrom) return;
+          if (!stockData.modelStock || !stockData.createdAt) return;
 
           const test = getDataDate(stockData);
           const createdAt = test;
@@ -649,8 +651,8 @@ export default function PerformanceStockPage() {
         Object.keys(dataByDate).forEach((dateDayKey) => {
           const stockData = dataByDate[dateDayKey];
 
-          if (timeIntervals.includes(dateDayKey) && stockData.modelStocks) {
-            const currentVariant = stockData.modelStocks.find(v => v.id === variantInfo.id);
+          if (timeIntervals.includes(dateDayKey) && stockData.modelStock) {
+            const currentVariant = stockData.modelStock.find(v => v.id === variantInfo.id);
             if (currentVariant) {
               variantStockMap[dateDayKey] = currentVariant.totalAvailableStock || 0;
             }
@@ -801,12 +803,6 @@ export default function PerformanceStockPage() {
     const newItemsPerPage = parseInt(e.target.value, 10);
     setItemsPerPage(newItemsPerPage);
     setCurrentPage(1);
-
-    const { fromDate, toDate } = getCurrentDateRange();
-    if (fromDate && toDate) {
-      const currentFilters = buildCurrentFilters();
-      fetchTableData(fromDate, toDate, 1, currentFilters);
-    }
   };
 
   const renderPagination = () => {
@@ -1074,209 +1070,206 @@ export default function PerformanceStockPage() {
     }
   };
 
-
-
-  useEffect(() => {
-    if (!chartRawData.length) return;
+  const memoizedChartData = React.useMemo(() => {
+    if (!chartRawData.length) return [];
 
     const currentDate = dateMode === 'preset' ? date : 
-      dateMode === 'range' ? dateRange : 
-      date;
+      dateMode === 'range' ? dateRange : date;
     
-    const newChartData = generateChartData(currentDate, selectedProduct);
-    setChartData(newChartData);
+    return generateChartData(currentDate, selectedProduct);
+  }, [chartRawData, date, dateRange, dateMode, selectedProduct]);
 
-    if (selectedProduct) {
-      const newVariantsChartData = generateVariantsChartData(currentDate, selectedProduct);
-      setVariantsChartData(newVariantsChartData);
-    } else {
-      setVariantsChartData([]);
-    }
-  }, [date, dateRange, dateMode, selectedProduct, chartRawData]);
+  const memoizedVariantsChartData = React.useMemo(() => {
+    if (!selectedProduct || !chartRawData.length) return [];
 
+    const currentDate = dateMode === 'preset' ? date : 
+      dateMode === 'range' ? dateRange : date;
+    
+    return generateVariantsChartData(currentDate, selectedProduct);
+  }, [chartRawData, date, dateRange, dateMode, selectedProduct]);
+
+  useEffect(() => {
+    setChartData(memoizedChartData);
+  }, [memoizedChartData]);
+
+  useEffect(() => {
+    setVariantsChartData(memoizedVariantsChartData);
+  }, [memoizedVariantsChartData]);
+
+
+  const chartInstanceRef = useRef(null);
   useEffect(() => {
     if (!chartRef.current || !chartData.length) return;
 
-    let chartInstance = echarts.getInstanceByDom(chartRef.current);
+    const timeoutId = setTimeout(() => { 
+      if (chartInstanceRef.current && !chartInstanceRef.current.isDisposed()) {
+        chartInstanceRef.current.dispose();
+      }
 
-    if (chartInstance) {
-      chartInstance.dispose();
-    }
+      chartInstanceRef.current = echarts.init(chartRef.current);
 
-    chartInstance = echarts.init(chartRef.current);
+      // Configure date style
+      let xAxisData = chartData.map((item) => item.date);
+      const includesColon = xAxisData.some((item) => item.includes(":"));
 
+      if (includesColon) {
+        xAxisData = xAxisData.map((item) => item.split(" ")[1]);
+      } else {
+        xAxisData = xAxisData.map((item) => item.split("-").slice(1).join("/"));
+      }
 
+      // Configure margin left dynamically based on max Y value
+      const allValues = chartData.map(d => d.totalStock);
+      variantsChartData.forEach(v => {
+        v.data.forEach(d => allValues.push(d.totalStock));
+      });
 
-    // Configure date style
-    let xAxisData = chartData.map((item) => item.date);
-    const includesColon = xAxisData.some((item) => item.includes(":"));
+      const maxYValue = Math.max(...allValues);
+      let dynamicLeft = 35;
+      if (maxYValue >= 1000) dynamicLeft = 50;
+      if (maxYValue >= 1_000_000) dynamicLeft = 70;
+      if (maxYValue >= 10_000_000) dynamicLeft = 90;
+      if (maxYValue >= 100_000_000) dynamicLeft = 120;
+      if (maxYValue >= 1_000_000_000) dynamicLeft = 150;
+      if (maxYValue >= 10_000_000_000) dynamicLeft = 180;
 
-    if (includesColon) {
-      xAxisData = xAxisData.map((item) => item.split(" ")[1]);
-    } else {
-      xAxisData = xAxisData.map((item) => item.split("-").slice(1).join("/"));
-    }
-
-    // Configure margin left dynamically based on max Y value
-    const allValues = chartData.map(d => d.totalStock);
-    variantsChartData.forEach(v => {
-      v.data.forEach(d => allValues.push(d.totalStock));
-    });
-
-    const maxYValue = Math.max(...allValues);
-    let dynamicLeft = 35;
-    if (maxYValue >= 1000) dynamicLeft = 50;
-    if (maxYValue >= 1_000_000) dynamicLeft = 70;
-    if (maxYValue >= 10_000_000) dynamicLeft = 90;
-    if (maxYValue >= 100_000_000) dynamicLeft = 120;
-    if (maxYValue >= 1_000_000_000) dynamicLeft = 150;
-    if (maxYValue >= 10_000_000_000) dynamicLeft = 180;
-
-
-
-    const series = [
-      {
-        name: selectedProduct ? selectedProduct.name : "Total Stock",
-        type: "line",
-        smooth: true,
-        showSymbol: false,
-        data: chartData.map((item) => item.totalStock),
-        lineStyle: { color: "#5470C6", width: 2.5 },
-        emphasis: { focus: 'series' }
-      },
-    ];
-
-    if (selectedProduct && variantsChartData.length > 0) {
-      const grayColors = [
-        "#95A5A6", "#7F8C8D", "#BDC3C7", "#85929E", "#A6ACAF",
-        "#909497", "#ABB2B9", "#CCD1D1", "#D5DBDB", "#EAEDED"
-      ];
-
-      variantsChartData.forEach((variant, index) => {
-        series.push({
-          name: `↳ ${variant.name}`,
+      const series = [
+        {
+          name: selectedProduct ? selectedProduct.name : "Total Stock",
           type: "line",
           smooth: true,
           showSymbol: false,
-          data: variant.data.map((item) => item.totalStock),
-          lineStyle: {
-            color: grayColors[index % grayColors.length],
-            width: 1.5,
-            type: 'dashed'
-          },
+          data: chartData.map((item) => item.totalStock),
+          lineStyle: { color: "#5470C6", width: 2},
           emphasis: { focus: 'series' }
-        });
-      });
-    }
+        },
+      ];
 
-    chartInstance.setOption({
-      toolbox: { feature: { saveAsImage: {} } },
-      grid: { left: dynamicLeft, right: 50, bottom: 70, containLabel: false },
-      tooltip: {
-        trigger: "axis",
-        extraCssText: 'box-shadow: none;',
-        backgroundColor: "transparent",
-        borderWidth: 0,
-        formatter: function (params) {
-          const date = params[0].axisValue;
-          let tooltipHTML = `
-            <div style="
-              background: white;
-              border-radius: 6px;
-              box-shadow: 0 0 4px rgba(0,0,0,0.1);
-              overflow: hidden;
-              font-family: sans-serif;
-            ">
-              <div style="
-                background: #EDEDEDFF;
-                padding: 6px 12px;
-                font-weight: bold;
-                font-size: 13px;
-                border-bottom: 1px solid #dddddd;
-                color: #101010FF;
-              ">${date}</div>
-              <div style="padding: 6px 12px; font-size: 13px;">
-          `;
+      if (selectedProduct && variantsChartData.length > 0) {
+        const grayColors = [
+          "#95A5A6", "#7F8C8D", "#BDC3C7", "#85929E", "#A6ACAF",
+          "#909497", "#ABB2B9", "#CCD1D1", "#D5DBDB", "#EAEDED"
+        ];
 
-          params.forEach((param) => {
-            tooltipHTML += `
-              <div style="display: flex; align-items: center; justify-content: space-between; margin: 4px 0; gap: 4px;">
-                <div style="display: flex; align-items: center;">
-                  <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${param.color}; margin-right:6px;"></span>
-                  ${param.seriesName}
-                </div>
-                <strong>${formatTableValue(param.value, "number")}</strong>
-              </div>
-            `;
+        variantsChartData.forEach((variant, index) => {
+          series.push({
+            name: `↳ ${variant.name}`,
+            type: "line",
+            smooth: true,
+            showSymbol: false,
+            data: variant.data.map((item) => item.totalStock),
+            lineStyle: {
+              color: grayColors[index % grayColors.length],
+              width: 1.5,
+              type: 'dashed'
+            },
+            emphasis: { focus: 'series' }
           });
+        });
+      }
 
-          tooltipHTML += `</div></div>`;
-          return tooltipHTML;
-        },
-      },
-      legend: {
-        data: series.map(s => s.name),
-        bottom: 0,
-        type: 'scroll',
-        icon: 'circle',
-        itemWidth: 8,
-      },
-      xAxis: {
-        type: "category",
-        data: xAxisData,
-        boundaryGap: false,
-        axisLabel: {
-          interval: 0,
-          formatter: function (value, index) {
-            const total = xAxisData.length;
-            let modulus = 1;
-            if (total > 56) modulus = 5;
-            else if (total > 42) modulus = 4;
-            else if (total > 28) modulus = 3;
-            else if (total > 14) modulus = 2;
+      chartInstanceRef.current.setOption({
+        toolbox: { feature: { saveAsImage: {} } },
+        grid: { left: dynamicLeft, right: 50, bottom: 70, containLabel: false },
+        tooltip: {
+          trigger: "axis",
+          extraCssText: 'box-shadow: none;',
+          backgroundColor: "transparent",
+          borderWidth: 0,
+          formatter: function (params) {
+            const date = params[0].axisValue;
+            let tooltipHTML = `
+              <div style="
+                background: white;
+                border-radius: 6px;
+                box-shadow: 0 0 4px rgba(0,0,0,0.1);
+                overflow: hidden;
+                font-family: sans-serif;
+              ">
+                <div style="
+                  background: #EDEDEDFF;
+                  padding: 6px 12px;
+                  font-weight: bold;
+                  font-size: 13px;
+                  border-bottom: 1px solid #dddddd;
+                  color: #101010FF;
+                ">${date}</div>
+                <div style="padding: 6px 12px; font-size: 13px;">
+            `;
 
-            return index % modulus === 0 ? value : '';
+            params.forEach((param) => {
+              tooltipHTML += `
+                <div style="display: flex; align-items: center; justify-content: space-between; margin: 4px 0; gap: 4px;">
+                  <div style="display: flex; align-items: center;">
+                    <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${param.color}; margin-right:6px;"></span>
+                    ${param.seriesName}
+                  </div>
+                  <strong>${formatTableValue(param.value, "number")}</strong>
+                </div>
+              `;
+            });
+
+            tooltipHTML += `</div></div>`;
+            return tooltipHTML;
           },
-          rotate: 0,
         },
-      },
-      yAxis: {
-        type: "value",
-        splitLine: { show: true },
-        name: 'Stock',
-        nameGap: 30
-      },
-      series: series,
+        legend: {
+          data: series.map(s => s.name),
+          bottom: 0,
+          type: 'scroll',
+          icon: 'circle',
+          itemWidth: 8,
+        },
+        xAxis: {
+          type: "category",
+          data: xAxisData,
+          boundaryGap: false,
+          axisLabel: {
+            interval: 0,
+            formatter: function (value, index) {
+              const total = xAxisData.length;
+              let modulus = 1;
+              if (total > 56) modulus = 5;
+              else if (total > 42) modulus = 4;
+              else if (total > 28) modulus = 3;
+              else if (total > 14) modulus = 2;
+
+              return index % modulus === 0 ? value : '';
+            },
+            rotate: 0,
+          },
+        },
+        yAxis: {
+          type: "value",
+          splitLine: { show: true },
+          name: 'Stock',
+          nameGap: 30
+        },
+        series: series,
+      });
+
+      const handleResize = () => {
+        if (chartInstanceRef.current && !chartInstanceRef.current.isDisposed()) {
+          chartInstanceRef.current.resize();
+        }
+      };
+      window.addEventListener('resize', handleResize);
+
+      return () => {
+        window.removeEventListener('resize', handleResize);
+        if (chartInstanceRef && !chartInstanceRef.isDisposed()) {
+          chartInstanceRef.dispose();
+        }
+      };
     });
 
-    const handleResize = () => {
-      if (chartInstance && !chartInstance.isDisposed()) {
-        chartInstance.resize();
-      }
-    };
-    window.addEventListener('resize', handleResize);
-
     return () => {
-      window.removeEventListener('resize', handleResize);
-      if (chartInstance && !chartInstance.isDisposed()) {
-        chartInstance.dispose();
+      clearTimeout(timeoutId);
+      if (chartInstanceRef.current && !chartInstanceRef.current.isDisposed()) {
+        chartInstanceRef.current.dispose();
       }
     };
   }, [chartData, variantsChartData, selectedProduct]);
-
-  useEffect(() => {
-    if (filteredData.length > 0) {
-      const startIndex = 0;
-      const endIndex = Math.min(itemsPerPage, filteredData.length);
-      setPaginatedData(filteredData.slice(startIndex, endIndex));
-
-      const calculatedTotalPages = Math.ceil(totalElements / itemsPerPage);
-      setTotalPages(calculatedTotalPages || 1);
-    } else {
-      setPaginatedData([]);
-      setTotalPages(1);
-    }
-  }, [filteredData, itemsPerPage, totalElements]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -1624,178 +1617,199 @@ export default function PerformanceStockPage() {
                         </div>
                       )}
                     </div>
-                    {/* Container table */}
-                    {isTableFilterLoading ? (
+                    <div style={{ position: 'relative' }}>
+                      {isTableFilterLoading && (
+                        <div
+                          style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            paddingTop: filteredData.length > 0 ? '85px' : '0px',
+                            backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'start',
+                            zIndex: 10,
+                            minHeight: filteredData.length > 0 ? '200px' : '50px',
+                          }}
+                        >
+                          <Loading size={40} />
+                        </div>
+                      )}
+                      {/* {isTableFilterLoading ? (
                         <div className="d-flex justify-content-center align-items-center" style={{ height: "200px" }}>
                           <Loading size={30} />
                         </div>
-                      ) : (                      
-                      <div className="table-responsive">
-                        <table
-                          className="table table-centered"
-                          style={{
-                            width: "100%",
-                            minWidth: "max-content",
-                            maxWidth: "none",
-                          }}
-                        >
-                          {/* Head table */}
-                          <thead className="table-light">
-                            <tr>
-                              {paginatedData.length > 0 && <th scope="col"></th>}
-                              {allColumns
-                                .filter((col) => selectedColumns.includes(col.key))
-                                .map((col) => (
-                                  <th key={col.key}>
-                                    <div className="d-flex justify-content-start gap-1 align-items-center">
-                                      {col.label}
-                                      {col.key === "stock" && (
-                                        <div className="d-flex flex-column">
-                                          <img
-                                            src={iconArrowUp}
-                                            alt="Sort Asc"
-                                            style={{
-                                              width: "10px",
-                                              height: "10px",
-                                              cursor: "pointer",
-                                              opacity:
-                                                sortOrderData === "asc" ? 1 : 0.5,
-                                            }}
-                                            onClick={() => handleSortStock("asc")}
-                                          />
-                                          <img
-                                            src={iconArrowDown}
-                                            alt="Sort Desc"
-                                            style={{
-                                              width: "10px",
-                                              height: "10px",
-                                              cursor: "pointer",
-                                              opacity:
-                                                sortOrderData === "desc" ? 1 : 0.5,
-                                            }}
-                                            onClick={() => handleSortStock("desc")}
-                                          />
-                                        </div>
-                                      )}
-                                    </div>
-                                  </th>
-                                ))}
-                            </tr>
-                          </thead>
-                          {/* Body Table */}
-                          <tbody>
-                            {paginatedData.length > 0 ? (
-                              paginatedData.map((entry) => {
-                                const latestStockData = getLatestStockData(entry);
-                                return (
-                                  <React.Fragment key={entry.productId}>
-                                    <tr>
-                                      {paginatedData.length > 0 && (
-                                        <td
-                                          onClick={() => toggleRow(latestStockData.productId)}
-                                          style={{ cursor: "pointer", width: "20px" }}
-                                        >
-                                          {expandedVariantProduct[latestStockData.productId] ? <FaAngleUp /> : <FaAngleDown />}
-                                        </td>
-                                      )}
-
-                                      {selectedColumns.includes("name") && (
-                                        <td
-                                          style={{
-                                            width: "400px",
-                                            cursor: "pointer",
-                                            color: selectedProduct?.productId == latestStockData.productId ? "#F6881F" : "",
-                                          }}
-                                          onClick={() => handleProductClick(latestStockData)}
-                                        >
-                                          {latestStockData?.name || "-"}
-                                        </td>
-                                      )}
-
-                                      {selectedColumns.includes("stock") && (
-                                        <td>
-                                          <div className="d-flex flex-column align-items-start">
-                                            <span>{latestStockData?.totalAvailableStock || 0} Stok</span>
-                                          </div>
-                                        </td>
-                                      )}
-
-                                      {selectedColumns.includes("code") && (
-                                        <td>{latestStockData?.productId || "-"}</td>
-                                      )}
-
-                                      {selectedColumns.includes("availability") && (
-                                        <td>
-                                          <span>
-                                            {latestStockData?.availability || "-"}
-                                          </span>
-                                        </td>
-                                      )}
-
-                                      {selectedColumns.includes("status") && (
-                                        <td>
-                                          {
-                                            latestStockData.state != null ? <span className="">{convertStatusToLabel(latestStockData.state)}</span> : "-"
-                                          }
-                                        </td>
-                                      )}
-
-                                      {selectedColumns.includes("classification") && (
-                                        <td>
-                                          <span>{latestStockData?.classification || "-"}</span>
-                                        </td>
-                                      )}
-                                    </tr>
-                                    {expandedVariantProduct[latestStockData.productId] && (
-                                      latestStockData?.modelStocks && latestStockData.modelStocks.length > 0 ? (
-                                        <tr className="bg-light">
-                                          <td
-                                            colSpan={selectedColumns.length + 1}
-                                            style={{ padding: "4px 4px", border: "none" }}
-                                          >
-                                            <ul className="list-group">
-                                              {latestStockData.modelStocks.map((variant) => (
-                                                <li
-                                                  key={variant.id}
-                                                  className="list-group-item d-flex justify-content-start gap-2"
-                                                >
-                                                  <span style={{ width: "8px" }}></span>
-                                                  <span style={{ width: "388px" }}>
-                                                    {variant.name}
-                                                  </span>
-                                                  <span>{variant.totalAvailableStock || 0} Stok</span>
-                                                </li>
-                                              ))}
-                                            </ul>
-                                          </td>
-                                        </tr>
-                                      ) : (
-                                        <tr className="bg-light">
-                                          <td
-                                            colSpan={selectedColumns.length + 1}
-                                            style={{ padding: "12px 4px", border: "none", borderRadius: "4px" }}
-                                          >
-                                            <span>Tidak ada varian untuk produk ini</span>
-                                          </td>
-                                        </tr>
-                                      )
-                                    )}
-                                  </React.Fragment>
-                                );
-                              })
-                            ) : (
+                      ) : (                       */}
+                        <div className="table-responsive" style={{ borderRadius: "4px" }}>
+                          <table
+                            className="table table-centered"
+                            style={{
+                              width: "100%",
+                              minWidth: "max-content",
+                              maxWidth: "none",
+                            }}
+                          >
+                            {/* Head table */}
+                            <thead className="table-light">
                               <tr>
-                                <td colSpan={selectedColumns.length + 1} className="text-left">
-                                  Data tidak tersedia
-                                </td>
+                                {filteredData.length > 0 && <th scope="col"></th>}
+                                {allColumns
+                                  .filter((col) => selectedColumns.includes(col.key))
+                                  .map((col) => (
+                                    <th key={col.key}>
+                                      <div className="d-flex justify-content-start gap-1 align-items-center">
+                                        {col.label}
+                                        {col.key === "stock" && (
+                                          <div className="d-flex flex-column">
+                                            <img
+                                              src={iconArrowUp}
+                                              alt="Sort Asc"
+                                              style={{
+                                                width: "10px",
+                                                height: "10px",
+                                                cursor: "pointer",
+                                                opacity:
+                                                  sortOrderData === "asc" ? 1 : 0.5,
+                                              }}
+                                              onClick={() => handleSortStock("asc")}
+                                            />
+                                            <img
+                                              src={iconArrowDown}
+                                              alt="Sort Desc"
+                                              style={{
+                                                width: "10px",
+                                                height: "10px",
+                                                cursor: "pointer",
+                                                opacity:
+                                                  sortOrderData === "desc" ? 1 : 0.5,
+                                              }}
+                                              onClick={() => handleSortStock("desc")}
+                                            />
+                                          </div>
+                                        )}
+                                      </div>
+                                    </th>
+                                  ))}
                               </tr>
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
-                      )}
+                            </thead>
+                            {/* Body Table */}
+                            <tbody>
+                              {filteredData.length > 0 ? (
+                                filteredData.map((entry) => {
+                                  const latestStockData = getLatestStockData(entry);
+                                  return (
+                                    <React.Fragment key={entry.productId}>
+                                      <tr>
+                                        {filteredData.length > 0 && (
+                                          <td
+                                            onClick={() => toggleRow(latestStockData.productId)}
+                                            style={{ cursor: "pointer", width: "20px" }}
+                                          >
+                                            {expandedVariantProduct[latestStockData.productId] ? <FaAngleUp /> : <FaAngleDown />}
+                                          </td>
+                                        )}
+
+                                        {selectedColumns.includes("name") && (
+                                          <td
+                                            style={{
+                                              width: "400px",
+                                              cursor: "pointer",
+                                              color: selectedProduct?.productId == latestStockData.productId ? "#F6881F" : "",
+                                            }}
+                                            onClick={() => handleProductClick(latestStockData)}
+                                          >
+                                            {latestStockData?.name || "-"}
+                                          </td>
+                                        )}
+
+                                        {selectedColumns.includes("stock") && (
+                                          <td>
+                                            <div className="d-flex flex-column align-items-start">
+                                              <span>{latestStockData?.totalAvailableStock || 0} Stok</span>
+                                            </div>
+                                          </td>
+                                        )}
+
+                                        {selectedColumns.includes("code") && (
+                                          <td>{latestStockData?.productId || "-"}</td>
+                                        )}
+
+                                        {selectedColumns.includes("availability") && (
+                                          <td>
+                                            <span>
+                                              {latestStockData?.availability || "-"}
+                                            </span>
+                                          </td>
+                                        )}
+
+                                        {selectedColumns.includes("status") && (
+                                          <td>
+                                            {
+                                              latestStockData.state != null ? <span className="">{convertStatusToLabel(latestStockData.state)}</span> : "-"
+                                            }
+                                          </td>
+                                        )}
+
+                                        {selectedColumns.includes("classification") && (
+                                          <td>
+                                            <span>{latestStockData?.classification || "-"}</span>
+                                          </td>
+                                        )}
+                                      </tr>
+                                      {expandedVariantProduct[latestStockData.productId] && (
+                                        latestStockData?.modelStocks && latestStockData.modelStocks.length > 0 ? (
+                                          <tr className="bg-light">
+                                            <td
+                                              colSpan={selectedColumns.length + 1}
+                                              style={{ padding: "4px 4px", border: "none" }}
+                                            >
+                                              <ul className="list-group">
+                                                {latestStockData.modelStocks.map((variant) => (
+                                                  <li
+                                                    key={variant.id}
+                                                    className="list-group-item d-flex justify-content-start gap-2"
+                                                  >
+                                                    <span style={{ width: "8px" }}></span>
+                                                    <span style={{ width: "388px" }}>
+                                                      {variant.name}
+                                                    </span>
+                                                    <span>{variant.totalAvailableStock || 0} Stok</span>
+                                                  </li>
+                                                ))}
+                                              </ul>
+                                            </td>
+                                          </tr>
+                                        ) : (
+                                          <tr className="bg-light">
+                                            <td
+                                              colSpan={selectedColumns.length + 1}
+                                              style={{ padding: "12px 4px", border: "none", borderRadius: "4px" }}
+                                            >
+                                              <span>Tidak ada varian untuk produk ini</span>
+                                            </td>
+                                          </tr>
+                                        )
+                                      )}
+                                    </React.Fragment>
+                                  );
+                                })
+                              ) : (
+                                <tr>
+                                  <td colSpan={selectedColumns.length + 1} className="text-left">
+                                    Data tidak tersedia
+                                  </td>
+                                </tr>
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      {/* )} */}
+                    </div>
                     {/* Pagination */}
-                    {paginatedData.length > 0 &&
+                    {filteredData.length > 0 &&
                       filteredData !== null &&
                       renderPagination()}
                   </div>
