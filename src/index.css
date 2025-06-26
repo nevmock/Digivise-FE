@@ -294,7 +294,7 @@ body {
   animation-delay: 3.5s;
 }
 
-.custom-calendar-behavior {
+.custom-calendar-behavior, .custom-calendar-behavior-v2 {
   opacity: 0;
   transform: translateY(-20px);
   transition: opacity 0.3s ease, transform 0.4s ease;
@@ -304,7 +304,7 @@ body {
   color: #F6881F;
 }
 
-.custom-calendar-behavior.show {
+.custom-calendar-behavior.show, .custom-calendar-behavior-v2.show {
   opacity: 1;
   transform: translateY(0);
 }

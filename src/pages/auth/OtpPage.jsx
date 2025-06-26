@@ -67,6 +67,7 @@ export default function OtpPage() {
 
         try {
             const result = await verifyMerchantOTP(otp);
+            console.log("OTP verification result otppage:", result);
             
             if (result?.success === true || result?.status === 200 || result?.status === "success" || result?.status === "OK" || result?.code === "OK") {
                 const name = userData?.merchants?.find(
@@ -79,8 +80,8 @@ export default function OtpPage() {
                 toast.error("Gagal verifikasi OTP, silakan coba lagi");
             }
         } catch (error) {
-            toast.error("Gagal verifikasi OTP",  error.message);
-            console.error("Gagal verifikasi OTP, server error:", error);
+            toast.error("Gagal verifikasi OTP");
+            console.error("Gagal verifikasi OTP, kesalahan pada server :", error);
         } finally {
             setIsLoading(false);
         }
@@ -142,9 +143,9 @@ export default function OtpPage() {
                                             disabled={isLoading}
                                         >
                                             {isLoading ? (
-                                                <div className="d-flex align-items-center justify-content-center gap-2">
-                                                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                                <div className="d-flex align-items-center justify-content-center gap-1">
                                                     Verifying...
+                                                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                                                 </div>
                                             ) : (
                                                 "Verify"

@@ -6,17 +6,12 @@ import toast from "react-hot-toast";
 import * as echarts from "echarts";
 import { FaAngleLeft, FaAngleRight } from "react-icons/fa6";
 
-import axiosRequest from "../../../utils/request";
-import { useAuth } from "../../../context/Auth";
-import useDebounce from "../../../hooks/useDebounce";
 import { updateCustomRoasProduct } from "../../../resolver/ads/index";
-import convertBudgetToIDR from "../../../utils/convertBudgetIDR";
-import converTypeAds from "../../../utils/convertTypeAds";
-import formatRupiahFilter from "../../../utils/convertFormatRupiahFilter";
-import convertFormatCTR from "../../../utils/convertFormatToCTR";
-import formatMetricValue from "../../../utils/convertValueMetricFilter";
+import axiosRequest from "../../../utils/request";
+import useDebounce from "../../../hooks/useDebounce";
 import formatValueRatio from "../../../utils/convertFormatRatioValue";
 import formatStyleSalesClassification from "../../../utils/convertFormatSalesClassification";
+import formatTableValue from "../../../utils/formatTableValue";
 import Loading from "../../atoms/Loading/Loading";
 
 
@@ -112,7 +107,6 @@ const AdsTable = ({ shoppeeId }) => {
   };
 
   const toLocalISOString = (date) => {
-    // console.log('Converting date to ISO string:', date);
     if (!date || !(date instanceof Date)) {
       console.error('Invalid date passed to toLocalISOString:', date);
       return null;
@@ -257,8 +251,6 @@ const AdsTable = ({ shoppeeId }) => {
       const to1ISO = toLocalISOString(dateRanges.current.to);
 
       const apiUrl = `/api/product-ads/chart?shopId=${shopId}&from=${from1ISO}&to=${to1ISO}&limit=50`;
-      // const apiUrl = `/api/product-ads/chart?shopId=${shoppeeId}&from=${from1ISO}&to=${to1ISO}&limit=100000000000000000`;
-      // console.log('API URL Chart Data:', apiUrl);
       
       const response = await axiosRequest.get(apiUrl);
       const data = await response.data;
@@ -288,10 +280,9 @@ const AdsTable = ({ shoppeeId }) => {
 
       const backendPage = Math.max(0, page - 1);
       let apiUrl = `/api/product-ads?shopId=${shopId}&from1=${from1ISO}&to1=${to1ISO}&from2=${from2ISO}&to2=${to2ISO}&limit=50&page=${backendPage}`;
-      // let apiUrl = `/api/product-ads?shopId=${shoppeeId}&from1=${from1ISO}&to1=${to1ISO}&from2=${from2ISO}&to2=${to2ISO}&limit=1000000&page=${backendPage}`;
 
       if (filters.searchQuery && filters.searchQuery.trim() !== "") {
-        apiUrl += `&search=${encodeURIComponent(filters.searchQuery.trim())}`;
+        apiUrl += `&title=${encodeURIComponent(filters.searchQuery.trim())}`;
       }
       
       if (filters.statusFilter && filters.statusFilter !== "all") {
@@ -314,7 +305,6 @@ const AdsTable = ({ shoppeeId }) => {
         apiUrl += `&productPlacement=${filters.placement.value}`;
       }
 
-      // console.log('API URL Table Data:', apiUrl);
       const response = await axiosRequest.get(apiUrl);
       const data = await response.data;
       const content = data.content || [];
@@ -339,11 +329,6 @@ const AdsTable = ({ shoppeeId }) => {
     try {
       const dateRanges = generateComparisonDateRanges(currentSelection, selectionType);
       
-      // console.log('Generated Date Ranges:', {
-      //   previous: `${dateRanges.previous.from.toISOString()} - ${dateRanges.previous.to.toISOString()}`,
-      //   current: `${dateRanges.current.from.toISOString()} - ${dateRanges.current.to.toISOString()}`
-      // });
-
       const currentFilters = {
         searchQuery: debouncedSearchTerm,
         statusFilter: statusAdsFilter,
@@ -838,64 +823,88 @@ const AdsTable = ({ shoppeeId }) => {
             emphasis: { focus: 'series' },
             data: s.data,
             lineStyle: {
-              color: s.color
+              color: s.color,
+              width: 2
             },
             itemStyle: {
               color: s.color
             }
           })) || [];
 
+          // Check if the chart have data
           const hasData = series.some(s => s.data && s.data.some(value => value > 0));
 
-          let leftGrid = 50;
-          if (selectedMetrics.length > 1 || selectedMetrics.includes("cpc")) {
-            leftGrid = 80;
-          }
+          let xAxisData = chartData.timeIntervals || chartData.date || [];
+          const isSingleDay = chartData.isSingleDay || false;
+          const includesColon = xAxisData.some((item) => item.includes(":"));
 
-          let xAxisData = chartData?.timeIntervals || [];
-          const isSingleDay = chartData?.isSingleDay || false;
-
-          if (isSingleDay) {
-            // Extract only the time portion (HH:00) for hourly view
-            xAxisData = xAxisData.map(interval => {
-              if (!interval) return "";
-              if (interval.includes(" ")) {
-                return interval.split(" ")[1]; // Return only the time part
-              }
-              return interval;
-            });
+          if (includesColon) {
+            xAxisData = xAxisData.map((item) => item.split(" ")[1]);
           } else {
-            // For multi-day view, normalize date formats first
-            xAxisData = xAxisData.map(date => {
-              if (!date) return "";
-              // If it contains a space (has time component), take only the date part
-              if (date.includes(" ")) {
-                return date.split(" ")[0];
-              }
-              return date;
-            });
-
-            // Format multi-day dates to show just month-day
-            xAxisData = xAxisData.map(data => {
-              if (!data) return "";
-              const parts = data.split("-");
-              if (parts.length >= 3) {
-                return `${parts[1]}-${parts[2]}`;  // month-day format
-              }
-              return data;
-            });
+            xAxisData = xAxisData.map((item) => item.split("-").slice(1).join("/"));
           }
 
-          let rotateAxisLabel = 0;
-          if (!isSingleDay) {
-            if (xAxisData?.length > 7 && xAxisData?.length <= 20) {
-              rotateAxisLabel = 30;
-            } else if (xAxisData?.length > 20) {
-              rotateAxisLabel = 40;
-            } else if (xAxisData?.length > 30) {
-              rotateAxisLabel = 50;
-            }
-          }
+          const getDynamicLeft = (maxY) => {
+            if (maxY >= 10_000_000_000) return 180;
+            if (maxY >= 1_000_000_000) return 150;
+            if (maxY >= 100_000_000) return 120;
+            if (maxY >= 10_000_000) return 90;
+            if (maxY >= 1_000_000) return 70;
+            if (maxY >= 1000) return 50;
+            return 35;
+          };
+
+          const getXAxisFormatter = (length) => {
+            let modulus = 1;
+            if (length > 56) modulus = 5;
+            else if (length > 42) modulus = 4;
+            else if (length > 28) modulus = 3;
+            else if (length > 14) modulus = 2;
+
+            return (value, index) => index % modulus === 0 ? value : '';
+          };
+
+          const customTooltipFormatter = (params) => {
+            const date = params[0].axisValue;
+            let html = `
+              <div style="
+                background: white;
+                border-radius: 6px;
+                box-shadow: 0 0 4px rgba(0,0,0,0.1);
+                overflow: hidden;
+                font-family: sans-serif;
+              ">
+                <div style="
+                  background: #EDEDED;
+                  padding: 6px 12px;
+                  font-weight: bold;
+                  font-size: 13px;
+                  border-bottom: 1px solid #ddd;
+                  color: #101010;
+                ">${date}</div>
+                <div style="padding: 6px 12px; font-size: 13px;">
+            `;
+
+            params.forEach(param => {
+              html += `
+                <div style="display: flex; align-items: center; justify-content: space-between; margin: 4px 0; gap: 4px;">
+                  <div style="display: flex; align-items: center;">
+                    <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${param.color}; margin-right:6px;"></span>
+                    ${param.seriesName}
+                  </div>
+                  <strong>${formatTableValue(param.value, "number")}</strong>
+                </div>
+              `;
+            });
+
+            html += `</div></div>`;
+            return html;
+          };
+
+          const allYValues = chartData.series?.flatMap(s => s.data) || [];
+          const maxY = Math.max(...allYValues);
+          const leftGrid = getDynamicLeft(maxY);
+          const axisLabelFormatter = getXAxisFormatter(xAxisData.length);
 
           const option = {
             toolbox: { feature: { saveAsImage: {} } },
@@ -907,17 +916,16 @@ const AdsTable = ({ shoppeeId }) => {
             },
             tooltip: {
               trigger: "axis",
-              formatter: function (params) {
-                let result = params[0].axisValue + '<br/>';
-                params.forEach(param => {
-                  result += `<span style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background-color:${param.color};"></span> ${param.seriesName}: ${param.value}<br/>`;
-                });
-                return result;
-              }
+              extraCssText: 'box-shadow: none;',
+              backgroundColor: "transparent",
+              borderWidth: 0,
+              formatter: customTooltipFormatter
             },
             legend: {
               data: chartData.series?.map(s => s.name) || [],
-              bottom: 0
+              bottom: 0,
+              icon: 'circle',
+              itemWidth: 8,
             },
             xAxis: {
               name: isSingleDay ? "Time" : "Date",
@@ -925,8 +933,9 @@ const AdsTable = ({ shoppeeId }) => {
               data: xAxisData || [],
               boundaryGap: false,
               axisLabel: {
-                rotate: rotateAxisLabel,
+                rotate: 0,
                 interval: 0,
+                formatter: axisLabelFormatter
               },
             },
             yAxis: {
@@ -1073,11 +1082,11 @@ const AdsTable = ({ shoppeeId }) => {
     return (
       <div className="custom-container-pagination mt-3">
         <div className="custom-pagination-select d-flex align-items-center gap-2">
-          <span
+          {/* <span
             style={{
               display: `${getWidthWindow < 768 ? 'none' : 'block'}`
             }}
-          >Tampilan</span>
+          >Tampilan</span> */}
           <select
             className="form-select"
             value={itemsPerPage}
@@ -1102,7 +1111,7 @@ const AdsTable = ({ shoppeeId }) => {
                   {showFirstLastButtons && (
                     <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
                       <button
-                        className="page-link"
+                        className="page-link sm-me-2"
                         onClick={() => handlePageChange(1)}
                         disabled={currentPage === 1}
                         title="Ke halaman pertama"
@@ -1158,7 +1167,7 @@ const AdsTable = ({ shoppeeId }) => {
                   {showFirstLastButtons && (
                     <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
                       <button
-                        className="page-link"
+                        className="page-link sm-ms-2"
                         onClick={() => handlePageChange(totalPages)}
                         disabled={currentPage === totalPages}
                         title="Ke halaman terakhir"
@@ -1175,7 +1184,7 @@ const AdsTable = ({ shoppeeId }) => {
                     {showFirstLastButtons && (
                       <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
                         <button
-                          className="page-link"
+                          className="d-none sm-d-block page-link"
                           onClick={() => handlePageChange(1)}
                           disabled={currentPage === 1}
                           title="Ke halaman pertama"
@@ -1236,7 +1245,7 @@ const AdsTable = ({ shoppeeId }) => {
                     {showFirstLastButtons && (
                       <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
                         <button
-                          className="page-link"
+                          className="d-none sm-d-block page-link"
                           onClick={() => handlePageChange(totalPages)}
                           disabled={currentPage === totalPages}
                           title="Ke halaman terakhir"
@@ -1296,15 +1305,15 @@ const AdsTable = ({ shoppeeId }) => {
     { key: "cost", label: "Biaya Iklan" },
     { key: "broadGmv", label: "Penjualan dari iklan" },
     { key: "roas", label: "ROAS" },
-    { key: "custom_roas", label: "Custom ROAS" },
+    { key: "customRoas", label: "Custom ROAS" },
     { key: "impression", label: "Iklan dilihat" },
     { key: "click", label: "Jumlah Klik" },
-    { key: "ctr", label: "Presentase Klik" },
+    { key: "ctr", label: "Presentase Klik" }, 
     { key: "broadOrder", label: "Konversi" },
     { key: "cr", label: "Tingkat Konversi" },
     { key: "broadOrderAmount", label: "Produk Terjual" },
     { key: "cpc", label: "Biaya per Konversi" },
-    { key: "acos", label: "ACOS (Presentase Biaya Iklan)" },
+    { key: "acos", label: "Presentase Biaya Iklan (ACOS)" },
     { key: "directOrder", label: "Konversi Langung" },
     { key: "directOrderAmount", label: "Produk Terjual Langsung" },
     { key: "directGmv", label: "Penjualan dari Iklan Langsung" },
@@ -1383,118 +1392,6 @@ const AdsTable = ({ shoppeeId }) => {
   const isTypeManualProductSelected = selectedTypeAds.some(
     (option) => option.value === "manual"
   );
-
-
-
-  // AVERAGE VALUE CALCULATION FEATURE
-  // const isMultiDayFilter = () => {
-  //   // Jika menggunakan comparator date range
-  //   if (comparatorDate && comparedDate) {
-  //     return comparatorDate.toDateString() !== comparedDate.toDateString();
-  //   }
-
-  //   // Jika menggunakan preset date options
-  //   if (Array.isArray(date)) {
-  //     // "1 Minggu terakhir" - lebih dari 1 hari
-  //     return date.length > 1;
-  //   }
-
-  //   if (date === "Bulan Ini") {
-  //     // "Bulan ini" - lebih dari 1 hari
-  //     return true;
-  //   }
-
-  //   // "Hari ini", "Kemarin", atau single date - 1 hari saja
-  //   return false;
-  // };
-  // const calculateTableValue = (entry, metricKey) => {
-  //   if (!entry.data || entry.data.length === 0) {
-  //     return null;
-  //   }
-
-  //   // Metrics yang harus ditotal (tidak di-average)
-  //   const totalMetrics = ['dailyBudget', 'cost'];
-
-  //   // Jika filter single day, ambil data terbaru saja (seperti sebelumnya)
-  //   if (!isMultiDayFilter()) {
-  //     // Ambil data terbaru berdasarkan createdAt
-  //     const sortedData = [...entry.data].sort((a, b) =>
-  //       new Date(b.createdAt) - new Date(a.createdAt)
-  //     );
-  //     return sortedData[0][metricKey];
-  //   }
-
-  //   // Jika filter multi-day, hitung average atau total
-  //   let total = 0;
-  //   let validDataCount = 0;
-
-  //   entry.data.forEach(dataItem => {
-  //     const value = dataItem[metricKey];
-  //     if (value !== undefined && value !== null && !isNaN(value)) {
-  //       total += Number(value);
-  //       validDataCount++;
-  //     }
-  //   });
-
-  //   if (validDataCount === 0) {
-  //     return null;
-  //   }
-
-  //   // Jika metric termasuk yang harus ditotal
-  //   if (totalMetrics.includes(metricKey)) {
-  //     return total;
-  //   }
-
-  //   return total / validDataCount;
-  // };
-  // const formatTableValue = (entry, metricKey, formatType = 'default') => {
-  //   const value = calculateTableValue(entry, metricKey);
-
-  //   if (value === null || value === undefined) {
-  //     return "-";
-  //   }
-
-  //   // Format berdasarkan tipe metric
-  //   switch (metricKey) {
-  //     case 'dailyBudget':
-  //     case 'cost':
-  //       // Selalu format sebagai currency
-  //       return `Rp ${convertBudgetToIDR(value, formatType)}`;
-
-  //     case 'roas':
-  //     case 'ctr':
-  //     case 'acos':
-  //       // Metrics yang biasanya dalam bentuk ratio/percentage
-  //       if (isMultiDayFilter()) {
-  //         // Jika average, tampilkan dengan 2 desimal
-  //         return Number(value).toFixed(2);
-  //       } else {
-  //         // Jika single day, tampilkan sesuai format asli
-  //         return Number(value).toFixed(2);
-  //       }
-
-  //     case 'impression':
-  //       return formatRupiahFilter(value);
-  //     case 'click':
-  //       // Metrics yang berupa angka bulat
-  //       if (isMultiDayFilter()) {
-  //         // Jika average, tampilkan dengan 1 desimal
-  //         return Number(value).toFixed(1);
-  //       } else {
-  //         // Jika single day, tampilkan sebagai integer
-  //         return Math.round(value).toLocaleString('id-ID');
-  //       }
-
-  //     default:
-  //       if (isMultiDayFilter()) {
-  //         return Number(value).toFixed(2);
-  //       } else {
-  //         return value.toString();
-  //       }
-  //   }
-  // };
-
-
 
   const handleUpdateCustomRoas = async (shopId, campaignId, customRoasValue) => {
     try {
@@ -1715,10 +1612,10 @@ const AdsTable = ({ shoppeeId }) => {
                         <span className="card-text fs-4 fw-bold">
                           {
                             metrics[metricKey].type === "currency"
-                              ? <span>{formatRupiahFilter(metricsTotals[metricKey])}</span>
+                              ? <span>Rp. {formatTableValue(metricsTotals[metricKey], "simple_currency")}</span>
                               : metrics[metricKey].type === "percentage"
-                                ? <span>{Number(metricsTotals[metricKey]).toFixed(2)}%</span>
-                                : <span>{Number(metricsTotals[metricKey]).toFixed(2)}</span>
+                                ? <span>{formatTableValue(metricsTotals[metricKey], "percentage")}</span>
+                                : <span>{formatTableValue(metricsTotals[metricKey], "coma")}</span>
                           }
                         </span>
                       </div>
@@ -1738,7 +1635,7 @@ const AdsTable = ({ shoppeeId }) => {
                   </div>
                 )}
                 {/* Chart */}
-                <div ref={chartRef} style={{ width: "100%", height: "320px" }}></div>
+                <div ref={chartRef} style={{ width: "100%", height: "340px" }}></div>
                 {/* Filter & Table */}
                 <div className="d-flex flex-column gap-2">
                   {/* Status filter */}
@@ -1794,7 +1691,7 @@ const AdsTable = ({ shoppeeId }) => {
                           : "border border-secondary-subtle"
                           }`}
                         onClick={() => setStatusAdsFilter("ended")}
-                        style={{ cursor: "pointer", fontSize: "12px", padding: "1px 12px", }}
+                        style={{ cursor: "pointer", fontSize: "12px", padding: "6px 12px", }}
                       >
                         Berakhir
                       </div>
@@ -1804,7 +1701,7 @@ const AdsTable = ({ shoppeeId }) => {
                           : "border border-secondary-subtle"
                           }`}
                         onClick={() => setStatusAdsFilter("deleted")}
-                        style={{ cursor: "pointer", fontSize: "12px", padding: "1px 12px", }}
+                        style={{ cursor: "pointer", fontSize: "12px", padding: "6px 12px", }}
                       >
                         Dihapus
                       </div>
@@ -2014,24 +1911,26 @@ const AdsTable = ({ shoppeeId }) => {
                           left: 0,
                           right: 0,
                           bottom: 0,
+                          paddingTop: filteredData.length > 0 ? '85px' : '0px',
                           backgroundColor: 'rgba(255, 255, 255, 0.8)',
                           display: 'flex',
                           justifyContent: 'center',
-                          alignItems: 'center',
+                          alignItems: 'start',
                           zIndex: 10,
-                          minHeight: '200px'
+                          minHeight: filteredData.length > 0 ? '200px' : '50px',
                         }}
                       >
                         <Loading size={40} />
                       </div>
                     )}
                     {/* Table container */}
-                    <div className="table-responsive">
+                    <div className="table-responsive" style={{ borderRadius: "4px" }}>
                       <table className="table table-centered"
                         style={{
                           width: "100%",
                           minWidth: "max-content",
                           maxWidth: "none",
+                          borderRadius: "8px",
                         }}
                       >
                         <thead className="table-dark">
@@ -2040,8 +1939,8 @@ const AdsTable = ({ shoppeeId }) => {
                             {allColumns
                               .filter((col) =>
                                 selectedColumns.includes(col.key) &&
-                                (col.key !== "custom_roas" ||
-                                  (flagCustomRoasDate == "hari_ini"))
+                                (col.key !== "customRoas" ||
+                                  ((flagCustomRoasDate == "hari_ini" || flagCustomRoasDate == "kemarin") && col.key === "customRoas"))
                               )
                               .map((col) => (
                                 <th key={col.key}>
@@ -2113,24 +2012,17 @@ const AdsTable = ({ shoppeeId }) => {
                                   )}
                                   {selectedColumns.includes("dailyBudget") && (
                                     <td style={{ width: "180px" }}>
-                                      <div className="d-flex flex-column">
                                         <span>
                                           {
-                                            entry.data[0].dailyBudget === undefined ? "-" : entry.data[0].dailyBudget === null ? "0" : `Rp ${convertBudgetToIDR(entry.data[0].dailyBudget, "default")}`
+                                            entry.data[0].dailyBudget === undefined || entry.data[0].dailyBudget === null ? "-" : formatTableValue(entry.data[0].dailyBudget, "currency")
                                           }
                                         </span>
-                                        <span className="text-success" style={{ fontSize: "10px" }}>
-                                          {
-                                            entry.data[0].dailyBudgetComparison === undefined ? "-" : entry.data[0].dailyBudgetComparison === null ? "0" : `Rp ${convertBudgetToIDR(entry.data[0].dailyBudgetComparison, "default")}`
-                                          }
-                                        </span>
-                                      </div>
                                     </td>
                                   )}
                                   {selectedColumns.includes("insight") && (
                                     <td style={{ width: "260px" }}>
                                       <span>
-                                        {entry.data[0].insight === undefined ? "-" : entry.data[0].insight === null ? "Tidak ada keterangan" : entry.data[0].insight}
+                                        {entry.data[0].insight === undefined || entry.data[0].insight === null ? "-" : entry.data[0].insight}
                                       </span>
                                     </td>
                                   )}
@@ -2149,7 +2041,7 @@ const AdsTable = ({ shoppeeId }) => {
                                           }}
                                         >
                                           {
-                                            entry.data[0].salesClassification === undefined ? "-" : entry.data[0].salesClassification === null ? "Not Found" : formatStyleSalesClassification(entry.data[0].salesClassification).label
+                                            entry.data[0].salesClassification === undefined || entry.data[0].salesClassification === null ? "-" : formatStyleSalesClassification(entry.data[0].salesClassification).label
                                           }
                                         </span>
                                       </div>
@@ -2160,12 +2052,12 @@ const AdsTable = ({ shoppeeId }) => {
                                       <div className="d-flex flex-column">
                                         <span>
                                           {
-                                            entry.data[0].cost === undefined ? "-" : entry.data[0].cost === null ? "0" : `Rp ${convertBudgetToIDR(entry.data[0].cost, "cost")}`
+                                            entry.data[0].cost === undefined || entry.data[0].cost === null ? "-" : formatTableValue(entry.data[0].cost, "currency")
                                           }
                                         </span>
                                         <span className={`${formatValueRatio(entry.data[0].costComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
                                           {
-                                            entry.data[0].costComparison === undefined ? "-" : entry.data[0].costComparison === null ? "0" : formatValueRatio(entry.data[0].costComparison).rounded
+                                            entry.data[0].costComparison === undefined || entry.data[0].costComparison === null ? "-" : formatTableValue(entry.data[0].costComparison, "ratio")
                                           }
                                         </span>
                                       </div>
@@ -2175,9 +2067,9 @@ const AdsTable = ({ shoppeeId }) => {
                                     <td style={{ width: "180px" }}>
                                       <div className="d-flex flex-column">
                                         <span>
-                                          {entry.data[0].broadGmv === undefined ? "-" : entry.data[0].broadGmv === null ? "0" : `Rp ${convertBudgetToIDR(entry.data[0].broadGmv, "cost")}`}</span>
+                                          {entry.data[0].broadGmv === undefined || entry.data[0].broadGmv === null ? "-" : formatTableValue(entry.data[0].broadGmv, "currency")}</span>
                                         <span className={`${formatValueRatio(entry.data[0].broadGmvComparisson).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                          {entry.data[0].broadGmvComparison === undefined ? "-" : entry.data[0].broadGmvComparison === null ? "0" : `${formatValueRatio(entry.data[0].broadGmvComparison).rounded}%`}
+                                          {entry.data[0].broadGmvComparison === undefined || entry.data[0].broadGmvComparison === null ? "-" : formatTableValue(entry.data[0].broadGmvComparison, "ratio")}
                                         </span>
                                       </div>
                                     </td>
@@ -2186,15 +2078,15 @@ const AdsTable = ({ shoppeeId }) => {
                                     <td style={{ width: "120px" }}>
                                       <div className="d-flex flex-column">
                                         <span>{
-                                          entry.data[0].customRoas === undefined ? "-" : entry.data[0].customRoas === null ? "0" : `${(entry.data[0].customRoas).toFixed(2)}%`
+                                          entry.data[0].roas === undefined || entry.data[0].roas === null ? "-" : formatTableValue(entry.data[0].roas, "coma")
                                         }</span>
                                         <span className={`${formatValueRatio(entry.data[0].roasComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                          {entry.data[0].roasComparison === undefined ? "-" : entry.data[0].roasComparison === null ? "0" : `${formatValueRatio(entry.data[0].roasComparison).rounded}%`}
+                                          {entry.data[0].roasComparison === undefined || entry.data[0].roasComparison === null ? "-" : formatTableValue(entry.data[0].roasComparison, "ratio")}
                                         </span>
                                       </div>
                                     </td>
                                   )}
-                                  {selectedColumns.includes("custom_roas") && flagCustomRoasDate !== "minggu_ini" && flagCustomRoasDate !== "bulan_ini" && (
+                                  {selectedColumns.includes("customRoas") && flagCustomRoasDate !== "minggu_ini" && flagCustomRoasDate !== "bulan_ini" && (
                                     <td style={{ width: "200px" }}>
                                       <span>{entry.data[0].customRoas}</span>
                                       <input
@@ -2239,10 +2131,10 @@ const AdsTable = ({ shoppeeId }) => {
                                     <td style={{ width: "200px" }}>
                                       <div className="d-flex flex-column">
                                         <span>{
-                                          entry.data[0].impression === undefined ? "-" : entry.data[0].impression === null ? "0" : formatRupiahFilter(entry.data[0].impression)
+                                          entry.data[0].impression === undefined || entry.data[0].impression === null ? "-" : formatTableValue(entry.data[0].impression, "simple_currency")
                                         }</span>
                                         <span className={`${formatValueRatio(entry.data[0].impressionComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                          {entry.data[0].impressionComparison === undefined ? "-" : entry.data[0].impressionComparison === null ? "0" : `${formatValueRatio(entry.data[0].impressionComparison).rounded}%`}
+                                          {entry.data[0].impressionComparison === undefined || entry.data[0].impressionComparison === null ? "-" : formatTableValue(entry.data[0].impressionComparison, "ratio")}
                                         </span>
                                       </div>
                                     </td>
@@ -2251,10 +2143,10 @@ const AdsTable = ({ shoppeeId }) => {
                                     <td style={{ width: "200px" }}>
                                       <div className="d-flex flex-column">
                                         <span>{
-                                          entry.data[0].click === undefined ? "-" : entry.data[0].click === null ? "0" : formatRupiahFilter(entry.data[0].click)
+                                          entry.data[0].click === undefined || entry.data[0].click === null ? "-" : formatTableValue(entry.data[0].click, "simple_currency")
                                         }</span>
                                         <span className={`${formatValueRatio(entry.data[0].clickComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                          {entry.data[0].clickComparison === undefined ? "-" : entry.data[0].clickComparison === null ? "0" : `${formatValueRatio(entry.data[0].clickComparison).rounded}%`}
+                                          {entry.data[0].clickComparison === undefined || entry.data[0].clickComparison === null ? "-" : formatTableValue(entry.data[0].clickComparison, "ratio")}
                                         </span>
                                       </div>
                                     </td>
@@ -2263,10 +2155,10 @@ const AdsTable = ({ shoppeeId }) => {
                                     <td style={{ width: "200px" }}>
                                       <div className="d-flex flex-column">
                                         <span>{
-                                          entry.data[0].ctr === undefined ? "-" : entry.data[0].ctr === null ? "0" : `${entry.data[0].ctr}%`
+                                          entry.data[0].ctr === undefined || entry.data[0].ctr === null ? "-" : formatTableValue(entry.data[0].ctr, "percentage")
                                         }</span>
                                         <span className={`${formatValueRatio(entry.data[0].ctrComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                          {entry.data[0].ctrComparison === undefined ? "-" : entry.data[0].ctrComparison === null ? "0" : `${formatValueRatio(entry.data[0].ctrComparison).rounded}%`}
+                                          {entry.data[0].ctrComparison === undefined || entry.data[0].ctrComparison === null ? "-" : formatTableValue(entry.data[0].ctrComparison, "ratio")}
                                         </span>
                                       </div>
                                     </td>
@@ -2277,11 +2169,11 @@ const AdsTable = ({ shoppeeId }) => {
                                       <div className="d-flex flex-column">
                                         <span>
                                           {
-                                            entry.data[0].broadOrder === undefined ? "-" : entry.data[0].broadOrder === null ? "0" : formatRupiahFilter(entry.data[0].broadOrder)
+                                            entry.data[0].broadOrder === undefined || entry.data[0].broadOrder === null ? "-" : formatTableValue(entry.data[0].broadOrder, "none")
                                           }
                                         </span>
                                         <span className={`${formatValueRatio(entry.data[0].broadOrderComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                          {entry.data[0].broadOrderComparison === undefined ? "-" : entry.data[0].broadOrderComparison === null ? "0" : `${formatValueRatio(entry.data[0].broadOrderComparison).rounded}%`}
+                                          {entry.data[0].broadOrderComparison === undefined || entry.data[0].broadOrderComparison === null ? "-" : formatTableValue(entry.data[0].broadOrderComparison, "ratio")}
                                         </span>
                                       </div>
                                     </td>
@@ -2290,10 +2182,10 @@ const AdsTable = ({ shoppeeId }) => {
                                     <td style={{ width: "200px" }}>
                                       <div className="d-flex flex-column">
                                         <span>{
-                                          entry.data[0].cr === undefined ? "-" : entry.data[0].cr === null ? "0" : `${Number(entry.data[0].cr).toFixed(2)}%`
+                                          entry.data[0].cr === undefined || entry.data[0].cr === null ? "-" : formatTableValue(entry.data[0].cr, "percentage")
                                         }</span>
                                         <span className={`${formatValueRatio(entry.data[0].crComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                          {entry.data[0].crComparison === undefined ? "-" : entry.data[0].crComparison === null ? "0" : `${formatValueRatio(entry.data[0].crComparison).rounded}%`}
+                                          {entry.data[0].crComparison === undefined || entry.data[0].crComparison === null ? "-" : formatTableValue(entry.data[0].crComparison, "ratio")}
                                         </span>
                                       </div>
                                     </td>
@@ -2304,11 +2196,11 @@ const AdsTable = ({ shoppeeId }) => {
                                       <div className="d-flex flex-column">
                                         <span>
                                           {
-                                            entry.data[0].broadOrderAmount === undefined ? "-" : entry.data[0].broadOrderAmount === null ? "0" : convertBudgetToIDR(entry.data[0].broadOrderAmount)
+                                            entry.data[0].broadOrderAmount === undefined || entry.data[0].broadOrderAmount === null ? "-" : formatTableValue(entry.data[0].broadOrderAmount, "none")
                                           }
                                         </span>
                                         <span className={`${formatValueRatio(entry.data[0].broadOrderAmountComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                          {entry.data[0].broadOrderAmountComparison === undefined ? "-" : entry.data[0].broadOrderAmountComparison === null ? "0" : `${formatValueRatio(entry.data[0].broadOrderAmountComparison).rounded}%`}
+                                          {entry.data[0].broadOrderAmountComparison === undefined || entry.data[0].broadOrderAmountComparison === null ? "-" : formatTableValue(entry.data[0].broadOrderAmountComparison, "ratio")}
                                         </span>
                                       </div>
                                     </td>
@@ -2318,11 +2210,11 @@ const AdsTable = ({ shoppeeId }) => {
                                       <div className="d-flex flex-column">
                                         <span>
                                           {
-                                            entry.data[0].cpc === undefined ? "-" : entry.data[0].cpc === null ? "0" : `Rp ${formatRupiahFilter(entry.data[0].cpc, "cpc")}`
+                                            entry.data[0].cpc === undefined || entry.data[0].cpc === null ? "-" : formatTableValue(entry.data[0].cpc, "currency")
                                           }
                                         </span>
                                         <span className={`${formatValueRatio(entry.data[0].cpcComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                          {entry.data[0].cpcComparison === undefined ? "-" : entry.data[0].cpcComparison === null ? "0" : `${formatValueRatio(entry.data[0].cpcComparison).rounded}%`}
+                                          {entry.data[0].cpcComparison === undefined || entry.data[0].cpcComparison === null ? "-" : formatTableValue(entry.data[0].cpcComparison, "ratio")}
                                         </span>
                                       </div>
                                     </td>
@@ -2332,11 +2224,11 @@ const AdsTable = ({ shoppeeId }) => {
                                       <div className="d-flex flex-column">
                                         <span>
                                           {
-                                            entry.data[0].acos === undefined ? "-" : entry.data[0].acos === null ? "0" : `${Number(entry.data[0].acos).toFixed(2)}%`
+                                            entry.data[0].acos === undefined || entry.data[0].acos === null ? "-" : formatTableValue(entry.data[0].acos, "percentage")
                                           }
                                         </span>
                                         <span className={`${formatValueRatio(entry.data[0].acosComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                          {entry.data[0].acosComparison === undefined ? "-" : entry.data[0].acosComparison === null ? "0" : `${formatValueRatio(entry.data[0].acosComparison).rounded}%`}
+                                          {entry.data[0].acosComparison === undefined || entry.data[0].acosComparison === null ? "-" : formatTableValue(entry.data[0].acosComparison, "ratio")}
                                         </span>
                                       </div>
                                     </td>
@@ -2346,11 +2238,11 @@ const AdsTable = ({ shoppeeId }) => {
                                       <div className="d-flex flex-column">
                                         <span>
                                           {
-                                            entry.data[0].directOrder === undefined ? "-" : entry.data[0].directOrder === null ? "0" : formatRupiahFilter(entry.data[0].directOrder, "directOrder")
+                                            entry.data[0].directOrder === undefined || entry.data[0].directOrder === null ? "-" : formatTableValue(entry.data[0].directOrder, "none")
                                           }
                                         </span>
                                         <span className={`${formatValueRatio(entry.data[0].directOrderComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                          {entry.data[0].directOrderComparison === undefined ? "-" : entry.data[0].directOrderComparison === null ? "0" : `${formatValueRatio(entry.data[0].directOrderComparison).rounded}%`}
+                                          {entry.data[0].directOrderComparison === undefined || entry.data[0].directOrderComparison === null ? "-" : formatTableValue(entry.data[0].directOrderComparison, "ratio")}
                                         </span>
                                       </div>
                                     </td>
@@ -2360,11 +2252,11 @@ const AdsTable = ({ shoppeeId }) => {
                                       <div className="d-flex flex-column">
                                         <span>
                                           {
-                                            entry.data[0].directOrderAmount === undefined ? "-" : entry.data[0].directOrderAmount === null ? "0" : formatRupiahFilter(entry.data[0].directOrderAmount, "directOrderAmount")
+                                            entry.data[0].directOrderAmount === undefined || entry.data[0].directOrderAmount === null ? "-" : formatTableValue(entry.data[0].directOrderAmount, "none")
                                           }
                                         </span>
                                         <span className={`${formatValueRatio(entry.data[0].directOrderAmountComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                          {entry.data[0].directOrderAmountComparison === undefined ? "-" : entry.data[0].directOrderAmountComparison === null ? "0" : `${formatValueRatio(entry.data[0].directOrderAmountComparison).rounded}%`}
+                                          {entry.data[0].directOrderAmountComparison === undefined || entry.data[0].directOrderAmountComparison === null ? "-" : formatTableValue(entry.data[0].directOrderAmountComparison, "ratio")}
                                         </span>
                                       </div>
                                     </td>
@@ -2374,11 +2266,11 @@ const AdsTable = ({ shoppeeId }) => {
                                       <div className="d-flex flex-column">
                                         <span>
                                           {
-                                            entry.data[0].directGmv === undefined ? "-" : entry.data[0].directGmv === null ? "0" : `Rp ${convertBudgetToIDR(entry.data[0].directGmv, "directGmv")}`
+                                            entry.data[0].directGmv === undefined || entry.data[0].directGmv === null ? "-" : formatTableValue(entry.data[0].directGmv, "currency")
                                           }
                                         </span>
                                         <span className={`${formatValueRatio(entry.data[0].directGmvComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                          {entry.data[0].directGmvComparison === undefined ? "-" : entry.data[0].directGmvComparison === null ? "0" : `${formatValueRatio(entry.data[0].directGmvComparison).rounded}%`}
+                                          {entry.data[0].directGmvComparison === undefined || entry.data[0].directGmvComparison === null ? "-" : formatTableValue(entry.data[0].directGmvComparison, "ratio")}
                                         </span>
                                       </div>
                                     </td>
@@ -2388,11 +2280,11 @@ const AdsTable = ({ shoppeeId }) => {
                                       <div className="d-flex flex-column">
                                         <span>
                                           {
-                                            entry.data[0].directRoi === undefined ? "-" : entry.data[0].directRoi === null ? "0" : `${Number(entry.data[0].directRoi).toFixed(2)}%`
+                                            entry.data[0].directRoi === undefined || entry.data[0].directRoi === null ? "-" : formatTableValue(entry.data[0].directRoi, "none")
                                           }
                                         </span>
                                         <span className={`${formatValueRatio(entry.data[0].directRoiComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                          {entry.data[0].directRoiComparison === undefined ? "-" : entry.data[0].directRoiComparison === null ? "0" : `${formatValueRatio(entry.data[0].directRoiComparison).rounded}%`}
+                                          {entry.data[0].directRoiComparison === undefined || entry.data[0].directRoiComparison === null ? "-" : formatTableValue(entry.data[0].directRoiComparison, "ratio")}
                                         </span>
                                       </div>
                                     </td>
@@ -2402,11 +2294,11 @@ const AdsTable = ({ shoppeeId }) => {
                                       <div className="d-flex flex-column">
                                         <span>
                                           {
-                                            entry.data[0].directCir === undefined ? "-" : entry.data[0].directCir === null ? "0" : `${Number(entry.data[0].directCir).toFixed(2)}%`
+                                            entry.data[0].directCir === undefined || entry.data[0].directCir === null ? "-" : formatTableValue(entry.data[0].directCir, "percentage")
                                           }
                                         </span>
                                         <div className={`${formatValueRatio(entry.data[0].directCirComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                          {entry.data[0].directCirComparison === undefined ? "-" : entry.data[0].directCirComparison === null ? "0" : `${formatValueRatio(entry.data[0].directCirComparison).rounded}%`}
+                                          {entry.data[0].directCirComparison === undefined || entry.data[0].directCirComparison === null ? "-" : formatTableValue(entry.data[0].directCirComparison, "ratio")}
                                         </div>
                                       </div>
                                     </td>
@@ -2416,11 +2308,11 @@ const AdsTable = ({ shoppeeId }) => {
                                       <div className="d-flex flex-column">
                                         <span>
                                           {
-                                            entry.data[0].directCr === undefined ? "-" : entry.data[0].directCr === null ? "0" : `${Number(entry.data[0].directCr).toFixed(2)}%`
+                                            entry.data[0].directCr === undefined || entry.data[0].directCr === null ? "-" : formatTableValue(entry.data[0].directCr, "percentage")
                                           }
                                         </span>
                                         <span className={`${formatValueRatio(entry.data[0].directCrComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                          {entry.data[0].directCrComparison === undefined ? "-" : entry.data[0].directCrComparison === null ? "0" : `${formatValueRatio(entry.data[0].directCrComparison).rounded}%`}
+                                          {entry.data[0].directCrComparison === undefined || entry.data[0].directCrComparison === null ? "-" : formatTableValue(entry.data[0].directCrComparison, "ratio")}
                                         </span>
                                       </div>
                                     </td>
@@ -2430,11 +2322,11 @@ const AdsTable = ({ shoppeeId }) => {
                                       <div className="d-flex flex-column">
                                         <span>
                                           {
-                                            entry.data[0].cpdc === undefined ? "-" : entry.data[0].cpdc === null ? "0" : `Rp ${convertBudgetToIDR(entry.data[0].cpdc, "cpdc")}`
+                                            entry.data[0].cpdc === undefined || entry.data[0].cpdc === null ? "-" : formatTableValue(entry.data[0].cpdc, "currency")
                                           }
                                         </span>
                                         <span className={`${formatValueRatio(entry.data[0].cpdcComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                          {entry.data[0].cpdcComparison === undefined ? "-" : entry.data[0].cpdcComparison === null ? "0" : `${formatValueRatio(entry.data[0].cpdcComparison).rounded}%`}
+                                          {entry.data[0].cpdcComparison === undefined || entry.data[0].cpdcComparison === null ? "-" : formatTableValue(entry.data[0].cpdcComparison, "ratio")}
                                         </span>
                                       </div>
                                     </td>
