@@ -48,8 +48,8 @@ export default function PerformanceStockPage() {
   const [isContentLoading, setIsContentLoading] = useState(false);
   const [isTableFilterLoading, setIsTableFilterLoading] = useState(false);
 
-  const getShopeeId = localStorage.getItem("shopeeId");
   // const getShopeeId = "252412120";
+  const getShopeeId = localStorage.getItem("shopeeId");
   if (getShopeeId == null || getShopeeId === null || getShopeeId === "null" || getShopeeId === "undefined") {
       return (
       <BaseLayout>
@@ -1660,7 +1660,7 @@ export default function PerformanceStockPage() {
                                   .filter((col) => selectedColumns.includes(col.key))
                                   .map((col) => (
                                     <th key={col.key}>
-                                      <div className="d-flex justify-content-start gap-1 align-items-center">
+                                      <div className="d-flex justify-content-start gap-1 align-items-center fw-bold">
                                         {col.label}
                                         {col.key === "stock" && (
                                           <div className="d-flex flex-column">
@@ -1726,36 +1726,37 @@ export default function PerformanceStockPage() {
                                         )}
 
                                         {selectedColumns.includes("stock") && (
-                                          <td>
+                                          <td style={{ width: "160px" }}>
                                             <div className="d-flex flex-column align-items-start">
-                                              <span>{latestStockData?.totalAvailableStock || 0} Stok</span>
+                                              <span>{latestStockData?.totalAvailableStock === undefined || latestStockData?.totalAvailableStock === null ? "-" : latestStockData?.totalAvailableStock} Stok</span>
                                             </div>
                                           </td>
                                         )}
 
                                         {selectedColumns.includes("code") && (
-                                          <td>{latestStockData?.productId || "-"}</td>
+                                          <td>{latestStockData?.productId === undefined || latestStockData?.productId === null ? "-" : latestStockData?.productId}</td>
+                                          // <td>{latestStockData?.parentSku === undefined || latestStockData?.parentSku === null ? "-" : latestStockData?.parentSku}</td>
                                         )}
 
                                         {selectedColumns.includes("availability") && (
-                                          <td>
+                                          <td style={{ width: "160px" }}>
                                             <span>
-                                              {latestStockData?.availability || "-"}
+                                              {latestStockData?.availability === undefined || latestStockData?.availability === null ? "-" : latestStockData?.availability}
                                             </span>
                                           </td>
                                         )}
 
                                         {selectedColumns.includes("status") && (
-                                          <td>
+                                          <td style={{ width: "160px" }}>
                                             {
-                                              latestStockData.state != null ? <span className="">{convertStatusToLabel(latestStockData.state)}</span> : "-"
+                                              latestStockData.state === null || latestStockData.state === undefined ? "-" : convertStatusToLabel(latestStockData.state)
                                             }
                                           </td>
                                         )}
 
                                         {selectedColumns.includes("classification") && (
                                           <td>
-                                            <span>{latestStockData?.classification || "-"}</span>
+                                            <span>{latestStockData?.classification === undefined || latestStockData?.classification === null ? "-" : latestStockData?.classification}</span>
                                           </td>
                                         )}
                                       </tr>
