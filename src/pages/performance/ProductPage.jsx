@@ -5,16 +5,11 @@ import * as echarts from "echarts";
 import toast from "react-hot-toast";
 import { FaAngleLeft, FaAngleRight } from "react-icons/fa6";
 
-import { useAuth } from "../../context/Auth";
 import axiosRequest from "../../utils/request";
 import useDebounce from "../../hooks/useDebounce";
 import BaseLayout from "../../components/organisms/BaseLayout";
-import convertBudgetToIDR from "../../utils/convertFromatToIDR";
-import converTypeAds from "../../utils/convertTypeAds";
-import formatRupiahFilter from "../../utils/convertFormatToENG";
-import convertFormatCTR from "../../utils/convertFormatToCTR";
-import formatMetricValue from "../../utils/convertValueMetricFilter";
 import formatValueRatio from "../../utils/convertFormatRatioValue";
+import formatTableValue from "../../utils/formatTableValue";
 import Loading from "../../components/atoms/Loading/Loading";
 
 
@@ -51,8 +46,8 @@ export default function PerformanceProductPage() {
   const [isContentLoading, setIsContentLoading] = useState(false);
   const [isTableFilterLoading, setIsTableFilterLoading] = useState(false);
 
-  const getShopeeId = localStorage.getItem("shopeeId");
   // const getShopeeId = "252234165";
+  const getShopeeId = localStorage.getItem("shopeeId");
   if (getShopeeId == null || getShopeeId === null || getShopeeId === "null" || getShopeeId === "undefined") {
       return (
       <BaseLayout>
@@ -68,47 +63,56 @@ export default function PerformanceProductPage() {
     pv: { 
       label: "Pengunjung", 
       color: "#0050C8",
-      dataKey: "pv" 
+      dataKey: "pv",
+      type: "simple_currency"
     },
     addToCartUnits: { 
       label: "Add To Cart", 
       color: "#D50000", 
-      dataKey: "addToCartUnits" 
+      dataKey: "addToCartUnits",
+      type: "simple_currency"
     },
     uvToAddToCartRate: { 
       label: "Add To Cart (Percentage)", 
       color: "#00B800",
-      dataKey: "uvToAddToCartRate" 
+      dataKey: "uvToAddToCartRate",
+      type: "percentage"
     },
     placedUnits: { 
       label: "Produk Siap Dikirim", 
       color: "#DFC100",
-      dataKey: "placedUnits" 
+      dataKey: "placedUnits",
+      type: "simple_currency"
     },
     placedBuyersToConfirmedBuyersRate: { 
       label: "Convertion Rate (Pesanan Siap Dikirim Dibagi Pesanan Dibuat)", 
       color: "#E200D6FF",
-      dataKey: "placedBuyersToConfirmedBuyersRate" 
+      dataKey: "placedBuyersToConfirmedBuyersRate",
+      type: "percentage"
     },
     uvToConfirmedBuyersRate: { 
       label: "Convertion Rate (Pesanan Siap Dikirim)", 
       color: "#A5009DFF",
-      dataKey: "uvToConfirmedBuyersRate" 
+      dataKey: "uvToConfirmedBuyersRate",
+      type: "percentage"
     },
     uvToPlacedBuyersRate: { 
       label: "Convertion Rate (Pesanan yang Dibuat)", 
       color: "#5F005AFF",
-      dataKey: "uvToPlacedBuyersRate" 
+      dataKey: "uvToPlacedBuyersRate",
+      type: "percentage"
     },
     confirmedSales: { 
       label: "Penjualan (Pesanan Siap Dikirim)", 
       color: "#FB8A00FF",
-      dataKey: "confirmedSales" 
+      dataKey: "confirmedSales",
+      type: "simple_currency"
     },
     placedSales: { 
       label: "Penjualan (Total Penjualan dari Pesanan Dibuat)", 
       color: "#A15800FF",
-      dataKey: "placedSales" 
+      dataKey: "placedSales",
+      type: "simple_currency"
     }
   };
 
@@ -278,7 +282,7 @@ export default function PerformanceProductPage() {
       const to2ISO = toLocalISOString(dateRanges?.previous?.to);
 
       const backendPage = Math.max(0, page - 1);
-      let apiUrl = `/api/product-performance?shopId=${getShopeeId}&from1=${from1ISO}&to1=${to1ISO}&from2=${from2ISO}&to2=${to2ISO}&limit=1000000&page=${backendPage}`;
+      let apiUrl = `/api/product-performance?shopId=${getShopeeId}&from1=${from1ISO}&to1=${to1ISO}&from2=${from2ISO}&to2=${to2ISO}&limit=50&page=${backendPage}`;
 
       if (filters.searchQuery && filters.searchQuery.trim() !== "") {
         apiUrl += `&name=${encodeURIComponent(filters.searchQuery.trim())}`;
@@ -316,10 +320,6 @@ export default function PerformanceProductPage() {
     
     try {
       const dateRanges = generateComparisonDateRanges(currentSelection, selectionType);
-      // console.log('Generated Date Ranges:', {
-      //   previous: `${dateRanges.previous.from.toISOString()} - ${dateRanges.previous.to.toISOString()}`,
-      //   current: `${dateRanges.current.from.toISOString()} - ${dateRanges.current.to.toISOString()}`
-      // });
 
       const currentFilters = {
         searchQuery: debouncedSearchTerm,
@@ -817,57 +817,84 @@ export default function PerformanceProductPage() {
             }
           })) || [];
 
-          const hasData = series.some(s => s.data && s.data.some(value => value > 0));
+          // Check if the chart have data
+          const hasData = series.length > 0 && series.some(s => 
+            s.data && s.data.length > 0 && s.data.some(value => 
+              value !== null && value !== undefined
+            )
+          );
 
-          let leftGrid = 50;
-          if (selectedMetrics.length > 1 || selectedMetrics.includes("pv")) {
-            leftGrid = 80;
-          }
-
-          let xAxisData = chartData?.timeIntervals || [];
+          let xAxisData = chartData?.timeIntervals || chartData.date || [];
           const isSingleDay = chartData?.isSingleDay || false;
+          const includesColon = xAxisData.some((item) => item.includes(":"));
 
-          if (isSingleDay) {
-            // Extract only the time portion (HH:00) for hourly view
-            xAxisData = xAxisData.map(interval => {
-              if (!interval) return "";
-              if (interval.includes(" ")) {
-                return interval.split(" ")[1]; // Return only the time part
-              }
-              return interval;
-            });
+          if (includesColon) {
+            xAxisData = xAxisData.map((item) => item.split(" ")[1]);
           } else {
-            // For multi-day view, normalize date formats first
-            xAxisData = xAxisData.map(date => {
-              if (!date) return "";
-              // If it contains a space (has time component), take only the date part
-              if (date.includes(" ")) {
-                return date.split(" ")[0];
-              }
-              return date;
-            });
-
-            // Format multi-day dates to show just month-day
-            xAxisData = xAxisData.map(data => {
-              if (!data) return "";
-              const parts = data.split("-");
-              if (parts.length >= 3) {
-                return `${parts[1]}-${parts[2]}`;  // month-day format
-              }
-              return data;
-            });
+            xAxisData = xAxisData.map((item) => item.split("-").slice(1).join("/"));
           }
 
-          let rotateAxisLabel = 0;
-          if (!isSingleDay) {
-            if (xAxisData?.length > 7 && xAxisData?.length <= 20) {
-              rotateAxisLabel = 20;
-            } else if (xAxisData?.length > 20) {
-              rotateAxisLabel = 40;
-            } else if (xAxisData?.length > 30) {
-              rotateAxisLabel = 50;
-            }
-          }
+          const getDynamicLeft = (maxY) => {
+            if (maxY >= 10_000_000_000) return 180;
+            if (maxY >= 1_000_000_000) return 150;
+            if (maxY >= 100_000_000) return 120;
+            if (maxY >= 10_000_000) return 90;
+            if (maxY >= 1_000_000) return 70;
+            if (maxY >= 1000) return 50;
+            return 35;
+          };
+
+          const getXAxisFormatter = (length) => {
+            let modulus = 1;
+            if (length > 56) modulus = 5;
+            else if (length > 42) modulus = 4;
+            else if (length > 28) modulus = 3;
+            else if (length > 14) modulus = 2;
+
+            return (value, index) => index % modulus === 0 ? value : '';
+          };
+
+          const customTooltipFormatter = (params) => {
+            const date = params[0].axisValue;
+            let html = `
+              <div style="
+                background: white;
+                border-radius: 6px;
+                box-shadow: 0 0 4px rgba(0,0,0,0.1);
+                overflow: hidden;
+                font-family: sans-serif;
+              ">
+                <div style="
+                  background: #EDEDED;
+                  padding: 6px 12px;
+                  font-weight: bold;
+                  font-size: 13px;
+                  border-bottom: 1px solid #ddd;
+                  color: #101010;
+                ">${date}</div>
+                <div style="padding: 6px 12px; font-size: 13px;">
+            `;
+
+            params.forEach(param => {
+              html += `
+                <div style="display: flex; align-items: center; justify-content: space-between; margin: 4px 0; gap: 4px;">
+                  <div style="display: flex; align-items: center;">
+                    <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${param.color}; margin-right:6px;"></span>
+                    ${param.seriesName}
+                  </div>
+                  <strong>${formatTableValue(param.value, "number")}</strong>
+                </div>
+              `;
+            });
+
+            html += `</div></div>`;
+            return html;
+          };
+
+          const allYValues = chartData.series?.flatMap(s => s.data) || [];
+          const maxY = Math.max(...allYValues);
+          const leftGrid = getDynamicLeft(maxY);
+          const axisLabelFormatter = getXAxisFormatter(xAxisData.length);
 
           const option = {
             toolbox: { feature: { saveAsImage: {} } },
@@ -879,17 +906,16 @@ export default function PerformanceProductPage() {
             },
             tooltip: {
               trigger: "axis",
-              formatter: function (params) {
-                let result = params[0].axisValue + '<br/>';
-                params.forEach(param => {
-                  result += `<span style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background-color:${param.color};"></span> ${param.seriesName}: ${param.value}<br/>`;
-                });
-                return result;
-              }
+              extraCssText: 'box-shadow: none;',
+              backgroundColor: "transparent",
+              borderWidth: 0,
+              formatter: customTooltipFormatter
             },
             legend: {
               data: chartData.series?.map(s => s.name) || [],
-              bottom: 0
+              bottom: 0,
+              icon: 'circle',
+              itemWidth: 8,
             },
             xAxis: {
               name: isSingleDay ? "Time" : "Date",
@@ -897,8 +923,9 @@ export default function PerformanceProductPage() {
               data: xAxisData || [],
               boundaryGap: false,
               axisLabel: {
-                rotate: rotateAxisLabel,
+                rotate: 0,
                 interval: 0,
+                formatter: axisLabelFormatter
               },
             },
             yAxis: {
@@ -910,14 +937,16 @@ export default function PerformanceProductPage() {
             series: series
           };
 
-          if (!hasData && (comparatorDateRange && comparedDateRange)) {
+          if (!hasData) {
             option.graphic = [
               {
                 type: 'text',
                 left: 'center',
                 top: 'middle',
                 style: {
-                  text: 'Tidak ada data untuk rentang waktu yang dipilih',
+                  text: series.length === 0 ? 
+                    'Pilih metrik untuk menampilkan chart' : 
+                    'Tidak ada data untuk rentang waktu yang dipilih',
                   fontSize: 16,
                   fill: '#999',
                   fontWeight: 'bold'
@@ -926,7 +955,7 @@ export default function PerformanceProductPage() {
             ];
           }
 
-          chartInstance.setOption(option);
+          chartInstance.setOption(option, true);
 
           return () => {
             if (chartInstance && !chartInstance.isDisposed()) {
@@ -939,7 +968,7 @@ export default function PerformanceProductPage() {
         }
       }
 
-      const timer = setTimeout(() => initChart(), 100);
+      const timer = setTimeout(() => initChart(), 50);
       return () => {
         clearTimeout(timer);
       };
@@ -983,10 +1012,10 @@ export default function PerformanceProductPage() {
   const getVisiblePageNumbers = () => {
     const pages = [];
     if (totalPages <= 10) {
-        for (let i = 1; i <= totalPages; i++) {
-          pages.push(i);
-        }
-        return pages;
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+      return pages;
     }
     
     if (currentPage <= 3) {
@@ -1060,11 +1089,11 @@ export default function PerformanceProductPage() {
     return (
       <div className="custom-container-pagination mt-3">
         <div className="custom-pagination-select d-flex align-items-center gap-2">
-          <span
+          {/* <span
             style={{
               display: `${getWidthWindow < 768 ? 'none' : 'block'}`
             }}
-          >Tampilan</span>
+          >Tampilan</span> */}
           <select
             className="form-select"
             value={itemsPerPage}
@@ -1089,7 +1118,7 @@ export default function PerformanceProductPage() {
                   {showFirstLastButtons && (
                     <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
                       <button
-                        className="page-link"
+                        className="page-link sm-me-2"
                         onClick={() => handlePageChange(1)}
                         disabled={currentPage === 1}
                         title="Ke halaman pertama"
@@ -1145,7 +1174,7 @@ export default function PerformanceProductPage() {
                   {showFirstLastButtons && (
                     <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
                       <button
-                        className="page-link"
+                        className="page-link sm-ms-2"
                         onClick={() => handlePageChange(totalPages)}
                         disabled={currentPage === totalPages}
                         title="Ke halaman terakhir"
@@ -1162,7 +1191,7 @@ export default function PerformanceProductPage() {
                     {showFirstLastButtons && (
                       <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
                         <button
-                          className="page-link"
+                          className="d-none sm-d-block page-link"
                           onClick={() => handlePageChange(1)}
                           disabled={currentPage === 1}
                           title="Ke halaman pertama"
@@ -1223,7 +1252,7 @@ export default function PerformanceProductPage() {
                     {showFirstLastButtons && (
                       <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
                         <button
-                          className="page-link"
+                          className="d-none sm-d-block page-link"
                           onClick={() => handlePageChange(totalPages)}
                           disabled={currentPage === totalPages}
                           title="Ke halaman terakhir"
@@ -1450,11 +1479,13 @@ export default function PerformanceProductPage() {
                               </strong>
                               <span className="card-text fs-4 fw-bold">
                                 {
-                                  metrics[metricKey].type === "currency"
-                                    ? <span>{formatRupiahFilter(metricsTotals[metricKey])}</span>
-                                    : metrics[metricKey].type === "percentage"
-                                    ? <span>{Number(metricsTotals[metricKey]).toFixed(2)}%</span>
-                                    : <span>{Number(metricsTotals[metricKey]).toFixed(2)}</span>
+                                  metrics[metricKey].type === "simple_currency"
+                                  ? <span>{formatTableValue(metricsTotals[metricKey], "simple_currency")}</span>
+                                  : metrics[metricKey].type === "percentage"
+                                  ? <span>{formatTableValue(metricsTotals[metricKey], "percentage")}</span>
+                                  : metrics[metricKey].type === "currency"
+                                  ? <span>Rp. {formatTableValue(metricsTotals[metricKey], "simple_currency")}</span>
+                                  : <span>{formatTableValue(metricsTotals[metricKey], "coma")}</span>
                                 }
                               </span>
                             </div>
@@ -1647,12 +1678,13 @@ export default function PerformanceProductPage() {
                                 left: 0,
                                 right: 0,
                                 bottom: 0,
+                                paddingTop: filteredData.length > 0 ? '85px' : '50px',
                                 backgroundColor: 'rgba(255, 255, 255, 0.8)',
                                 display: 'flex',
                                 justifyContent: 'center',
                                 alignItems: 'start',
                                 zIndex: 10,
-                                minHeight: '100vh'
+                                minHeight: filteredData.length > 0 ? '600px' : '100px',
                               }}
                             >
                               <Loading size={40} />
@@ -1670,7 +1702,7 @@ export default function PerformanceProductPage() {
                           >
                             <thead className="table-dark">
                               <tr>
-                                {filteredData.length > 0 && filteredData !== null && <th scope="col">No</th>}
+                                {paginatedData.length > 0 && paginatedData !== null && <th scope="col">No</th>}
                                   {allColumns
                                     .filter((col) => selectedColumns.includes(col.key))
                                     .map((col) => (
@@ -1721,9 +1753,9 @@ export default function PerformanceProductPage() {
                                       {selectedColumns.includes("pv") && (
                                         <td>
                                           <div className="d-flex flex-column">
-                                            <span>{entry.data[0].pv === undefined || entry.data[0].pv === null ? "-" : entry.data[0].pv}</span>
+                                            <span>{entry.data[0].pv === undefined || entry.data[0].pv === null ? "-" : formatTableValue(entry.data[0].pv, "simple_currency")}</span>
                                             <span className={`${formatValueRatio(entry.data[0].pvComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                              {entry.data[0].pvComparison === undefined ? "-" : entry.data[0].pvComparison === null ? "0" : `${formatValueRatio(entry.data[0].pvComparison).rounded}%`}
+                                              {entry.data[0].pvComparison === undefined || entry.data[0].pvComparison === null ? "-" : formatTableValue(entry.data[0].pvComparison, "ratio")}
                                             </span>
                                           </div>
                                         </td>
@@ -1731,9 +1763,9 @@ export default function PerformanceProductPage() {
                                       {selectedColumns.includes("addToCartUnits") && (
                                         <td>
                                           <div className="d-flex flex-column">
-                                            <span>{entry.data[0].addToCartUnits === undefined || entry.data[0].addToCartUnits === null ? "-" : entry.data[0].addToCartUnits}</span>
+                                            <span>{entry.data[0].addToCartUnits === undefined || entry.data[0].addToCartUnits === null ? "-" : formatTableValue(entry.data[0].addToCartUnits, "simple_currency")}</span>
                                             <span className={`${formatValueRatio(entry.data[0].addToCartUnitsComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                              {entry.data[0].addToCartUnitsComparison === undefined ? "-" : entry.data[0].addToCartUnitsComparison === null ? "0" : `${formatValueRatio(entry.data[0].addToCartUnitsComparison).rounded}%`}
+                                              {entry.data[0].addToCartUnitsComparison === undefined || entry.data[0].addToCartUnitsComparison === null ? "-" : formatTableValue(entry.data[0].addToCartUnitsComparison, "ratio")}
                                             </span>
                                           </div>
                                         </td>
@@ -1741,9 +1773,9 @@ export default function PerformanceProductPage() {
                                       {selectedColumns.includes("uvToAddToCartRate") && (
                                         <td>
                                           <div className="d-flex flex-column">
-                                            <span>{entry.data[0].uvToAddToCartRate}</span>
+                                            <span>{entry.data[0].uvToAddToCartRate === undefined || entry.data[0].uvToAddToCartRate === null ? "-" : formatTableValue(entry.data[0].uvToAddToCartRate, "percentage")}</span>
                                             <span className={`${formatValueRatio(entry.data[0].uvToAddToCartRate).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                              {entry.data[0].uvToAddToCartRate === undefined ? "-" : entry.data[0].uvToAddToCartRate === null ? "0" : `${formatValueRatio(entry.data[0].uvToAddToCartRate).rounded}%`}
+                                              {entry.data[0].uvToAddToCartRateComparison === undefined || entry.data[0].uvToAddToCartRateComparison === null ? "-" : formatTableValue(entry.data[0].uvToAddToCartRateComparison, "ratio")}
                                             </span>
                                           </div>
                                         </td>
@@ -1751,9 +1783,9 @@ export default function PerformanceProductPage() {
                                       {selectedColumns.includes("placedUnits") && (
                                         <td>
                                           <div className="d-flex flex-column">
-                                            <span>{entry.data[0].placedUnits === undefined || entry.data[0].placedUnits === null ? "-" : entry.data[0].placedUnits}</span>
+                                            <span>{entry.data[0].placedUnits === undefined || entry.data[0].placedUnits === null ? "-" : formatTableValue(entry.data[0].placedUnits, "simple_currency")}</span>
                                             <span className={`${formatValueRatio(entry.data[0].placedUnitsComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                              {entry.data[0].placedUnitsComparison === undefined ? "-" : entry.data[0].placedUnitsComparison === null ? "0" : `${formatValueRatio(entry.data[0].placedUnitsComparison).rounded}%`}
+                                              {entry.data[0].placedUnitsComparison === undefined || entry.data[0].placedUnitsComparison === null ? "-" : formatTableValue(entry.data[0].placedUnitsComparison, "ratio")}
                                             </span>
                                           </div>
                                         </td>
@@ -1761,9 +1793,9 @@ export default function PerformanceProductPage() {
                                       {selectedColumns.includes("placedBuyersToConfirmedBuyersRate") && (
                                         <td>
                                           <div className="d-flex flex-column">
-                                            <span>{entry.data[0].placedBuyersToConfirmedBuyersRate === undefined || entry.data[0].placedBuyersToConfirmedBuyersRate === null ? "-" : entry.data[0].placedBuyersToConfirmedBuyersRate}</span>
+                                            <span>{entry.data[0].placedBuyersToConfirmedBuyersRate === undefined || entry.data[0].placedBuyersToConfirmedBuyersRate === null ? "-" : formatTableValue(entry.data[0].placedBuyersToConfirmedBuyersRate, "percentage")}</span>
                                             <span className={`${formatValueRatio(entry.data[0].placedBuyersToConfirmedBuyersRate).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                              {entry.data[0].placedBuyersToConfirmedBuyersRate === undefined ? "-" : entry.data[0].placedBuyersToConfirmedBuyersRate === null ? "0" : `${formatValueRatio(entry.data[0].placedBuyersToConfirmedBuyersRate).rounded}%`}
+                                              {entry.data[0].placedBuyersToConfirmedBuyersRateComparison === undefined || entry.data[0].placedBuyersToConfirmedBuyersRateComparison === null ? "-" : formatTableValue(entry.data[0].placedBuyersToConfirmedBuyersRateComparison, "ratio")}
                                             </span>
                                           </div>
                                         </td>
@@ -1771,9 +1803,9 @@ export default function PerformanceProductPage() {
                                       {selectedColumns.includes("uvToConfirmedBuyersRate") && (
                                         <td>
                                           <div className="d-flex flex-column">
-                                            <span>{entry.data[0].uvToConfirmedBuyersRate === undefined || entry.data[0].uvToConfirmedBuyersRate === null ? "-" : entry.data[0].uvToConfirmedBuyersRate}</span>
+                                            <span>{entry.data[0].uvToConfirmedBuyersRate === undefined || entry.data[0].uvToConfirmedBuyersRate === null ? "-" : formatTableValue(entry.data[0].uvToConfirmedBuyersRate, "percentage")}</span>
                                             <span className={`${formatValueRatio(entry.data[0].uvToConfirmedBuyersRate).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                              {entry.data[0].uvToConfirmedBuyersRate === undefined ? "-" : entry.data[0].uvToConfirmedBuyersRate === null ? "0" : `${formatValueRatio(entry.data[0].uvToConfirmedBuyersRate).rounded}%`}
+                                              {entry.data[0].uvToConfirmedBuyersRateComparison === undefined || entry.data[0].uvToConfirmedBuyersRateComparison === null ? "-" : formatTableValue(entry.data[0].uvToConfirmedBuyersRateComparison, "ratio")}
                                             </span>
                                           </div>
                                         </td>
@@ -1781,9 +1813,9 @@ export default function PerformanceProductPage() {
                                       {selectedColumns.includes("uvToPlacedBuyersRate") && (
                                         <td>
                                           <div className="d-flex flex-column">
-                                            <span>{entry.data[0].uvToPlacedBuyersRate === undefined || entry.data[0].uvToPlacedBuyersRate === null ? "-" : entry.data[0].uvToPlacedBuyersRate}</span>
+                                            <span>{entry.data[0].uvToPlacedBuyersRate === undefined || entry.data[0].uvToPlacedBuyersRate === null ? "-" : formatTableValue(entry.data[0].uvToPlacedBuyersRate, "percentage")}</span>
                                             <span className={`${formatValueRatio(entry.data[0].uvToPlacedBuyersRate).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                              {entry.data[0].uvToPlacedBuyersRate === undefined ? "-" : entry.data[0].uvToPlacedBuyersRate === null ? "0" : `${formatValueRatio(entry.data[0].uvToPlacedBuyersRate).rounded}%`}
+                                              {entry.data[0].uvToPlacedBuyersRateComparison === undefined || entry.data[0].uvToPlacedBuyersRateComparison === null ? "-" : formatTableValue(entry.data[0].uvToPlacedBuyersRateComparison, "ratio")}
                                             </span>
                                           </div>
                                         </td>
@@ -1791,9 +1823,9 @@ export default function PerformanceProductPage() {
                                       {selectedColumns.includes("confirmedSales") && (
                                         <td>
                                           <div className="d-flex flex-column">
-                                            <span>{entry.data[0].confirmedSales === undefined || entry.data[0].confirmedSales === null ? "-" : entry.data[0].confirmedSales}</span>
+                                            <span>{entry.data[0].confirmedSales === undefined || entry.data[0].confirmedSales === null ? "-" : formatTableValue(entry.data[0].confirmedSales, "simple_currency")}</span>
                                             <span className={`${formatValueRatio(entry.data[0].confirmedSales).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                              {entry.data[0].confirmedSalesComparison === undefined ? "-" : entry.data[0].confirmedSalesComparison === null ? "0" : `${formatValueRatio(entry.data[0].confirmedSalesComparison).rounded}%`}
+                                              {entry.data[0].confirmedSalesComparison === undefined || entry.data[0].confirmedSalesComparison === null ? "-" : formatTableValue(entry.data[0].confirmedSalesComparison, "ratio")}
                                             </span>
                                           </div>
                                         </td>
@@ -1801,9 +1833,9 @@ export default function PerformanceProductPage() {
                                       {selectedColumns.includes("placedSales") && (
                                         <td>
                                           <div className="d-flex flex-column">
-                                            <span>{entry.data[0].placedSales === undefined || entry.data[0].placedSales === null ? "-" : entry.data[0].placedSales}</span>
+                                            <span>{entry.data[0].placedSales === undefined || entry.data[0].placedSales === null ? "-" : formatTableValue(entry.data[0].placedSales, "simple_currency")}</span>
                                             <span className={`${formatValueRatio(entry.data[0].placedSalesComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                              {entry.data[0].placedSalesComparison === undefined ? "-" : entry.data[0].placedSalesComparison === null ? "0" : `${formatValueRatio(entry.data[0].placedSalesComparison).rounded}%`}
+                                              {entry.data[0].placedSalesComparison === undefined || entry.data[0].placedSalesComparison === null ? "-" : formatTableValue(entry.data[0].placedSalesComparison, "ratio")}
                                             </span>
                                           </div>
                                         </td>
@@ -1811,9 +1843,9 @@ export default function PerformanceProductPage() {
                                       {selectedColumns.includes("confirmedSellRatio") && (
                                         <td>
                                           <div className="d-flex flex-column">
-                                            <span>{entry.data[0].confirmedSellRatio === undefined || entry.data[0].confirmedSellRatio === null ? "-" : entry.data[0].confirmedSellRatio}</span>
+                                            <span>{entry.data[0].confirmedSellRatio === undefined || entry.data[0].confirmedSellRatio === null ? "-" : formatTableValue(entry.data[0].confirmedSellRatio, "percentage") }</span>
                                             <span className={`${formatValueRatio(entry.data[0].confirmedSellRatio).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
-                                              {entry.data[0].confirmedSellRatio === undefined ? "-" : entry.data[0].confirmedSellRatio === null ? "0" : `${formatValueRatio(entry.data[0].confirmedSellRatio).rounded}%`}
+                                              {entry.data[0].confirmedSellRatioComparison === undefined || entry.data[0].confirmedSellRatioComparison === null ? "-" : formatTableValue(entry.data[0].confirmedSellRatioComparison, "ratio")}
                                             </span>
                                           </div>
                                         </td>
@@ -1830,7 +1862,7 @@ export default function PerformanceProductPage() {
                           </table>
                         </div>
                         {/* Pagination */}
-                        {filteredData.length > 0 && filteredData !== null && renderPagination()}
+                        {paginatedData.length > 0 && paginatedData !== null && renderPagination()}
                       </div>
                     </div>
                   )
