@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import Select from "react-select";
 import Calendar from "react-calendar";
 import * as echarts from "echarts";
@@ -46,7 +46,6 @@ export default function PerformanceProductPage() {
   const [isContentLoading, setIsContentLoading] = useState(false);
   const [isTableFilterLoading, setIsTableFilterLoading] = useState(false);
 
-  // const getShopeeId = "252234165";
   const getShopeeId = localStorage.getItem("shopeeId");
   if (getShopeeId == null || getShopeeId === null || getShopeeId === "null" || getShopeeId === "undefined") {
       return (
@@ -254,7 +253,7 @@ export default function PerformanceProductPage() {
       const from1ISO = toLocalISOString(dateRanges.current.from);
       const to1ISO = toLocalISOString(dateRanges.current.to);
 
-      const apiUrl = `/api/product-performance/chart?shopId=${getShopeeId}&from=${from1ISO}&to=${to1ISO}&limit=100000000000000000000`;
+      const apiUrl = `/api/product-performance/chart?shopId=${getShopeeId}&from=${from1ISO}&to=${to1ISO}&limit=1000000000`;
 
       const response = await axiosRequest.get(apiUrl);
       const data = await response.data;
@@ -530,8 +529,7 @@ export default function PerformanceProductPage() {
         
         if (isSingleDay) {
           product?.data.forEach(productData => {
-            // should be and operator
-            if (!productData.shopeeFrom || !productData.createdAt) return;
+            if (!productData.shopeeFrom || productData.shopeeFrom === null) return;
 
             const test = getDataDate(productData);
             const createdAt = test;
@@ -558,7 +556,7 @@ export default function PerformanceProductPage() {
           const dataByDate = {};
           
           product?.data.forEach((productData) => {
-            if (!productData.shopeeFrom || !productData.createdAt) return;
+            if (!productData.data && !productData.shopeeFrom) return;
 
             const test = getDataDate(productData);
             const createdAt = test;
@@ -773,8 +771,54 @@ export default function PerformanceProductPage() {
     fetchData(selectedDateOption, type, 1);
   };
 
+
+
+  // FILTER COLUMNS TABLE FEATURE
+  const allColumns = [
+    { key: "name", label: "Nama" },
+    { key: "insight", label: "Insight" },
+    { key: "salesClassification", label: "Sales Classification" },
+    { key: "pv", label: "Pengunjung" },
+    { key: "addToCartUnits", label: "Add To Cart" },
+    { key: "uvToAddToCartRate", label: "Add To Cart (Percentage)" },
+    { key: "placedUnits", label: "Produk Siap Dikirim" },
+    { key: "placedBuyersToConfirmedBuyersRate", label: "Convertion Rate (Pesanan Siap Dikirim Dibagi Pesanan Dibuat)" },
+    { key: "uvToConfirmedBuyersRate", label: "Convertion Rate (Pesanan Siap Dikirim)" },
+    { key: "uvToPlacedBuyersRate", label: "Convertion Rate (Pesanan yang Dibuat)" },
+    { key: "confirmedSales", label: "Penjualan (Pesanan Siap Dikirim)" },
+    { key: "placedSales", label: "Penjualan (Total Penjualan dari Pesanan Dibuat)" },
+    { key: "confirmedSellRatio", label: "Ratio Penjualan" },
+  ];
+
+  const [selectedColumns, setSelectedColumns] = useState(
+    allColumns.map((col) => col.key)
+  );
+
+  const handleColumnChange = (colKey) => {
+    setSelectedColumns((prev) =>
+      prev.includes(colKey)
+        ? prev.filter((key) => key !== colKey)
+        : [...prev, colKey]
+    );
+  };
+
+
+
+  // SALES CLASSIFICATION ADS FEATURE
+  const typeClasificationOptions = [
+    { value: "best_seller", label: "Best Seller" },
+    { value: "middle_moving", label: "Middle Moving" },
+    { value: "slow_moving", label: "Slow Moving" },
+  ];
+
+  const handleClassificationChange = (selectedOptions) => {
+    setSelectedClassificationOption(selectedOptions);
+  };
+
+
+
+
   useEffect(() => {
-    // Initial load with default "minggu_ini" preset
     fetchData(getAllDaysInLast7Days(), "minggu_ini", 1);
   }, []);
 
@@ -791,219 +835,224 @@ export default function PerformanceProductPage() {
     setChartData(chartData);
   }, [date, selectedProduct, selectedMetrics, chartRawData, comparatorDateRange, comparedDateRange, rangeParameters]);
 
-  useEffect(() => {
-    if (chartRef?.current && chartData?.series && chartData?.series.length > 0) {
-      const initChart = () => {
-        try {
-          const existingInstance = echarts.getInstanceByDom(chartRef.current);
-          if (existingInstance) {
-            existingInstance.dispose();
-          }
+  const [isChartContainerReady, setIsChartContainerReady] = useState(false);
+  const chartInstance = useRef(null);
+  const [isMounted, setIsMounted] = useState(false);
+  
+  const chartRefCallback = useCallback((node) => {
+    if (node) {
+      chartRef.current = node;
+      setIsChartContainerReady(true);
+    } else {
+      setIsChartContainerReady(false);
+    }
+  }, []);
+  
+  const initializeChart = useCallback(() => {
+    if (!isMounted || !chartRef.current || !isChartContainerReady) {
+      return;
+    }
 
-          const chartInstance = echarts.init(chartRef.current);
-
-          const series = chartData?.series?.map(s => ({
-            name: s.name,
-            type: 'line',
-            smooth: true,
-            showSymbol: false,
-            emphasis: { focus: 'series' },
-            data: s.data,
-            lineStyle: {
-              color: s.color
-            },
-            itemStyle: {
-              color: s.color
-            }
-          })) || [];
-
-          // Check if the chart have data
-          const hasData = series.length > 0 && series.some(s => 
-            s.data && s.data.length > 0 && s.data.some(value => 
-              value !== null && value !== undefined
-            )
-          );
-
-          let xAxisData = chartData?.timeIntervals || chartData.date || [];
-          const isSingleDay = chartData?.isSingleDay || false;
-          const includesColon = xAxisData.some((item) => item.includes(":"));
-
-          if (includesColon) {
-            xAxisData = xAxisData.map((item) => item.split(" ")[1]);
-          } else {
-            xAxisData = xAxisData.map((item) => item.split("-").slice(1).join("/"));
-          }
-
-          const getDynamicLeft = (maxY) => {
-            if (maxY >= 10_000_000_000) return 180;
-            if (maxY >= 1_000_000_000) return 150;
-            if (maxY >= 100_000_000) return 120;
-            if (maxY >= 10_000_000) return 90;
-            if (maxY >= 1_000_000) return 70;
-            if (maxY >= 1000) return 50;
-            return 35;
-          };
-
-          const getXAxisFormatter = (length) => {
-            let modulus = 1;
-            if (length > 56) modulus = 5;
-            else if (length > 42) modulus = 4;
-            else if (length > 28) modulus = 3;
-            else if (length > 14) modulus = 2;
-
-            return (value, index) => index % modulus === 0 ? value : '';
-          };
-
-          const customTooltipFormatter = (params) => {
-            const date = params[0].axisValue;
-            let html = `
-              <div style="
-                background: white;
-                border-radius: 6px;
-                box-shadow: 0 0 4px rgba(0,0,0,0.1);
-                overflow: hidden;
-                font-family: sans-serif;
-              ">
-                <div style="
-                  background: #EDEDED;
-                  padding: 6px 12px;
-                  font-weight: bold;
-                  font-size: 13px;
-                  border-bottom: 1px solid #ddd;
-                  color: #101010;
-                ">${date}</div>
-                <div style="padding: 6px 12px; font-size: 13px;">
-            `;
-
-            params.forEach(param => {
-              html += `
-                <div style="display: flex; align-items: center; justify-content: space-between; margin: 4px 0; gap: 4px;">
-                  <div style="display: flex; align-items: center;">
-                    <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${param.color}; margin-right:6px;"></span>
-                    ${param.seriesName}
-                  </div>
-                  <strong>${formatTableValue(param.value, "number")}</strong>
-                </div>
-              `;
-            });
-
-            html += `</div></div>`;
-            return html;
-          };
-
-          const allYValues = chartData.series?.flatMap(s => s.data) || [];
-          const maxY = Math.max(...allYValues);
-          const leftGrid = getDynamicLeft(maxY);
-          const axisLabelFormatter = getXAxisFormatter(xAxisData.length);
-
-          const option = {
-            toolbox: { feature: { saveAsImage: {} } },
-            grid: {
-              left: leftGrid,
-              right: 50,
-              bottom: 50,
-              containLabel: false
-            },
-            tooltip: {
-              trigger: "axis",
-              extraCssText: 'box-shadow: none;',
-              backgroundColor: "transparent",
-              borderWidth: 0,
-              formatter: customTooltipFormatter
-            },
-            legend: {
-              data: chartData.series?.map(s => s.name) || [],
-              bottom: 0,
-              icon: 'circle',
-              itemWidth: 8,
-            },
-            xAxis: {
-              name: isSingleDay ? "Time" : "Date",
-              type: "category",
-              data: xAxisData || [],
-              boundaryGap: false,
-              axisLabel: {
-                rotate: 0,
-                interval: 0,
-                formatter: axisLabelFormatter
-              },
-            },
-            yAxis: {
-              name: selectedMetrics.length === 1 ? metrics[selectedMetrics[0]]?.label : "Total",
-              type: "value",
-              splitLine: { show: true },
-              nameGap: 30
-            },
-            series: series
-          };
-
-          if (!hasData) {
-            option.graphic = [
-              {
-                type: 'text',
-                left: 'center',
-                top: 'middle',
-                style: {
-                  text: series.length === 0 ? 
-                    'Pilih metrik untuk menampilkan chart' : 
-                    'Tidak ada data untuk rentang waktu yang dipilih',
-                  fontSize: 16,
-                  fill: '#999',
-                  fontWeight: 'bold'
-                }
-              }
-            ];
-          }
-
-          chartInstance.setOption(option, true);
-
-          return () => {
-            if (chartInstance && !chartInstance.isDisposed()) {
-              chartInstance.dispose();
-            }
-          };
-        } catch (err) {
-          toast.error("Gagal memuat chart produk");
-          console.error("Gagal menampilkan chart, kesalahan pada server :", err);
-        }
+    try {
+      if (chartInstance.current) {
+        chartInstance.current.dispose();
+        chartInstance.current = null;
       }
 
-      const timer = setTimeout(() => initChart(), 50);
-      return () => {
-        clearTimeout(timer);
+      chartInstance.current = echarts.init(chartRef.current);
+
+      const activeSeries = chartData.series?.filter(series => 
+        selectedMetrics.some(metric => 
+          metrics[metric]?.label === series.name
+        )
+      ) || [];
+
+      if (activeSeries.length === 0) {
+        return;
+      }
+
+      const seriesConfig = activeSeries.map(s => ({
+        name: s.name,
+        type: 'line',
+        smooth: true,
+        showSymbol: false,
+        emphasis: { focus: 'series' },
+        data: s.data,
+        lineStyle: {
+          color: s.color,
+          width: 2
+        },
+        itemStyle: {
+          color: s.color
+        }
+      }));
+
+      const hasData = seriesConfig.some(s => 
+        s.data?.some(value => value !== null && value !== undefined)
+      );
+
+      let xAxisData = chartData.timeIntervals || [];
+      const isSingleDay = chartData.isSingleDay || false;
+      
+      if (xAxisData.some(item => item.includes(":"))) {
+        xAxisData = xAxisData.map(item => item.split(" ")[1]);
+      } else {
+        xAxisData = xAxisData.map(item => item.split("-").slice(1).join("/"));
+      }
+
+      const option = {
+        toolbox: { feature: { saveAsImage: {} } },
+        grid: {
+          left: calculateLeftMargin(seriesConfig),
+          right: 50,
+          bottom: 50,
+          containLabel: false
+        },
+        tooltip: {
+          trigger: "axis",
+          extraCssText: 'box-shadow: none;',
+          backgroundColor: "transparent",
+          borderWidth: 0,
+          formatter: generateTooltipContent
+        },
+        legend: {
+          data: activeSeries.map(s => s.name),
+          bottom: 0,
+          icon: 'circle',
+          itemWidth: 8,
+        },
+        xAxis: {
+          name: isSingleDay ? "Time" : "Date",
+          type: "category",
+          data: xAxisData,
+          boundaryGap: false,
+          axisLabel: {
+            rotate: 0,
+            interval: 0,
+            formatter: getAxisLabelFormatter(xAxisData.length)
+          },
+        },
+        yAxis: {
+          // name: selectedMetrics.length === 1 ? metrics[selectedMetrics[0]]?.label : "Total",
+          type: "value",
+          splitLine: { show: true },
+        },
+        series: seriesConfig
       };
+
+      if (!hasData) {
+        option.graphic = [{
+          type: 'text',
+          left: 'center',
+          top: 'middle',
+          style: {
+            text: 'Tidak ada data untuk rentang waktu yang dipilih',
+            fontSize: 16,
+            fill: '#999',
+            fontWeight: 'bold'
+          }
+        }];
+      }
+
+      chartInstance.current.setOption(option);
+
+    } catch (err) {
+      console.error("Chart initialization error:", err);
+      toast.error("Gagal memuat chart iklan produk");
     }
-  }, [chartData, selectedMetrics]);
-
-  const handleStyleMatricButton = (metricKey) => {
-    const isActive = selectedMetrics.includes(metricKey);
-    const metric = metrics[metricKey];
-
-    return {
-      backgroundColor: "#ffffff00",
-      borderTop: `solid ${isActive ? `${metric.color} 3px` : "rgb(179.4, 184.2, 189) 1px"}`,
-      borderRadius: "8px",
-      cursor: "pointer",
-      fontSize: "12px",
-      fontWeight: isActive ? "medium" : "normal",
-      transition: "all 0.3s ease",
-      flex: "1 1 200px",
-      height: "auto",
-      justifyContent: "center"
+  }, [chartData, selectedMetrics, isMounted, isChartContainerReady]);
+  
+  useEffect(() => {
+    setIsMounted(true);
+    return () => {
+      setIsMounted(false);
+      setIsChartContainerReady(false);
+      if (chartInstance.current) {
+        chartInstance.current.dispose();
+        chartInstance.current = null;
+      }
     };
+  }, []);
+
+  useEffect(() => {
+    if (isChartContainerReady && chartData.series?.length > 0) {
+      const timer = setTimeout(() => {
+        initializeChart();
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [initializeChart, isChartContainerReady]);
+
+  useEffect(() => {
+    if (!isMounted || !chartRef.current || !isChartContainerReady) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      if (chartInstance.current) {
+        chartInstance.current.resize();
+      }
+    });
+
+    resizeObserver.observe(chartRef.current);
+    return () => resizeObserver.disconnect();
+  }, [isMounted, isChartContainerReady]);
+
+  const calculateLeftMargin = (series) => {
+    const maxY = Math.max(...series.flatMap(s => s.data || []));
+    if (maxY >= 1_000_000_000) return 110;
+    if (maxY >= 100_000_000) return 100;
+    if (maxY >= 10_000_000) return 90;
+    if (maxY >= 1_000_000) return 80;
+    if (maxY >= 100_000) return 70;
+    if (maxY >= 10_000) return 60;
+    if (maxY >= 1_000) return 50;
+    return 35;
   };
 
+  const getAxisLabelFormatter = (length) => {
+    let modulus = 1;
+    if (length > 56) modulus = 5;
+    else if (length > 42) modulus = 4;
+    else if (length > 28) modulus = 3;
+    else if (length > 14) modulus = 2;
+    return (value, index) => (index % modulus === 0 ? value : '');
+  };
 
+  const generateTooltipContent = (params) => {
+    const date = params[0].axisValue;
+    let html = `
+      <div style="
+        background: white;
+        border-radius: 6px;
+        box-shadow: 0 0 4px rgba(0,0,0,0.1);
+        overflow: hidden;
+        font-family: sans-serif;
+      ">
+        <div style="
+          background: #EDEDED;
+          padding: 6px 12px;
+          font-weight: bold;
+          font-size: 13px;
+          border-bottom: 1px solid #ddd;
+          color: #101010;
+        ">${date}</div>
+        <div style="padding: 6px 12px; font-size: 13px;">
+    `;
 
-  // SALES CLASSIFICATION ADS FEATURE
-  const typeClasificationOptions = [
-    { value: "best_seller", label: "Best Seller" },
-    { value: "middle_moving", label: "Middle Moving" },
-    { value: "slow_moving", label: "Slow Moving" },
-  ];
+    params.forEach(param => {
+      html += `
+        <div style="display: flex; align-items: center; justify-content: space-between; margin: 4px 0; gap: 4px;">
+          <div style="display: flex; align-items: center;">
+            <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${param.color}; margin-right:6px;"></span>
+            ${param.seriesName}
+          </div>
+          <strong>${formatTableValue(param.value, "number")}</strong>
+        </div>
+      `;
+    });
 
-  const handleClassificationChange = (selectedOptions) => {
-    setSelectedClassificationOption(selectedOptions);
+    html += `</div></div>`;
+    return html;
   };
 
 
@@ -1290,33 +1339,22 @@ export default function PerformanceProductPage() {
 
 
 
-  // FILTER COLUMNS TABLE FEATURE
-  const allColumns = [
-    { key: "name", label: "Nama" },
-    { key: "insight", label: "Insight" },
-    { key: "salesClassification", label: "Sales Classification" },
-    { key: "pv", label: "Pengunjung" },
-    { key: "addToCartUnits", label: "Add To Cart" },
-    { key: "uvToAddToCartRate", label: "Add To Cart (Percentage)" },
-    { key: "placedUnits", label: "Produk Siap Dikirim" },
-    { key: "placedBuyersToConfirmedBuyersRate", label: "Convertion Rate (Pesanan Siap Dikirim Dibagi Pesanan Dibuat)" },
-    { key: "uvToConfirmedBuyersRate", label: "Convertion Rate (Pesanan Siap Dikirim)" },
-    { key: "uvToPlacedBuyersRate", label: "Convertion Rate (Pesanan yang Dibuat)" },
-    { key: "confirmedSales", label: "Penjualan (Pesanan Siap Dikirim)" },
-    { key: "placedSales", label: "Penjualan (Total Penjualan dari Pesanan Dibuat)" },
-    { key: "confirmedSellRatio", label: "Ratio Penjualan" },
-  ];
+  const handleStyleMatricButton = (metricKey) => {
+    const isActive = selectedMetrics.includes(metricKey);
+    const metric = metrics[metricKey];
 
-  const [selectedColumns, setSelectedColumns] = useState(
-    allColumns.map((col) => col.key)
-  );
-
-  const handleColumnChange = (colKey) => {
-    setSelectedColumns((prev) =>
-      prev.includes(colKey)
-        ? prev.filter((key) => key !== colKey)
-        : [...prev, colKey]
-    );
+    return {
+      backgroundColor: "#ffffff00",
+      borderTop: `solid ${isActive ? `${metric.color} 3px` : "rgb(179.4, 184.2, 189) 1px"}`,
+      borderRadius: "8px",
+      cursor: "pointer",
+      fontSize: "12px",
+      fontWeight: isActive ? "medium" : "normal",
+      transition: "all 0.3s ease",
+      flex: "1 1 200px",
+      height: "auto",
+      justifyContent: "center"
+    };
   };
 
   const toggleOpenCalendar = () => {
@@ -1501,11 +1539,11 @@ export default function PerformanceProductPage() {
                       )}
                       {selectedMetrics.length === 0 && (
                         <div className="alert alert-warning alert-dismissible fade show">
-                          <span >Pilih minimal 1 metrik untuk menampilkan data</span>
+                          <span >Pilih minimal 1 metrik untuk menampilkan data secara akurat</span>
                         </div>
                       )}
                       {/* Chart */}
-                      <div ref={chartRef} style={{ width: "100%", height: "320px" }}></div>
+                      <div ref={chartRefCallback} style={{ width: "100%", height: "320px" }}></div>
                       {/* Filters & Table */}
                       <div className="d-flex flex-column gap-2">
                         {/* Status filter */}

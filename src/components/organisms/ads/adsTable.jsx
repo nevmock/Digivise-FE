@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import Select from "react-select";
 import Calendar from "react-calendar";
@@ -6,7 +6,6 @@ import toast from "react-hot-toast";
 import * as echarts from "echarts";
 import { FaAngleLeft, FaAngleRight } from "react-icons/fa6";
 
-import { updateCustomRoasProduct } from "../../../resolver/ads/index";
 import axiosRequest from "../../../utils/request";
 import useDebounce from "../../../hooks/useDebounce";
 import formatValueRatio from "../../../utils/convertFormatRatioValue";
@@ -21,7 +20,8 @@ const AdsTable = ({ shoppeeId }) => {
   const [filteredData, setFilteredData] = useState([]);
   const [chartData, setChartData] = useState([]);
   const chartRef = useRef(null);
-  const shopId = "252234165";
+  // const shopId = "252234165";
+  const shopId = shoppeeId;
   const [tempCustomRoas, setTempCustomRoas] = useState({});
   // Filter
   const [comparatorDateRange, setComparatorDateRange] = useState(null);
@@ -60,13 +60,13 @@ const AdsTable = ({ shoppeeId }) => {
       label: "Iklan Dilihat",
       color: "#D50000",
       dataKey: "impression",
-      type: "currency"
+      type: "simple_currency"
     },
     click: {
       label: "Jumlah Klik",
       color: "#00B800",
       dataKey: "click",
-      type: "currency"
+      type: "simple_currency"
     },
     ctr: {
       label: "Persentase Klik",
@@ -78,13 +78,13 @@ const AdsTable = ({ shoppeeId }) => {
       label: "Pesanan",
       color: "#C400BA",
       dataKey: "checkout",
-      type: "currency"
+      type: "simple_currency"
     },
     broadOrderAmount: {
       label: "Produk Terjual",
       color: "#35007FFF",
       dataKey: "broadOrderAmount",
-      type: "currency"
+      type: "simple_currency"
     },
     broadGmv: {
       label: "Penjualan dari Iklan",
@@ -107,11 +107,6 @@ const AdsTable = ({ shoppeeId }) => {
   };
 
   const toLocalISOString = (date) => {
-    if (!date || !(date instanceof Date)) {
-      console.error('Invalid date passed to toLocalISOString:', date);
-      return null;
-    }
-    
     const year = date?.getFullYear();
     const month = String(date?.getMonth() + 1).padStart(2, '0');
     const day = String(date?.getDate()).padStart(2, '0');
@@ -250,7 +245,7 @@ const AdsTable = ({ shoppeeId }) => {
       const from1ISO = toLocalISOString(dateRanges.current.from);
       const to1ISO = toLocalISOString(dateRanges.current.to);
 
-      const apiUrl = `/api/product-ads/chart?shopId=${shopId}&from=${from1ISO}&to=${to1ISO}&limit=50`;
+      const apiUrl = `/api/product-ads/chart?shopId=${shopId}&from=${from1ISO}&to=${to1ISO}&limit=1000000000`;
       
       const response = await axiosRequest.get(apiUrl);
       const data = await response.data;
@@ -348,6 +343,7 @@ const AdsTable = ({ shoppeeId }) => {
         fetchChartData(dateRanges),
         fetchTableData(dateRanges, page, currentFilters)
       ]);
+
     } catch (error) {
       toast.error("Gagal mengambil data iklan produk");
       console.error('Gagal mengambil data iklan produk, kesalahan pada server:', error);
@@ -521,7 +517,6 @@ const AdsTable = ({ shoppeeId }) => {
     result.series = [];
 
     let chartDataProducts = chartRawData;
-    // if ads product is selected, filter the chart data by product campaignId
     if (ads) {
       chartDataProducts = chartRawData.filter((product) => product.campaignId == ads.campaignId);
     }
@@ -542,8 +537,7 @@ const AdsTable = ({ shoppeeId }) => {
 
         if (isSingleDay) {
           adsProduct.data.forEach((productData) => {
-            // should be and operator
-            if ((!productData && !productData.shopeeFrom) || !productData.createdAt) return;
+            if (!productData.shopeeFrom || productData.shopeeFrom === null) return;
 
             const test = getDataDate(productData);
             const createdAt = test;
@@ -570,7 +564,7 @@ const AdsTable = ({ shoppeeId }) => {
           const dataByDate = {};
           
           adsProduct.data.forEach((productData) => {
-            if ((!productData && !productData.shopeeFrom) || !productData.createdAt) return;
+            if (!productData.shopeeFrom || productData.shopeeFrom === null) return;
 
             const test = getDataDate(productData);
             const createdAt = test;
@@ -722,7 +716,6 @@ const AdsTable = ({ shoppeeId }) => {
     
     if (!validation.isValid) {
       toast.error("Filter tanggal tidak valid, silakan periksa kembali tanggal yang dipilih.");
-      console.error('Validation error:', validation.message);
       return;
     }
 
@@ -785,13 +778,125 @@ const AdsTable = ({ shoppeeId }) => {
     // Use new automatic comparison logic
     fetchData(selectedDateOption, type, 1);
   };
-  
+
+
+
+  // SALES CLASSIFICATION ADS FEATURE
+  const typeClasificationOptions = [
+    { value: "best_seller", label: "Best Seller" },
+    { value: "middle_moving", label: "Middle Moving" },
+    { value: "slow_moving", label: "Slow Moving" },
+  ];
+
+  const handleClassificationChange = (selectedOptions) => {
+    setSelectedClassificationOption(selectedOptions || []);
+  };
+
+
+
+  // FILTER COLUMNS FEATURE
+  const allColumns = [
+    { key: "info_iklan", label: "Info iklan" },
+    { key: "dailyBudget", label: "Modal" },
+    { key: "insight", label: "Insight" },
+    { key: "salesClassification", label: "Sales Classification" },
+    { key: "cost", label: "Biaya Iklan" },
+    { key: "broadGmv", label: "Penjualan dari iklan" },
+    { key: "roas", label: "ROAS" },
+    { key: "customRoas", label: "Custom ROAS" },
+    { key: "impression", label: "Iklan dilihat" },
+    { key: "click", label: "Jumlah Klik" },
+    { key: "ctr", label: "Presentase Klik" }, 
+    { key: "broadOrder", label: "Konversi" },
+    { key: "cr", label: "Tingkat Konversi" },
+    { key: "broadOrderAmount", label: "Produk Terjual" },
+    { key: "cpc", label: "Biaya per Konversi" },
+    { key: "acos", label: "Presentase Biaya Iklan (ACOS)" },
+    { key: "directOrder", label: "Konversi Langung" },
+    { key: "directOrderAmount", label: "Produk Terjual Langsung" },
+    { key: "directGmv", label: "Penjualan dari Iklan Langsung" },
+    { key: "directRoi", label: "ROAS (Efektifitas Iklan) Langsung" },
+    { key: "directCir", label: "ACOS Langsung" },
+    { key: "directCr", label: "Tingkat Konversi Langsung" },
+    { key: "cpdc", label: "Biaya per Konversi Langsung" },
+    { key: "detail", label: "Detail Iklan" }
+  ];
+
+  const [selectedColumns, setSelectedColumns] = useState(
+    allColumns.map((col) => col.key)
+  );
+
+  const handleColumnChange = (colKey) => {
+    setSelectedColumns((prev) =>
+      prev.includes(colKey)
+        ? prev.filter((key) => key !== colKey)
+        : [...prev, colKey]
+    );
+  };
+
+
+
+  // TYPE ADS FILTER FEATURE
+  const typeAdsOptions = [
+    { value: "all", label: "Semue Tipe" },
+    { value: "product_gmv_max_roas", label: "Iklan Produk GMV Max ROAS" },
+    { value: "product_gmv_max_auto", label: "Iklan Produk GMV Max Auto" },
+    { value: "auto", label: "Iklan Produk Auto" },
+    { value: "manual", label: "Iklan Produk Manual" },
+    { value: "shop_auto", label: "Iklan Toko Auto" },
+    { value: "shop_manual", label: "Iklan Toko Manual" },
+  ];
+
+  const handleAdsChange = (selectedOptions) => {
+    // Check if "all" is selected
+    const hasAll = selectedOptions.some(option => option.value === "all");
+    const hadAll = selectedTypeAds.some(option => option.value === "all");
+
+    let newSelectedOptions;
+    // If "all" is newly selected, remove all other options
+    if (hasAll && !hadAll) {
+      newSelectedOptions = [{ value: "all", label: "Semua Tipe" }];
+    }
+    // If any other options are selected and "all" is already there, remove "all"
+    else if (selectedOptions.length > 1 && hasAll) {
+      newSelectedOptions = selectedOptions.filter(option => option.value !== "all");
+    }
+    // If no options are selected, set back to "all"
+    else if (selectedOptions.length === 0) {
+      newSelectedOptions = [{ value: "all", label: "Semua Tipe" }];
+    }
+    // Normal case, set selected options
+    else {
+      newSelectedOptions = selectedOptions;
+    }
+
+    setSelectedTypeAds(newSelectedOptions);
+  };
+
+
+
+  // PLACEMENT ADS FILTER FEATURE
+  const placementOptions = [
+    { value: "all", label: "Semua" },
+    { value: "targeting", label: "Halaman Rekomendasi" },
+    { value: "search_product", label: "Halaman Pencarian" },
+  ];
+
+  const handlePlacementChange = (selectedOption) => {
+    setSelectedOptionPlacement(selectedOption);
+  };
+
+  // Check if "manual" is selected in the type ads filter
+  const isTypeManualProductSelected = selectedTypeAds.some(
+    (option) => option.value === "manual"
+  );
+
+
+
   useEffect(() => {
-    // Initial load with default "minggu_ini" preset
     fetchData(getAllDaysInLast7Days(), "minggu_ini", 1);
   }, []);
 
-  // Update totals when raw/main data changes
   useEffect(() => {
     if (chartRawData.length > 0) {
       const totals = calculateMetricTotalsValue(chartRawData);
@@ -804,182 +909,228 @@ const AdsTable = ({ shoppeeId }) => {
     setChartData(chartData);
   }, [date, selectedProduct, selectedMetrics, chartRawData, rangeParameters, comparatorDateRange, comparedDateRange]);
 
-  useEffect(() => {
-    if (chartRef.current && chartData.series && chartData.series.length > 0) {
-      const initChart = () => {
-        try {
-          const existingInstance = echarts.getInstanceByDom(chartRef.current);
-          if (existingInstance) {
-            existingInstance.dispose();
-          }
+  const [isChartContainerReady, setIsChartContainerReady] = useState(false);
+  const chartInstance = useRef(null);
+  const [isMounted, setIsMounted] = useState(false);
 
-          const chartInstance = echarts.init(chartRef.current);
+  const chartRefCallback = useCallback((node) => {
+    if (node) {
+      chartRef.current = node;
+      setIsChartContainerReady(true);
+    } else {
+      setIsChartContainerReady(false);
+    }
+  }, []);
 
-          const series = chartData.series?.map(s => ({
-            name: s.name,
-            type: 'line',
-            smooth: true,
-            showSymbol: false,
-            emphasis: { focus: 'series' },
-            data: s.data,
-            lineStyle: {
-              color: s.color,
-              width: 2
-            },
-            itemStyle: {
-              color: s.color
-            }
-          })) || [];
+  const initializeChart = useCallback(() => {
+    if (!isMounted || !chartRef.current || !isChartContainerReady) {
+      return;
+    }
 
-          // Check if the chart have data
-          const hasData = series.some(s => s.data && s.data.some(value => value > 0));
+    try {
+      if (chartInstance.current) {
+        chartInstance.current.dispose();
+        chartInstance.current = null;
+      }
 
-          let xAxisData = chartData.timeIntervals || chartData.date || [];
-          const isSingleDay = chartData.isSingleDay || false;
-          const includesColon = xAxisData.some((item) => item.includes(":"));
+      chartInstance.current = echarts.init(chartRef.current);
 
-          if (includesColon) {
-            xAxisData = xAxisData.map((item) => item.split(" ")[1]);
-          } else {
-            xAxisData = xAxisData.map((item) => item.split("-").slice(1).join("/"));
-          }
+      const activeSeries = chartData.series?.filter(series => 
+        selectedMetrics.some(metric => 
+          metrics[metric]?.label === series.name
+        )
+      ) || [];
 
-          const getDynamicLeft = (maxY) => {
-            if (maxY >= 10_000_000_000) return 180;
-            if (maxY >= 1_000_000_000) return 150;
-            if (maxY >= 100_000_000) return 120;
-            if (maxY >= 10_000_000) return 90;
-            if (maxY >= 1_000_000) return 70;
-            if (maxY >= 1000) return 50;
-            return 35;
-          };
+      if (activeSeries.length === 0) {
+        return;
+      }
 
-          const getXAxisFormatter = (length) => {
-            let modulus = 1;
-            if (length > 56) modulus = 5;
-            else if (length > 42) modulus = 4;
-            else if (length > 28) modulus = 3;
-            else if (length > 14) modulus = 2;
-
-            return (value, index) => index % modulus === 0 ? value : '';
-          };
-
-          const customTooltipFormatter = (params) => {
-            const date = params[0].axisValue;
-            let html = `
-              <div style="
-                background: white;
-                border-radius: 6px;
-                box-shadow: 0 0 4px rgba(0,0,0,0.1);
-                overflow: hidden;
-                font-family: sans-serif;
-              ">
-                <div style="
-                  background: #EDEDED;
-                  padding: 6px 12px;
-                  font-weight: bold;
-                  font-size: 13px;
-                  border-bottom: 1px solid #ddd;
-                  color: #101010;
-                ">${date}</div>
-                <div style="padding: 6px 12px; font-size: 13px;">
-            `;
-
-            params.forEach(param => {
-              html += `
-                <div style="display: flex; align-items: center; justify-content: space-between; margin: 4px 0; gap: 4px;">
-                  <div style="display: flex; align-items: center;">
-                    <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${param.color}; margin-right:6px;"></span>
-                    ${param.seriesName}
-                  </div>
-                  <strong>${formatTableValue(param.value, "number")}</strong>
-                </div>
-              `;
-            });
-
-            html += `</div></div>`;
-            return html;
-          };
-
-          const allYValues = chartData.series?.flatMap(s => s.data) || [];
-          const maxY = Math.max(...allYValues);
-          const leftGrid = getDynamicLeft(maxY);
-          const axisLabelFormatter = getXAxisFormatter(xAxisData.length);
-
-          const option = {
-            toolbox: { feature: { saveAsImage: {} } },
-            grid: {
-              left: leftGrid,
-              right: 50,
-              bottom: 50,
-              containLabel: false
-            },
-            tooltip: {
-              trigger: "axis",
-              extraCssText: 'box-shadow: none;',
-              backgroundColor: "transparent",
-              borderWidth: 0,
-              formatter: customTooltipFormatter
-            },
-            legend: {
-              data: chartData.series?.map(s => s.name) || [],
-              bottom: 0,
-              icon: 'circle',
-              itemWidth: 8,
-            },
-            xAxis: {
-              name: isSingleDay ? "Time" : "Date",
-              type: "category",
-              data: xAxisData || [],
-              boundaryGap: false,
-              axisLabel: {
-                rotate: 0,
-                interval: 0,
-                formatter: axisLabelFormatter
-              },
-            },
-            yAxis: {
-              name: selectedMetrics.length === 1 ? metrics[selectedMetrics[0]]?.label : "Total",
-              type: "value",
-              splitLine: { show: true },
-            },
-            series: series
-          };
-
-          if ((!hasData && ((comparatorDateRange && comparedDateRange) || rangeParameters)) || (!hasData && selectedDate)) {
-            option.graphic = [
-              {
-                type: 'text',
-                left: 'center',
-                top: 'middle',
-                style: {
-                  text: 'Tidak ada data untuk rentang waktu yang dipilih',
-                  fontSize: 16,
-                  fill: '#999',
-                  fontWeight: 'bold'
-                }
-              }
-            ];
-          }
-
-          chartInstance.setOption(option);
-
-          return () => {
-            if (chartInstance && !chartInstance.isDisposed()) {
-              chartInstance.dispose();
-            }
-          };
-
-        } catch (err) {
-          toast.error("Gagal memuat chart iklan produk");
-          console.error("Gagal menampilkan chart, kesalahan pada server :", err);
+      const seriesConfig = activeSeries.map(s => ({
+        name: s.name,
+        type: 'line',
+        smooth: true,
+        showSymbol: false,
+        emphasis: { focus: 'series' },
+        data: s.data,
+        lineStyle: {
+          color: s.color,
+          width: 2
+        },
+        itemStyle: {
+          color: s.color
         }
+      }));
+
+      const hasData = seriesConfig.some(s => 
+        s.data?.some(value => value !== null && value !== undefined)
+      );
+
+      let xAxisData = chartData.timeIntervals || [];
+      const isSingleDay = chartData.isSingleDay || false;
+      
+      if (xAxisData.some(item => item.includes(":"))) {
+        xAxisData = xAxisData.map(item => item.split(" ")[1]);
+      } else {
+        xAxisData = xAxisData.map(item => item.split("-").slice(1).join("/"));
+      }
+
+      const option = {
+        toolbox: { feature: { saveAsImage: {} } },
+        grid: {
+          left: calculateLeftMargin(seriesConfig),
+          right: 50,
+          bottom: 50,
+          containLabel: false
+        },
+        tooltip: {
+          trigger: "axis",
+          extraCssText: 'box-shadow: none;',
+          backgroundColor: "transparent",
+          borderWidth: 0,
+          formatter: generateTooltipContent
+        },
+        legend: {
+          data: activeSeries.map(s => s.name),
+          bottom: 0,
+          icon: 'circle',
+          itemWidth: 8,
+        },
+        xAxis: {
+          name: isSingleDay ? "Time" : "Date",
+          type: "category",
+          data: xAxisData,
+          boundaryGap: false,
+          axisLabel: {
+            rotate: 0,
+            interval: 0,
+            formatter: getAxisLabelFormatter(xAxisData.length)
+          },
+        },
+        yAxis: {
+          // name: selectedMetrics.length === 1 ? metrics[selectedMetrics[0]]?.label : "Total",
+          type: "value",
+          splitLine: { show: true },
+        },
+        series: seriesConfig
       };
 
-      const timer = setTimeout(() => initChart(), 100);
+      if (!hasData) {
+        option.graphic = [{
+          type: 'text',
+          left: 'center',
+          top: 'middle',
+          style: {
+            text: 'Tidak ada data untuk rentang waktu yang dipilih',
+            fontSize: 16,
+            fill: '#999',
+            fontWeight: 'bold'
+          }
+        }];
+      }
+
+      chartInstance.current.setOption(option);
+
+    } catch (err) {
+      console.error("Chart initialization error:", err);
+      toast.error("Gagal memuat chart iklan produk");
+    }
+  }, [chartData, selectedMetrics, isMounted, isChartContainerReady]);
+
+  useEffect(() => {
+    setIsMounted(true);
+    return () => {
+      setIsMounted(false);
+      setIsChartContainerReady(false);
+      if (chartInstance.current) {
+        chartInstance.current.dispose();
+        chartInstance.current = null;
+      }
+    };
+  }, []);
+
+  // Simplified chart initialization trigger
+  useEffect(() => {
+    if (isChartContainerReady && chartData.series?.length > 0) {
+      // Small delay to ensure DOM is fully rendered
+      const timer = setTimeout(() => {
+        initializeChart();
+      }, 100);
+      
       return () => clearTimeout(timer);
     }
-  }, [chartData, selectedMetrics, comparatorDateRange, comparedDateRange]);
+  }, [initializeChart, isChartContainerReady]);
+
+  // Update resize observer
+  useEffect(() => {
+    if (!isMounted || !chartRef.current || !isChartContainerReady) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      if (chartInstance.current) {
+        chartInstance.current.resize();
+      }
+    });
+
+    resizeObserver.observe(chartRef.current);
+    return () => resizeObserver.disconnect();
+  }, [isMounted, isChartContainerReady]);
+
+  const calculateLeftMargin = (series) => {
+    const maxY = Math.max(...series.flatMap(s => s.data || []));
+    if (maxY >= 1_000_000_000) return 110;
+    if (maxY >= 100_000_000) return 100;
+    if (maxY >= 10_000_000) return 90;
+    if (maxY >= 1_000_000) return 80;
+    if (maxY >= 100_000) return 70;
+    if (maxY >= 10_000) return 60;
+    if (maxY >= 1_000) return 50;
+    return 35;
+  };
+
+  const getAxisLabelFormatter = (length) => {
+    let modulus = 1;
+    if (length > 56) modulus = 5;
+    else if (length > 42) modulus = 4;
+    else if (length > 28) modulus = 3;
+    else if (length > 14) modulus = 2;
+    return (value, index) => (index % modulus === 0 ? value : '');
+  };
+
+  const generateTooltipContent = (params) => {
+    const date = params[0].axisValue;
+    let html = `
+      <div style="
+        background: white;
+        border-radius: 6px;
+        box-shadow: 0 0 4px rgba(0,0,0,0.1);
+        overflow: hidden;
+        font-family: sans-serif;
+      ">
+        <div style="
+          background: #EDEDED;
+          padding: 6px 12px;
+          font-weight: bold;
+          font-size: 13px;
+          border-bottom: 1px solid #ddd;
+          color: #101010;
+        ">${date}</div>
+        <div style="padding: 6px 12px; font-size: 13px;">
+    `;
+
+    params.forEach(param => {
+      html += `
+        <div style="display: flex; align-items: center; justify-content: space-between; margin: 4px 0; gap: 4px;">
+          <div style="display: flex; align-items: center;">
+            <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${param.color}; margin-right:6px;"></span>
+            ${param.seriesName}
+          </div>
+          <strong>${formatTableValue(param.value, "number")}</strong>
+        </div>
+      `;
+    });
+
+    html += `</div></div>`;
+    return html;
+  };
 
   const handleStyleMatricFilterButton = (metricKey) => {
     const isActive = selectedMetrics.includes(metricKey);
@@ -1283,127 +1434,80 @@ const AdsTable = ({ shoppeeId }) => {
 
 
 
-   // SALES CLASSIFICATION ADS FEATURE
-  const typeClasificationOptions = [
-    { value: "best_seller", label: "Best Seller" },
-    { value: "middle_moving", label: "Middle Moving" },
-    { value: "slow_moving", label: "Slow Moving" },
-  ];
-
-  const handleClassificationChange = (selectedOptions) => {
-    setSelectedClassificationOption(selectedOptions || []);
-  };
-
-
-
-  // FILTER COLUMNS FEATURE
-  const allColumns = [
-    { key: "info_iklan", label: "Info iklan" },
-    { key: "dailyBudget", label: "Modal" },
-    { key: "insight", label: "Insight" },
-    { key: "salesClassification", label: "Sales Classification" },
-    { key: "cost", label: "Biaya Iklan" },
-    { key: "broadGmv", label: "Penjualan dari iklan" },
-    { key: "roas", label: "ROAS" },
-    { key: "customRoas", label: "Custom ROAS" },
-    { key: "impression", label: "Iklan dilihat" },
-    { key: "click", label: "Jumlah Klik" },
-    { key: "ctr", label: "Presentase Klik" }, 
-    { key: "broadOrder", label: "Konversi" },
-    { key: "cr", label: "Tingkat Konversi" },
-    { key: "broadOrderAmount", label: "Produk Terjual" },
-    { key: "cpc", label: "Biaya per Konversi" },
-    { key: "acos", label: "Presentase Biaya Iklan (ACOS)" },
-    { key: "directOrder", label: "Konversi Langung" },
-    { key: "directOrderAmount", label: "Produk Terjual Langsung" },
-    { key: "directGmv", label: "Penjualan dari Iklan Langsung" },
-    { key: "directRoi", label: "ROAS (Efektifitas Iklan) Langsung" },
-    { key: "directCir", label: "ACOS Langsung" },
-    { key: "directCr", label: "Tingkat Konversi Langsung" },
-    { key: "cpdc", label: "Biaya per Konversi Langsung" },
-    { key: "detail", label: "Detail Iklan" }
-  ];
-
-  const [selectedColumns, setSelectedColumns] = useState(
-    allColumns.map((col) => col.key)
-  );
-
-  const handleColumnChange = (colKey) => {
-    setSelectedColumns((prev) =>
-      prev.includes(colKey)
-        ? prev.filter((key) => key !== colKey)
-        : [...prev, colKey]
-    );
-  };
-
-
-
-  // TYPE ADS FILTER FEATURE
-  const typeAdsOptions = [
-    { value: "all", label: "Semue Tipe" },
-    { value: "product_gmv_max_roas", label: "Iklan Produk GMV Max ROAS" },
-    { value: "product_gmv_max_auto", label: "Iklan Produk GMV Max Auto" },
-    { value: "auto", label: "Iklan Produk Auto" },
-    { value: "manual", label: "Iklan Produk Manual" },
-    { value: "shop_auto", label: "Iklan Toko Auto" },
-    { value: "shop_manual", label: "Iklan Toko Manual" },
-  ];
-
-  const handleAdsChange = (selectedOptions) => {
-    // Check if "all" is selected
-    const hasAll = selectedOptions.some(option => option.value === "all");
-    const hadAll = selectedTypeAds.some(option => option.value === "all");
-
-    let newSelectedOptions;
-    // If "all" is newly selected, remove all other options
-    if (hasAll && !hadAll) {
-      newSelectedOptions = [{ value: "all", label: "Semua Tipe" }];
-    }
-    // If any other options are selected and "all" is already there, remove "all"
-    else if (selectedOptions.length > 1 && hasAll) {
-      newSelectedOptions = selectedOptions.filter(option => option.value !== "all");
-    }
-    // If no options are selected, set back to "all"
-    else if (selectedOptions.length === 0) {
-      newSelectedOptions = [{ value: "all", label: "Semua Tipe" }];
-    }
-    // Normal case, set selected options
-    else {
-      newSelectedOptions = selectedOptions;
+  const handleUpdateCustomRoas = async (shopId, campaignId, customRoas) => {
+    if (!customRoas || customRoas === "" || isNaN(customRoas)) {
+      toast.error("Custom ROAS harus berisi angka yang valid");
+      return;
     }
 
-    setSelectedTypeAds(newSelectedOptions);
-  };
+    if (!rangeParameters || !rangeParameters.current) {
+      toast.error("Tidak ada data periode aktif untuk update");
+      return;
+    }
 
+    const from1ISO = toLocalISOString(rangeParameters.current.from);
+    const to1ISO = toLocalISOString(rangeParameters.current.to);
 
-
-  // PLACEMENT ADS FILTER FEATURE
-  const placementOptions = [
-    { value: "all", label: "Semua" },
-    { value: "targeting", label: "Halaman Rekomendasi" },
-    { value: "search_product", label: "Halaman Pencarian" },
-  ];
-
-  const handlePlacementChange = (selectedOption) => {
-    setSelectedOptionPlacement(selectedOption);
-  };
-
-  // Check if "manual" is selected in the type ads filter
-  const isTypeManualProductSelected = selectedTypeAds.some(
-    (option) => option.value === "manual"
-  );
-
-  const handleUpdateCustomRoas = async (shopId, campaignId, customRoasValue) => {
     try {
-      setIsTableFilterLoading(true);
-      await updateCustomRoasProduct(shopId, campaignId, customRoasValue);
-      toast.success("Roas berhasil di update/custom");
-      window.location.reload();
+      const apiUrl = `/api/product-ads/custom-roas`;
+      
+      const params = {
+        shopId: shopId,
+        campaignId: campaignId,
+        customRoas: parseFloat(customRoas),
+        from: from1ISO,
+        to: to1ISO
+      };
+
+      const response = await axiosRequest.post(apiUrl, null, { params });
+      
+      if (response.status === 200) {
+        toast.success("Custom ROAS berhasil diupdate");
+        
+        setFilteredData(prevData => 
+          prevData.map(product => 
+            product.campaignId === campaignId 
+              ? {
+                  ...product,
+                  data: product.data.map(item => ({
+                    ...item,
+                    customRoas: parseFloat(customRoas)
+                  }))
+                }
+              : product
+          )
+        );
+
+        setTempCustomRoas(prev => {
+          const updated = { ...prev };
+          delete updated[campaignId];
+          return updated;
+        });
+
+        const currentFilters = buildCurrentFilters();
+        await fetchTableData(rangeParameters, currentPage, currentFilters);
+      }
+      
     } catch (error) {
-      console.error("Gagal mengupdate ROAS, kesalahan pada server:", error);
-      toast.error("Gagal menyimpan perubahan ROAS");
-    } finally {
-      setIsTableFilterLoading(false);
+      console.error('Gagal update custom ROAS, kesalahan pada server:', error);
+      if (error.response) {
+        const errorMessage = "Gagal update custom ROAS";
+        toast.error(errorMessage);
+      } else if (error.request) {
+        toast.error("Gagal terhubung ke server, periksa koneksi internet");
+      } else {
+        toast.error("Terjadi kesalahan saat update custom ROAS");
+      }
+    }
+  };
+
+  const toggleOpenCalendar = () => {
+    if (showCalendar) {
+      setAnimateCalendar(false);
+      setTimeout(() => setShowCalendar(false), 100);
+    } else {
+      setShowCalendar(true);
+      setTimeout(() => setAnimateCalendar(true), 100);
     }
   };
 
@@ -1455,14 +1559,29 @@ const AdsTable = ({ shoppeeId }) => {
     };
   };
 
-  const toggleOpenCalendar = () => {
-    if (showCalendar) {
-      setAnimateCalendar(false);
-      setTimeout(() => setShowCalendar(false), 100);
-    } else {
-      setShowCalendar(true);
-      setTimeout(() => setAnimateCalendar(true), 100);
-    }
+  const renderAlerts = () => {
+    return (
+      <>
+        {showAlert && (
+          <div className="alert alert-warning alert-dismissible fade show" role="alert">
+            Maksimal metrik yang dapat dipilih adalah 4 metrik
+            <button 
+              type="button" 
+              className="btn-close" 
+              onClick={() => setShowAlert(false)}
+            ></button>
+          </div>
+        )}
+        
+        {selectedMetrics.length === 0 && !isLoading && (
+          <div className="alert alert-info alert-dismissible fade show" role="alert">
+            <div className="d-flex align-items-center">
+              <span>Pilih minimal 1 metrik untuk menampilkan data pada chart</span>
+            </div>
+          </div>
+        )}
+      </>
+    );
   };
 
   return (
@@ -1495,24 +1614,24 @@ const AdsTable = ({ shoppeeId }) => {
                 >
                   <div>
                       <p className="pt-2" style={{ textAlign: "center" }}>
-                          Tanggal Pembanding
+                        Tanggal Pembanding
                       </p>
                       <Calendar 
                           selectRange={true}
                           onChange={handleComparatorDateChange} 
                           value={comparatorDateRange} 
                           maxDate={
-                              comparedDateRange ? comparedDateRange[1] : 
-                              new Date(2100, 0, 1)
+                            comparedDateRange ? comparedDateRange[1] : 
+                            new Date(2100, 0, 1)
                           } 
                           minDate={new Date(2000, 0, 1)} 
                       />
                       {(comparatorDateRange) && (
-                          <div className="text-center mt-1">
-                              <small className="text-success">
-                                  {comparatorDateRange[0].toLocaleDateString("id-ID")} - ${comparatorDateRange[1].toLocaleDateString("id-ID")}
-                              </small>
-                          </div>
+                        <div className="text-center mt-1">
+                          <small className="text-success">
+                            {comparatorDateRange[0].toLocaleDateString("id-ID")} - ${comparatorDateRange[1].toLocaleDateString("id-ID")}
+                          </small>
+                        </div>
                       )}
                   </div>
                   
@@ -1531,9 +1650,9 @@ const AdsTable = ({ shoppeeId }) => {
                       />
                       {(comparedDateRange) && (
                         <div className="text-center mt-1">
-                            <small className="text-success">
-                                {comparedDateRange[0].toLocaleDateString("id-ID")} - ${comparedDateRange[1].toLocaleDateString("id-ID")}
-                            </small>
+                          <small className="text-success">
+                            {comparedDateRange[0].toLocaleDateString("id-ID")} - ${comparedDateRange[1].toLocaleDateString("id-ID")}
+                          </small>
                         </div>
                       )}
                   </div>
@@ -1611,12 +1730,14 @@ const AdsTable = ({ shoppeeId }) => {
                         </strong>
                         <span className="card-text fs-4 fw-bold">
                           {
-                            metrics[metricKey].type === "currency"
-                              ? <span>Rp. {formatTableValue(metricsTotals[metricKey], "simple_currency")}</span>
-                              : metrics[metricKey].type === "percentage"
-                                ? <span>{formatTableValue(metricsTotals[metricKey], "percentage")}</span>
-                                : <span>{formatTableValue(metricsTotals[metricKey], "coma")}</span>
-                          }
+                              metrics[metricKey].type === "currency"
+                                ? <span>Rp. {formatTableValue(metricsTotals[metricKey], "simple_currency")}</span>
+                                : metrics[metricKey].type === "simple_currency"
+                                ? <span>{formatTableValue(metricsTotals[metricKey], "simple_currency")}</span>
+                                : metrics[metricKey].type === "percentage"
+                                  ? <span>{formatTableValue(metricsTotals[metricKey], "percentage")}</span>
+                                  : <span>{formatTableValue(metricsTotals[metricKey], "coma")}</span>
+                              }
                         </span>
                       </div>
                     </div>
@@ -1631,11 +1752,12 @@ const AdsTable = ({ shoppeeId }) => {
                 )}
                 {selectedMetrics.length === 0 && (
                   <div className="alert alert-warning alert-dismissible fade show">
-                    <span >Pilih minimal 1 metrik untuk menampilkan data</span>
+                    <span>Pilih minimal 1 metrik untuk menampilkan data secara akurat</span>
                   </div>
                 )}
                 {/* Chart */}
-                <div ref={chartRef} style={{ width: "100%", height: "340px" }}></div>
+                <div ref={chartRefCallback} style={{ width: "100%", height: "340px" }}>
+                </div>
                 {/* Filter & Table */}
                 <div className="d-flex flex-column gap-2">
                   {/* Status filter */}
@@ -1940,7 +2062,7 @@ const AdsTable = ({ shoppeeId }) => {
                               .filter((col) =>
                                 selectedColumns.includes(col.key) &&
                                 (col.key !== "customRoas" ||
-                                  ((flagCustomRoasDate == "hari_ini" || flagCustomRoasDate == "kemarin") && col.key === "customRoas"))
+                                  (flagCustomRoasDate == "hari_ini" && col.key === "customRoas"))
                               )
                               .map((col) => (
                                 <th key={col.key}>
@@ -2086,7 +2208,7 @@ const AdsTable = ({ shoppeeId }) => {
                                       </div>
                                     </td>
                                   )}
-                                  {selectedColumns.includes("customRoas") && flagCustomRoasDate !== "minggu_ini" && flagCustomRoasDate !== "bulan_ini" && (
+                                  {selectedColumns.includes("customRoas") && flagCustomRoasDate === "hari_ini" && (
                                     <td style={{ width: "200px" }}>
                                       <span>{entry.data[0].customRoas}</span>
                                       <input
