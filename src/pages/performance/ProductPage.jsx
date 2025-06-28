@@ -776,8 +776,8 @@ export default function PerformanceProductPage() {
   // FILTER COLUMNS TABLE FEATURE
   const allColumns = [
     { key: "name", label: "Nama" },
-    { key: "insight", label: "Insight" },
-    { key: "salesClassification", label: "Sales Classification" },
+    // { key: "insight", label: "Insight" },
+    // { key: "salesClassification", label: "Sales Classification" },
     { key: "pv", label: "Pengunjung" },
     { key: "addToCartUnits", label: "Add To Cart" },
     { key: "uvToAddToCartRate", label: "Add To Cart (Percentage)" },
@@ -1774,20 +1774,20 @@ export default function PerformanceProductPage() {
                                           </div>
                                         </td>
                                       )}
-                                      {selectedColumns.includes("insight") && (
+                                      {/* {selectedColumns.includes("insight") && (
                                         <td style={{ width: "260px" }}>
                                           <span>
                                             {entry.data[0].insight === undefined || entry.data[0].insight === null ? "-" : entry.data[0].insight}
                                           </span>
                                         </td>
-                                      )}
-                                      {selectedColumns.includes("salesClassification") && (
+                                      )} */}
+                                      {/* {selectedColumns.includes("salesClassification") && (
                                         <td style={{ width: "260px" }}>
                                           <span>
                                             {entry.data[0].salesClassification === undefined || entry.data[0].salesClassification === null ? "-" : entry.data[0].salesClassification}
                                           </span>
                                         </td>
-                                      )}
+                                      )} */}
                                       {selectedColumns.includes("pv") && (
                                         <td>
                                           <div className="d-flex flex-column">

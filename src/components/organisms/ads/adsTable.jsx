@@ -1559,31 +1559,6 @@ const AdsTable = ({ shoppeeId }) => {
     };
   };
 
-  const renderAlerts = () => {
-    return (
-      <>
-        {showAlert && (
-          <div className="alert alert-warning alert-dismissible fade show" role="alert">
-            Maksimal metrik yang dapat dipilih adalah 4 metrik
-            <button 
-              type="button" 
-              className="btn-close" 
-              onClick={() => setShowAlert(false)}
-            ></button>
-          </div>
-        )}
-        
-        {selectedMetrics.length === 0 && !isLoading && (
-          <div className="alert alert-info alert-dismissible fade show" role="alert">
-            <div className="d-flex align-items-center">
-              <span>Pilih minimal 1 metrik untuk menampilkan data pada chart</span>
-            </div>
-          </div>
-        )}
-      </>
-    );
-  };
-
   return (
     <>
       <div className="card">
