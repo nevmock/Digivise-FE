@@ -48,7 +48,6 @@ export default function PerformanceStockPage() {
   const [isContentLoading, setIsContentLoading] = useState(false);
   const [isTableFilterLoading, setIsTableFilterLoading] = useState(false);
 
-  // const getShopeeId = "252412120";
   const getShopeeId = localStorage.getItem("shopeeId");
   if (getShopeeId == null || getShopeeId === null || getShopeeId === "null" || getShopeeId === "undefined") {
       return (
@@ -1002,7 +1001,7 @@ export default function PerformanceStockPage() {
     { key: "name", label: "Nama" },
     { key: "stock", label: "Stok" },
     { key: "code", label: "Kode" },
-    { key: "availability", label: "Availability" },
+    { key: "salesAvailability", label: "Availability" },
     { key: "status", label: "Status" },
     { key: "classification", label: "Sales Clasification" },
   ];
@@ -1108,7 +1107,6 @@ export default function PerformanceStockPage() {
 
       chartInstanceRef.current = echarts.init(chartRef.current);
 
-      // Configure date style
       let xAxisData = chartData.map((item) => item.date);
       const includesColon = xAxisData.some((item) => item.includes(":"));
 
@@ -1118,7 +1116,6 @@ export default function PerformanceStockPage() {
         xAxisData = xAxisData.map((item) => item.split("-").slice(1).join("/"));
       }
 
-      // Configure margin left dynamically based on max Y value
       const allValues = chartData.map(d => d.totalStock);
       variantsChartData.forEach(v => {
         v.data.forEach(d => allValues.push(d.totalStock));
@@ -1127,11 +1124,12 @@ export default function PerformanceStockPage() {
       const maxYValue = Math.max(...allValues);
       let dynamicLeft = 35;
       if (maxYValue >= 1000) dynamicLeft = 50;
-      if (maxYValue >= 1_000_000) dynamicLeft = 70;
+      if (maxYValue >= 10_000) dynamicLeft = 60;
+      if (maxYValue >= 100_000) dynamicLeft = 70;
+      if (maxYValue >= 1_000_000) dynamicLeft = 80;
       if (maxYValue >= 10_000_000) dynamicLeft = 90;
-      if (maxYValue >= 100_000_000) dynamicLeft = 120;
-      if (maxYValue >= 1_000_000_000) dynamicLeft = 150;
-      if (maxYValue >= 10_000_000_000) dynamicLeft = 180;
+      if (maxYValue >= 100_000_000) dynamicLeft = 100;
+      if (maxYValue >= 1_000_000_000) dynamicLeft = 110;
 
       const series = [
         {
@@ -1738,10 +1736,10 @@ export default function PerformanceStockPage() {
                                           // <td>{latestStockData?.parentSku === undefined || latestStockData?.parentSku === null ? "-" : latestStockData?.parentSku}</td>
                                         )}
 
-                                        {selectedColumns.includes("availability") && (
-                                          <td style={{ width: "160px" }}>
-                                            <span>
-                                              {latestStockData?.availability === undefined || latestStockData?.availability === null ? "-" : latestStockData?.availability}
+                                        {selectedColumns.includes("salesAvailability") && (
+                                          <td style={{ width: "180px" }}>
+                                            <span className={`badge text-${latestStockData?.isSalesAvailable === true ? "success" : "danger"}`}>
+                                              {latestStockData?.salesAvailability === undefined || latestStockData?.salesAvailability === null ? "-" : latestStockData?.salesAvailability}
                                             </span>
                                           </td>
                                         )}

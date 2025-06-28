@@ -1,8 +1,4 @@
-import { useAuth } from "../../context/Auth";
-
 const Sidebar = () => {
-    const { activeMerchant } = useAuth();
-
     const MenuSidebar = [   
         {
             name: "Dashboard",

@@ -5,6 +5,7 @@ import './index.css';
 import App from './App';
 import { AuthProvider } from "./context/Auth"; 
 import 'react-calendar/dist/Calendar.css';
+import 'react-loading-skeleton/dist/skeleton.css'
 // import 'bootstrap/dist/css/bootstrap.min.css';
 // import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
