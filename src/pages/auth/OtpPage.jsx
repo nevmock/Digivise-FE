@@ -67,8 +67,7 @@ export default function OtpPage() {
 
         try {
             const result = await verifyMerchantOTP(otp);
-            console.log("OTP verification result otppage:", result);
-            
+
             if (result?.success === true || result?.status === 200 || result?.status === "success" || result?.status === "OK" || result?.code === "OK") {
                 const name = userData?.merchants?.find(
                     m => m.id === pendingMerchantLogin.merchantId

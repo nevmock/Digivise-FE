@@ -10,45 +10,62 @@ import axiosRequest from "../../utils/request";
 import CreateMerchantModal from "../organisms/ModalAddMerchant";
 import LoginMerchantUsernameModal from "./ModalLoginUsernameMerchant";
 import ModalOtpByUsername from "./ModalOtpByUsername";
-import avatarProfile from "../../assets/images/users/avatar-1.jpg";
 import convertNotifySessionExpired from "../../utils/convertNotifySessionExpired";
+import avatarProfile from "../../assets/images/users/avatar-1.jpg";
 
 
 const Navbar = () => {
-    const { userData, logoutSuccess } = useAuth();
+    const { 
+        userData, 
+        logoutSuccess, 
+        switchMerchant, 
+        isSwitching,
+        getCurrentUserData 
+    } = useAuth();
     const [showDropdown, setShowDropdown] = useState(false);
     const [showModalFormCreateMerchant, setShowModalFormCreateMerchant] = useState(false);
     const [showModalFormLoginUsernameMerchant, setShowModalFormLoginUsernameMerchant] = useState(false);
     const [showModalFormOTPUsername, setShowModalFormOTPUsername] = useState(false);
     const [selectedMerchant, setSelectedMerchant] = useState(null);
+    const [switchingMerchantId, setSwitchingMerchantId] = useState(false);
     const dropdownRef = useRef(null);
     const navigate = useNavigate();
     const [themeMode, setThemeMode] = useState(() => localStorage.getItem("appModeTheme") || "light");
     const [userNow, setUserNow] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
 
-
     const fetchGetCurrentUser = async () => {
         setIsLoading(true);
         try {
             const response = await axiosRequest.get(`/api/users/${userData.userId}`);
-            if (response.status === 200 || response) {
+            if (response.status === 200 || response.code === 200 || response.status === "OK" || response.code === "OK" || response.data) {
                 const currentUser = response.data;
                 setUserNow(currentUser);
-            } else {
-                console.error("Gagal mengambil data pengguna saat ini, status:", response.status);
             }
-
         } catch (error) {
-        console.error("Error fetching current user:", error);
+            console.error("Error fetching current user:", error);
         } finally {
-        setIsLoading(false);
+            setIsLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchGetCurrentUser();
-    }, [userData.userId]);
+        if (userData?.userId) {
+            fetchGetCurrentUser();
+        }
+    }, [userData?.userId]);
+
+    useEffect(() => {
+        if (userData && userNow) {
+            if (userData.activeMerchant?.id !== userNow.activeMerchant?.id) {
+                setUserNow(prev => ({
+                    ...prev,
+                    activeMerchant: userData.activeMerchant
+                }));
+            }
+        }
+    }, [userData?.activeMerchant, userNow]);
+
 
     const toggleTheme = () => {
         setThemeMode(prev => (prev === "light" ? "dark" : "light"));
@@ -62,14 +79,60 @@ const Navbar = () => {
     const closeModalLoginMerchant = () => setShowModalFormLoginUsernameMerchant(false);
     const closeModalOTPUsername = () => setShowModalFormOTPUsername(false);
 
+    const handleMerchantClick = async (merchant) => {
+        if (event.target.closest('.refresh-icon-area')) {
+            return;
+        }
+
+        if (userNow?.activeMerchant?.id === merchant.id) {
+            toast.error(`You are already logged in to ${merchant.name}`);
+            return;
+        }
+
+        setSwitchingMerchantId(merchant.id);
+        
+        try {
+            const result = await switchMerchant(merchant.id);
+            
+            if (result.success === true && result.switched === true) {
+                toast.success(`Switched ke ${merchant.name} berhasil`);
+                setShowDropdown(false);
+                
+                await fetchGetCurrentUser();
+            } else if (result.requiresLogin === true) {
+                handleOpenLoginModal(merchant);
+            } else {
+                handleOpenLoginModal(merchant);
+            }
+            navigate("/dashboard", { replace: true });
+            window.location.reload();
+        } catch (error) {
+            toast.error('Failed to switch merchant. Please try again.');
+            handleOpenLoginModal(merchant);
+        } finally {
+            setSwitchingMerchantId(null);
+        }
+    };
+
+    const handleRefreshIconClick = (merchant, event) => {
+        event.stopPropagation();
+        handleOpenLoginModal(merchant);
+    };
+
     const handleOpenLoginModal = (merchant) => {
         setSelectedMerchant(merchant);
         setShowModalFormLoginUsernameMerchant(true);
+        setShowDropdown(false);
     };
 
     const handleOTPRequired = (merchant) => {
         setSelectedMerchant(merchant);
         setShowModalFormOTPUsername(true);
+    };
+
+    const handleMerchantLoginSuccess = async () => {
+        await fetchGetCurrentUser();
+        setSelectedMerchant(null);
     };
 
     useEffect(() => {
@@ -126,50 +189,103 @@ const Navbar = () => {
                             <div className="topbar-item position-relative" ref={dropdownRef}>
                                 {userNow?.merchants && userNow?.merchants.length > 0 ? (
                                     <>
-                                        <button type="button" className="btn btn-primary" onClick={toggleDropdown}>
-                                            Switch Merchant
+                                        <button 
+                                            type="button" 
+                                            className="btn btn-primary" 
+                                            onClick={toggleDropdown}
+                                            disabled={isSwitching}
+                                        >
+                                            {isSwitching ? (
+                                                <>
+                                                    <span className="spinner-border spinner-border-sm me-2" />
+                                                    Switching...
+                                                </>
+                                            ) : (
+                                                'Switch Merchant'
+                                            )}
                                         </button>
                                         
                                         {showDropdown && (
-                                            <div className="dropdown-menu show position-absolute shadow p-2 rounded" style={{ width: "220px" }}>
-                                                {userNow?.merchants.map((merchant) => (
-                                                    <div key={merchant.id} id="custom-hover-login-navbar" className="d-flex flex-column mb-2 position-relative"
-                                                        style={{
-                                                            cursor: "pointer",
-                                                            borderRadius: "5px",
-                                                            justifyContent: "center",
-                                                            padding: "8px 8px", 
-                                                            backgroundColor: activeMerchant?.id === merchant.id ? "#7F42D421" : "transparent"
-                                                        }}
-                                                    >
-                                                        <span className="custom-tooltip">Login ke {merchant.name}</span>
-                                                        <div className="d-flex align-items-center">
-                                                            <img
-                                                                src={avatarProfile}
-                                                                className="rounded-circle me-2"
-                                                                width="40"
-                                                                height="40"
-                                                            />
-                                                            <div className="d-flex flex-column flex-grow-1">
-                                                                <div className="d-flex flex-column gap-1">
-                                                                    <strong>{activeMerchant?.id === merchant.id ? activeMerchant.name : merchant.name}</strong>
-                                                                    <p style={{ margin: 0, fontSize: "11px" }} className={`text-${convertNotifySessionExpired(merchant.lastLogin).type == "urgent" ? "danger" : "success"}`}>
-                                                                        {convertNotifySessionExpired(merchant.lastLogin).text}</p>
+                                            <div className="dropdown-menu show position-absolute shadow p-2 rounded" style={{ width: "260px" }}>
+                                                {userNow?.merchants.map((merchant) => {
+                                                    const isActive = activeMerchant?.id === merchant.id;
+                                                    const isSwitchingThis = switchingMerchantId === merchant.id;
+                                                    
+                                                    return (
+                                                        <div 
+                                                            key={merchant.id} 
+                                                            className="d-flex flex-column mb-2 position-relative merchant-item"
+                                                            style={{
+                                                                cursor: isSwitchingThis ? "not-allowed" : "pointer",
+                                                                borderRadius: "8px",
+                                                                padding: "12px", 
+                                                                backgroundColor: isActive ? "#7F42D421" : "transparent",
+                                                                border: isActive ? "2px solid #7F42D4" : "1px solid #e9ecef",
+                                                                opacity: isSwitchingThis ? 0.6 : 1
+                                                            }}
+                                                            onClick={(e) => !isSwitchingThis && handleMerchantClick(merchant, e)}
+                                                        >
+                                                            <div className="d-flex align-items-center">
+                                                                <img
+                                                                    src={avatarProfile}
+                                                                    className="rounded-circle me-3"
+                                                                    width="45"
+                                                                    height="45"
+                                                                />
+                                                                <div className="flex-grow-1">
+                                                                    <div className="d-flex flex-column gap-1">
+                                                                        <div className="d-flex align-items-center justify-content-between">
+                                                                            <strong className="text-truncate" style={{ maxWidth: "140px" }}>
+                                                                                {merchant.name}
+                                                                            </strong>
+                                                                        </div>
+                                                                        
+                                                                        <div className="d-flex align-items-center gap-2">
+                                                                            {merchant.lastLogin && (
+                                                                                <small className={`text-${convertNotifySessionExpired(merchant.lastLogin).type === "urgent" ? "danger" : "success"}`}>
+                                                                                    {convertNotifySessionExpired(merchant.lastLogin).text}
+                                                                                </small>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div 
+                                                                    className="ms-2 refresh-icon-area"
+                                                                    onClick={(e) => !isSwitchingThis && handleRefreshIconClick(merchant, e)}
+                                                                    style={{
+                                                                        padding: "4px",
+                                                                        borderRadius: "4px",
+                                                                        cursor: isSwitchingThis ? "not-allowed" : "pointer"
+                                                                    }}
+                                                                    title="Login to this merchant"
+                                                                >
+                                                                    {isSwitchingThis ? (
+                                                                        <div className="spinner-border spinner-border-sm text-primary" />
+                                                                    ) : (
+                                                                        <IoMdRefresh 
+                                                                            size={24} 
+                                                                            className="text-primary"
+                                                                            style={{
+                                                                                transition: "transform 0.2s ease"
+                                                                            }}
+                                                                            onMouseEnter={(e) => e.target.style.transform = "rotate(180deg)"}
+                                                                            onMouseLeave={(e) => e.target.style.transform = "rotate(0deg)"}
+                                                                        />
+                                                                    )}
                                                                 </div>
                                                             </div>
-                                                            <div className="flex-grow-1" style={{ cursor: "pointer" }} onClick={() => handleOpenLoginModal(merchant)}>
-                                                                <IoMdRefresh size={30} />
-                                                            </div>
                                                         </div>
-                                                        <hr
-                                                            style={{ 
-                                                                margin: "8px 0 0 0",
-                                                                display: activeMerchant?.id === merchant.id ? "none" : "block",
-                                                            }}
-                                                        />
-                                                    </div>
-                                                ))}
-                                                <button className="btn btn-success w-100 fs-5" onClick={() => setShowModalFormCreateMerchant(true)}>Add Merchant</button>
+                                                    );
+                                                })}
+                                                
+                                                <button 
+                                                    className="btn btn-success w-100 mt-2" 
+                                                    onClick={() => setShowModalFormCreateMerchant(true)}
+                                                    disabled={isSwitching}
+                                                >
+                                                    Add Merchant
+                                                </button>
                                             </div>
                                         )}
                                     </>
@@ -184,9 +300,13 @@ const Navbar = () => {
                                 )}
                             </div>
 
+                            {/* Modals */}
                             {showModalFormCreateMerchant &&
                                 createPortal(
-                                    <CreateMerchantModal onClose={closeModalCreateMerchant} />,
+                                    <CreateMerchantModal 
+                                        onClose={closeModalCreateMerchant}
+                                        onSuccess={fetchGetCurrentUser}
+                                    />,
                                     document.body
                                 )
                             }
@@ -205,6 +325,7 @@ const Navbar = () => {
                                     <ModalOtpByUsername 
                                         onClose={closeModalOTPUsername} 
                                         merchant={selectedMerchant}
+                                        onSuccess={handleMerchantLoginSuccess}
                                     />,
                                     document.body
                                 )
@@ -229,10 +350,14 @@ const Navbar = () => {
                                     </span>
                                 </a>
                                 <div className="dropdown-menu dropdown-menu-end rounded py-1">
-                                    <button className="dropdown-item text-danger d-flex align-items-center gap-1" onClick={handleLogout} disabled={isLoading} style={{ cursor: isLoading ? "not-allowed" : "pointer" }}>
-                                        <iconify-icon icon="solar:logout-3-outline"
-                                            className="align-middle fs-18"></iconify-icon><span
-                                                className="align-middle">Logout</span>
+                                    <button 
+                                        className="dropdown-item text-danger d-flex align-items-center gap-1" 
+                                        onClick={handleLogout} 
+                                        disabled={isLoading} 
+                                        style={{ cursor: isLoading ? "not-allowed" : "pointer" }}
+                                    >
+                                        <iconify-icon icon="solar:logout-3-outline" className="align-middle fs-18" />
+                                        <span className="align-middle">Logout</span>
                                     </button>
                                 </div>
                             </div>
@@ -241,7 +366,7 @@ const Navbar = () => {
                 </div>
             </header>
         </>
-    )
+    );
 };
 
 export default Navbar;

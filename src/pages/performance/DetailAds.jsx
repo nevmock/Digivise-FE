@@ -1298,7 +1298,7 @@ export default function DetailAds() {
         <BaseLayout>
             <button
                 className="btn btn-secondary mb-3"
-                onClick={() => navigate("/dashboard/performance/ads")}
+                onClick={() => navigate("/dashboard/performance/ads", { replace: true })}
                 style={{ backgroundColor: "#8042D4", border: "none" }}
             >
                 Kembali
