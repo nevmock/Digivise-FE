@@ -7,7 +7,8 @@ import Skeleton from 'react-loading-skeleton';
 
 import axiosRequest from "../../utils/request";
 import formatTableValue from "../../utils/formatTableValue";
-import formatValueRatio from "../../utils/convertFormatRatioValue"
+import formatValueRatio from "../../utils/convertFormatRatioValue";
+import formatStyleSalesClassification from "../../utils/convertFormatSalesClassification";
 import Loading from "../../components/atoms/Loading/Loading";
 import BaseLayout from "../../components/organisms/BaseLayout";
 
@@ -57,56 +58,6 @@ export default function DetailAds() {
     };
 
     // Define metrics with their display names and colors
-    // const metrics = {
-    //     metricsImpression: {
-    //         label: "Iklan Dilihat",
-    //         color: "#D50000",
-    //         dataKey: "metricsImpression",
-    //         type: "currency",
-    //     },
-    //     metricsClick: {
-    //         label: "Jumlah Klik",
-    //         color: "#00B800",
-    //         dataKey: "metricsClick",
-    //         type: "currency",
-    //     },
-    //     metricsCtr: {
-    //         label: "Persentase Klik",
-    //         color: "#DFC100",
-    //         dataKey: "metricsCtr",
-    //         type: "percentage",
-    //     },
-    //     metricsCheckout: {
-    //         label: "Pesanan",
-    //         color: "#C400BA",
-    //         dataKey: "metricsCheckout",
-    //         type: "currency",
-    //     },
-    //     metricsBroadOrderAmount: {
-    //         label: "Produk Terjual",
-    //         color: "#35007FFF",
-    //         dataKey: "metricsBroadOrderAmount",
-    //         type: "currency",
-    //     },
-    //     metricsBroadGmv: {
-    //         label: "Penjualan dari Iklan",
-    //         color: "#AD5F00",
-    //         dataKey: "metricsBroadGmv",
-    //         type: "currency",
-    //     },
-    //     metricsDailyBudget: {
-    //         label: "Biaya Iklan",
-    //         color: "#00B69A",
-    //         dataKey: "metricsDailyBudget",
-    //         type: "currency",
-    //     },
-    //     metricsRoas: {
-    //         label: "ROAS",
-    //         color: "#743A00FF",
-    //         dataKey: "metricsRoas",
-    //         type: "comma",
-    //     },
-    // };
     const metrics = {
         impression: {
             label: "Iklan Dilihat",
@@ -999,25 +950,27 @@ export default function DetailAds() {
 
     const allColumns = [
         { key: "keyword", label: "Kata Pencarian" },
+        { key: "dailyBudget", label: "Modal" },
         { key: "insight", label: "Insight" },
+        { key: "salesClassification", label: "Sales Classification" },
+        { key: "cost", label: "Biaya Iklan" },
+        { key: "broadGmv", label: "Penjualan dari iklan" },
+        { key: "roas", label: "ROAS" },
         { key: "impression", label: "Iklan dilihat" },
         { key: "click", label: "Jumlah Klik" },
         { key: "ctr", label: "Presentase Klik" },
-        { key: "cost", label: "Biaya Iklan" },
-        { key: "cpc", label: "Biaya per Klik" },
-        { key: "broadGmv", label: "Penjualan dari iklan" },
-        { key: "roas", label: "ROAS" },
         { key: "broadOrder", label: "Konversi" },
         { key: "cr", label: "Tingkat Konversi" },
         { key: "broadOrderAmount", label: "Produk Terjual" },
-        { key: "acos", label: "ACOS (Presentase Biaya Iklan)" },
-        { key: "directOrder", label: "Konversi Langsung" },
+        { key: "cpc", label: "Biaya per Konversi" },
+        { key: "acos", label: "Presentase Biaya Iklan (ACOS)" },
+        { key: "directOrder", label: "Konversi Langung" },
         { key: "directOrderAmount", label: "Produk Terjual Langsung" },
         { key: "directGmv", label: "Penjualan dari Iklan Langsung" },
-        { key: "directRoi", label: "ROAS Langsung" },
+        { key: "directRoi", label: "ROAS (Efektifitas Iklan) Langsung" },
         { key: "directCir", label: "ACOS Langsung" },
         { key: "directCr", label: "Tingkat Konversi Langsung" },
-        { key: "cpdc", label: "Biaya per Konversi Langsung" }
+        { key: "cpdc", label: "Biaya per Konversi Langsung" },
     ];
 
     const [selectedColumns, setSelectedColumns] = useState(
@@ -1479,7 +1432,7 @@ export default function DetailAds() {
 
                 {/* Performance */}
                 <div className="d-flex gap-1 flex-column">
-                    <h4 className="fw-bold">Performance</h4>
+                    <h4 className="fw-bold">Keywords Performance</h4>
                     <div className="card d-flex flex-column p-2 gap-2">
                         {/* Keywords Performance Header */}
                         <div className="d-flex flex-column gap-1">
@@ -1487,7 +1440,6 @@ export default function DetailAds() {
                                 {/* Header & Date filter */}
                                 <div className="d-flex justify-content-between align-items-start pb-3">
                                     <div className="d-flex flex-column">
-                                        <h5 className="fw-bold">Keywords Performance</h5>
                                         <strong>{totalElements} total keywords</strong>
                                     </div>
                                     <div style={{ position: "relative" }}>
@@ -1761,9 +1713,41 @@ export default function DetailAds() {
                                                                 <span>{entry.data[0].keyword || '-'}</span>
                                                             </td>
                                                         )}
+                                                        {selectedColumns.includes("dailyBudget") && (
+                                                            <td style={{ width: "180px" }}>
+                                                                <span>
+                                                                    {
+                                                                        entry.data[0].dailyBudget === undefined || entry.data[0].dailyBudget === null ? "-" : formatTableValue(entry.data[0].dailyBudget, "currency")
+                                                                    }
+                                                                </span>
+                                                            </td>
+                                                        )}
                                                         {selectedColumns.includes("insight") && (
+                                                            <td style={{ width: "260px" }}>
+                                                                <span>
+                                                                    {entry.data[0].insight === undefined || entry.data[0].insight === null ? "-" : entry.data[0].insight}
+                                                                </span>
+                                                            </td>
+                                                        )}
+                                                        {selectedColumns.includes("salesClassification") && (
                                                             <td style={{ width: "200px" }}>
-                                                                <span>{entry.data[0].insight || '-'}</span>
+                                                                <div className="d-flex gap-1 align-items-center">
+                                                                    <div
+                                                                        className="marker"
+                                                                        style={{
+                                                                            backgroundColor: formatStyleSalesClassification(entry.data[0].salesClassification).backgroundColor,
+                                                                        }}
+                                                                    ></div>
+                                                                    <span
+                                                                        style={{
+                                                                            fontSize: "14px",
+                                                                        }}
+                                                                    >
+                                                                        {
+                                                                            entry.data[0].salesClassification === undefined || entry.data[0].salesClassification === null ? "-" : formatStyleSalesClassification(entry.data[0].salesClassification).label
+                                                                        }
+                                                                    </span>
+                                                                </div>
                                                             </td>
                                                         )}
                                                         {selectedColumns.includes("cost") && (
@@ -1847,7 +1831,7 @@ export default function DetailAds() {
                                                                 <div className="d-flex flex-column">
                                                                     <span>
                                                                         {
-                                                                            entry.data[0].broadOrder === undefined || entry.data[0].broadOrder === null ? "-" : formatTableValue(entry.data[0].broadOrder, "none")
+                                                                            entry.data[0].broadOrder === undefined || entry.data[0].broadOrder === null ? "-" : formatTableValue(entry.data[0].broadOrder, "simple_currency")
                                                                         }
                                                                     </span>
                                                                     <span className={`${formatValueRatio(entry.data[0].broadOrderComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
@@ -1874,7 +1858,7 @@ export default function DetailAds() {
                                                                 <div className="d-flex flex-column">
                                                                     <span>
                                                                         {
-                                                                            entry.data[0].broadOrderAmount === undefined || entry.data[0].broadOrderAmount === null ? "-" : formatTableValue(entry.data[0].broadOrderAmount, "none")
+                                                                            entry.data[0].broadOrderAmount === undefined || entry.data[0].broadOrderAmount === null ? "-" : formatTableValue(entry.data[0].broadOrderAmount, "simple_currency")
                                                                         }
                                                                     </span>
                                                                     <span className={`${formatValueRatio(entry.data[0].broadOrderAmountComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
@@ -1916,7 +1900,7 @@ export default function DetailAds() {
                                                                 <div className="d-flex flex-column">
                                                                     <span>
                                                                         {
-                                                                            entry.data[0].directOrder === undefined || entry.data[0].directOrder === null ? "-" : formatTableValue(entry.data[0].directOrder, "none")
+                                                                            entry.data[0].directOrder === undefined || entry.data[0].directOrder === null ? "-" : formatTableValue(entry.data[0].directOrder, "simple_currency")
                                                                         }
                                                                     </span>
                                                                     <span className={`${formatValueRatio(entry.data[0].directOrderComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
@@ -1930,7 +1914,7 @@ export default function DetailAds() {
                                                                 <div className="d-flex flex-column">
                                                                     <span>
                                                                         {
-                                                                            entry.data[0].directOrderAmount === undefined || entry.data[0].directOrderAmount === null ? "-" : formatTableValue(entry.data[0].directOrderAmount, "none")
+                                                                            entry.data[0].directOrderAmount === undefined || entry.data[0].directOrderAmount === null ? "-" : formatTableValue(entry.data[0].directOrderAmount, "simple_currency")
                                                                         }
                                                                     </span>
                                                                     <span className={`${formatValueRatio(entry.data[0].directOrderAmountComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
@@ -1958,7 +1942,7 @@ export default function DetailAds() {
                                                                 <div className="d-flex flex-column">
                                                                     <span>
                                                                         {
-                                                                            entry.data[0].directRoi === undefined || entry.data[0].directRoi === null ? "-" : formatTableValue(entry.data[0].directRoi, "none")
+                                                                            entry.data[0].directRoi === undefined || entry.data[0].directRoi === null ? "-" : formatTableValue(entry.data[0].directRoi, "simple_currency")
                                                                         }
                                                                     </span>
                                                                     <span className={`${formatValueRatio(entry.data[0].directRoiComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
@@ -2009,222 +1993,6 @@ export default function DetailAds() {
                                                                 </div>
                                                             </td>
                                                         )}
-                                                        {/* {selectedColumns.includes("impression") && (
-                                                            <td style={{ width: "150px" }}>
-                                                                <div className="d-flex flex-column">
-                                                                    <span>{formatMetricValue("impression", entry.data[0].metricsImpression)}</span>
-                                                                    {entry.data[0].metricsImpression !== undefined && (
-                                                                        <span className={`${entry.data[0].metricsImpressionComparison >= 0 ? 'text-success' : 'text-danger'}`} style={{ fontSize: "10px" }}>
-                                                                            {entry.data[0].metricsImpressionComparison >= 0 ? '+' : ''}{Number(entry.data[0].metricsImpressionComparison).toFixed(1)}%
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                            </td>
-                                                        )}
-                                                        {selectedColumns.includes("click") && (
-                                                            <td style={{ width: "150px" }}>
-                                                                <div className="d-flex flex-column">
-                                                                    <span>{formatMetricValue("click", entry.data[0].metricsClick)}</span>
-                                                                    {entry.data[0].metricsClickComparison !== undefined && (
-                                                                        <span className={`${entry.data[0].clickComparison >= 0 ? 'text-success' : 'text-danger'}`} style={{ fontSize: "10px" }}>
-                                                                            {entry.data[0].metricsClickComparison >= 0 ? '+' : ''}{Number(entry.data[0].metricsClickComparison).toFixed(1)}%
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                            </td>
-                                                        )}
-                                                        {selectedColumns.includes("ctr") && (
-                                                            <td style={{ width: "150px" }}>
-                                                                <div className="d-flex flex-column">
-                                                                    <span>{formatMetricValue("ctr", entry.data[0].metricsCtr)}</span>
-                                                                    {entry.data[0].metricsCtrComparison !== undefined && (
-                                                                        <span className={`${entry.data[0].metricsCtrComparison >= 0 ? 'text-success' : 'text-danger'}`} style={{ fontSize: "10px" }}>
-                                                                            {entry.data[0].metricsCtrComparison >= 0 ? '+' : ''}{Number(entry.data[0].metricsCtrComparison).toFixed(1)}%
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                            </td>
-                                                        )}
-                                                        {selectedColumns.includes("cost") && (
-                                                            <td style={{ width: "180px" }}>
-                                                                <div className="d-flex flex-column">
-                                                                    <span>{formatMetricValue("cost", entry.data[0].metricsCost)}</span>
-                                                                    {entry.data[0].metricsCostComparison !== undefined && (
-                                                                        <span className={`${entry.data[0].metricsCostComparison >= 0 ? 'text-danger' : 'text-success'}`} style={{ fontSize: "10px" }}>
-                                                                            {entry.data[0].metricsCostComparison >= 0 ? '+' : ''}{Number(entry.data[0].metricsCostComparison).toFixed(1)}%
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                            </td>
-                                                        )}
-                                                        {selectedColumns.includes("cpc") && (
-                                                            <td style={{ width: "180px" }}>
-                                                                <div className="d-flex flex-column">
-                                                                    <span>{formatMetricValue("cpc", entry.data[0].metricsCpc)}</span>
-                                                                    {entry.data[0].metricsCpcComparison !== undefined && (
-                                                                        <span className={`${entry.data[0].metricsCpcComparison >= 0 ? 'text-danger' : 'text-success'}`} style={{ fontSize: "10px" }}>
-                                                                            {entry.data[0].metricsCpcComparison >= 0 ? '+' : ''}{Number(entry.data[0].metricsCpcComparison).toFixed(1)}%
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                            </td>
-                                                        )}
-                                                        {selectedColumns.includes("broadGmv") && (
-                                                            <td style={{ width: "200px" }}>
-                                                                <div className="d-flex flex-column">
-                                                                    <span>{formatMetricValue("broadGmv", entry.data[0].metricsBroadGmv)}</span>
-                                                                    {entry.data[0].metricsBroadGmvComparison !== undefined && (
-                                                                        <span className={`${entry.data[0].metricsBroadGmvComparison >= 0 ? 'text-success' : 'text-danger'}`} style={{ fontSize: "10px" }}>
-                                                                            {entry.data[0].metricsBroadGmvComparison >= 0 ? '+' : ''}{Number(entry.data[0].metricsBroadGmvComparison).toFixed(1)}%
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                            </td>
-                                                        )}
-                                                        {selectedColumns.includes("roas") && (
-                                                            <td style={{ width: "150px" }}>
-                                                                <div className="d-flex flex-column">
-                                                                    <span>{formatMetricValue("roas", entry.data[0].metricsRoas)}</span>
-                                                                    {entry.data[0].metricRoasComparison !== undefined && (
-                                                                        <span className={`${entry.data[0].metricRoasComparison >= 0 ? 'text-success' : 'text-danger'}`} style={{ fontSize: "10px" }}>
-                                                                            {entry.data[0].metricRoasComparison >= 0 ? '+' : ''}{Number(entry.data[0].metricRoasComparison).toFixed(1)}%
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                            </td>
-                                                        )}
-                                                        {selectedColumns.includes("broadOrder") && (
-                                                            <td style={{ width: "150px" }}>
-                                                                <div className="d-flex flex-column">
-                                                                    <span>{formatMetricValue("broadOrder", entry.data[0].metricsBroadOrder)}</span>
-                                                                    {entry.data[0].metricsBroadOrderComparison !== undefined && (
-                                                                        <span className={`${entry.data[0].metricsBroadOrderComparison >= 0 ? 'text-success' : 'text-danger'}`} style={{ fontSize: "10px" }}>
-                                                                            {entry.data[0].metricsBroadOrderComparison >= 0 ? '+' : ''}{Number(entry.data[0].metricsBroadOrderComparison).toFixed(1)}%
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                            </td>
-                                                        )}
-                                                        {selectedColumns.includes("cr") && (
-                                                            <td style={{ width: "150px" }}>
-                                                                <div className="d-flex flex-column">
-                                                                    <span>{formatMetricValue("cr", entry.data[0].metricsCr)}</span>
-                                                                    {entry.data[0].metricsCrComparison !== undefined && (
-                                                                        <span className={`${entry.data[0].metricsCrComparison >= 0 ? 'text-success' : 'text-danger'}`} style={{ fontSize: "10px" }}>
-                                                                            {entry.data[0].metricsCrComparison >= 0 ? '+' : ''}{Number(entry.data[0].metricsCrComparison).toFixed(1)}%
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                            </td>
-                                                        )}
-                                                        {selectedColumns.includes("broadOrderAmount") && (
-                                                            <td style={{ width: "180px" }}>
-                                                                <div className="d-flex flex-column">
-                                                                    <span>{formatMetricValue("broadOrderAmount", entry.data[0].metricsBroadOrderAmount)}</span>
-                                                                    {entry.data[0].metricsBroadOrderAmountComparison !== undefined && (
-                                                                        <span className={`${entry.data[0].metricsBroadOrderAmountComparison >= 0 ? 'text-success' : 'text-danger'}`} style={{ fontSize: "10px" }}>
-                                                                            {entry.data[0].metricsBroadOrderAmountComparison >= 0 ? '+' : ''}{Number(entry.data[0].metricsBroadOrderAmountComparison).toFixed(1)}%
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                            </td>
-                                                        )}
-                                                        {selectedColumns.includes("acos") && (
-                                                            <td style={{ width: "180px" }}>
-                                                                <div className="d-flex flex-column">
-                                                                    <span>{formatMetricValue("acos", entry.data[0].metricsAcos)}</span>
-                                                                    {entry.data[0].metricsAcosComparison !== undefined && (
-                                                                        <span className={`${entry.data[0].metricsAcosComparison >= 0 ? 'text-danger' : 'text-success'}`} style={{ fontSize: "10px" }}>
-                                                                            {entry.data[0].metricsAcosComparison >= 0 ? '+' : ''}{Number(entry.data[0].metricsAcosComparison).toFixed(1)}%
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                            </td>
-                                                        )}
-                                                        {selectedColumns.includes("directOrder") && (
-                                                            <td style={{ width: "150px" }}>
-                                                                <div className="d-flex flex-column">
-                                                                    <span>{formatMetricValue("directOrder", entry.data[0].metricsDirectOrder)}</span>
-                                                                    {entry.data[0].metricsDirectOrderComparison !== undefined && (
-                                                                        <span className={`${entry.data[0].metricsDirectOrderComparison >= 0 ? 'text-success' : 'text-danger'}`} style={{ fontSize: "10px" }}>
-                                                                            {entry.data[0].metricsDirectOrderComparison >= 0 ? '+' : ''}{Number(entry.data[0].metricsDirectOrderComparison).toFixed(1)}%
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                            </td>
-                                                        )}
-                                                        {selectedColumns.includes("directOrderAmount") && (
-                                                            <td style={{ width: "180px" }}>
-                                                                <div className="d-flex flex-column">
-                                                                    <span>{formatMetricValue("directOrderAmount", entry.data[0].metricsDirectOrderAmount)}</span>
-                                                                    {entry.data[0].metricsDirectOrderAmountComparison !== undefined && (
-                                                                        <span className={`${entry.data[0].metricsDirectOrderAmountComparison >= 0 ? 'text-success' : 'text-danger'}`} style={{ fontSize: "10px" }}>
-                                                                            {entry.data[0].metricsDirectOrderAmountComparison >= 0 ? '+' : ''}{Number(entry.data[0].metricsDirectOrderAmountComparison).toFixed(1)}%
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                            </td>
-                                                        )}
-                                                        {selectedColumns.includes("directGmv") && (
-                                                            <td style={{ width: "200px" }}>
-                                                                <div className="d-flex flex-column">
-                                                                    <span>{formatMetricValue("directGmv", entry.data[0].metricsDirectGmv)}</span>
-                                                                    {entry.data[0].metricsDirectGmvComparison !== undefined && (
-                                                                        <span className={`${entry.data[0].metricsDirectGmvComparison >= 0 ? 'text-success' : 'text-danger'}`} style={{ fontSize: "10px" }}>
-                                                                            {entry.data[0].metricsDirectGmvComparison >= 0 ? '+' : ''}{Number(entry.data[0].metricsDirectGmvComparison).toFixed(1)}%
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                            </td>
-                                                        )}
-                                                        {selectedColumns.includes("directRoi") && (
-                                                            <td style={{ width: "150px" }}>
-                                                                <div className="d-flex flex-column">
-                                                                    <span>{formatMetricValue("directRoi", entry.data[0].metricsDirectRoi)}</span>
-                                                                    {entry.data[0].metricsDirectRoiComparison !== undefined && (
-                                                                        <span className={`${entry.data[0].metricsDirectRoiComparison >= 0 ? 'text-success' : 'text-danger'}`} style={{ fontSize: "10px" }}>
-                                                                            {entry.data[0].metricsDirectRoiComparison >= 0 ? '+' : ''}{Number(entry.data[0].metricsDirectRoiComparison).toFixed(1)}%
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                            </td>
-                                                        )}
-                                                        {selectedColumns.includes("directCir") && (
-                                                            <td style={{ width: "150px" }}>
-                                                                <div className="d-flex flex-column">
-                                                                    <span>{formatMetricValue("directCir", entry.data[0].metricsDirectCir)}</span>
-                                                                    {entry.data[0].metricsDirectCirComparison !== undefined && (
-                                                                        <span className={`${entry.data[0].metricsDirectCirComparison >= 0 ? 'text-danger' : 'text-success'}`} style={{ fontSize: "10px" }}>
-                                                                            {entry.data[0].metricsDirectCirComparison >= 0 ? '+' : ''}{Number(entry.data[0].metricsDirectCirComparison).toFixed(1)}%
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                            </td>
-                                                        )}
-                                                        {selectedColumns.includes("directCr") && (
-                                                            <td style={{ width: "180px" }}>
-                                                                <div className="d-flex flex-column">
-                                                                    <span>{formatMetricValue("directCr", entry.data[0].metricsDirectCr)}</span>
-                                                                    {entry.data[0].metricsDirectCrComparison !== undefined && (
-                                                                        <span className={`${entry.data[0].metricsDirectCrComparison >= 0 ? 'text-success' : 'text-danger'}`} style={{ fontSize: "10px" }}>
-                                                                            {entry.data[0].metricsDirectCrComparison >= 0 ? '+' : ''}{Number(entry.data[0].metricsDirectCrComparison).toFixed(1)}%
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                            </td>
-                                                        )}
-                                                        {selectedColumns.includes("cpdc") && (
-                                                            <td style={{ width: "180px" }}>
-                                                                <div className="d-flex flex-column">
-                                                                    <span>{formatMetricValue("cpdc", entry.data[0].metricsCpdc)}</span>
-                                                                    {entry.data[0].metricsCpdcComparison !== undefined && (
-                                                                        <span className={`${entry.data[0].metricsCpdcComparison >= 0 ? 'text-success' : 'text-danger'}`} style={{ fontSize: "10px" }}>
-                                                                            {entry.data[0].metricsCpdcComparison >= 0 ? '+' : ''}{Number(entry.data[0].metricsCpdcComparison).toFixed(1)}%
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                            </td>
-                                                        )} */}
                                                     </tr>
                                                 ))
                                             ) : (
