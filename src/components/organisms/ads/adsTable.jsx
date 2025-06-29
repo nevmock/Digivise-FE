@@ -299,12 +299,10 @@ const AdsTable = ({ shoppeeId }) => {
       if (filters.placement && filters.placement.value !== "all") {
         apiUrl += `&productPlacement=${filters.placement.value}`;
       }
-      console.log('Fetching table data with URL:', apiUrl);
 
       const response = await axiosRequest.get(apiUrl);
       const data = await response.data;
       const content = data.content || [];
-      console.log('Table data fetched successfully:', content);
 
       setFilteredData(content);
       setTotalPages(data?.totalPages || 1);
@@ -785,9 +783,9 @@ const AdsTable = ({ shoppeeId }) => {
 
   // SALES CLASSIFICATION ADS FEATURE
   const typeClasificationOptions = [
-    { value: "best_seller", label: "Best Seller" },
-    { value: "middle_moving", label: "Middle Moving" },
-    { value: "slow_moving", label: "Slow Moving" },
+    { value: "Best Seller", label: "Best Seller" },
+    { value: "Middle Moving", label: "Middle Moving" },
+    { value: "Slow Moving", label: "Slow Moving" },
   ];
 
   const handleClassificationChange = (selectedOptions) => {
@@ -2083,9 +2081,9 @@ const AdsTable = ({ shoppeeId }) => {
                                         style={{ width: "60px", height: "60px" }}
                                       />
                                       <div className="d-flex flex-column">
-                                        <span className="custom-table-title-paragraph">{entry.data[0].title}</span>
+                                        <span className="custom-table-title-paragraph">{entry.data[0].title || "-"}</span>
                                         <span style={{ fontSize: "11px" }}>
-                                          Tidak terbatas
+                                          {entry.data[0].period || "-"}
                                         </span>
                                         {(() => {
                                           const stateStyle = getStateStyle(entry.data[0].state);

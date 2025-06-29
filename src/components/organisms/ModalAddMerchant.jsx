@@ -44,11 +44,18 @@ const MerchantModalCreate = ({ onClose }) => {
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setFormData((prevData) => ({ ...prevData, [name]: value }));
-
+        
         if (errors[name]) {
-            setErrors((prevErrors) => ({ ...prevErrors, [name]: "" }));
+            setErrors((prevErrors) => ({ 
+                ...prevErrors, 
+                [name]: "" 
+            }));
         }
+        
+        setFormData((prevData) => ({ 
+            ...prevData, 
+            [name]: value 
+        }));
     };
 
     const handleSubmitFormData = async (e) => {
@@ -58,7 +65,8 @@ const MerchantModalCreate = ({ onClose }) => {
         setIsLoading(true);
         
         try {
-            await createMerchant(formData);
+            const newMerchant = await createMerchant(formData);
+
             setFormData({
                 name: "",
                 sectorIndustry: "",
@@ -67,7 +75,7 @@ const MerchantModalCreate = ({ onClose }) => {
             });
             onClose();
             navigate("/dashboard", { replace: true });
-            toast.success("Merchant berhasil dibuat");
+            toast.success(`Merchant "${newMerchant.name}" berhasil dibuat`);
             window.location.reload();
         } catch (error) {
             toast.error("Gagal membuat merchant");
@@ -77,10 +85,18 @@ const MerchantModalCreate = ({ onClose }) => {
         }
     };
 
+    const handleKeyDown = (e) => {
+        if (e.key === 'Escape' && !isLoading) {
+            onClose();
+        }
+    };
+
     return (
         <div
             className="container-modal"
             onClick={onClose}
+            onKeyDown={handleKeyDown}
+            tabIndex="-1"
         >
             <div className="bg-white p-4 rounded shadow-lg" style={{ width: "420px", maxHeight: "90vh", overflowY: "auto" }} ref={modalRef} onClick={(e) => e.stopPropagation()}>
                 <h5 className="text-center">Create Merchant</h5>

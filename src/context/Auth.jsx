@@ -7,7 +7,8 @@ import { isTokenValid } from "../utils/jwtDecode";
 import { 
     createMerchant as createMerchantAPI, 
     loginMerchant as loginMerchantAPI,
-    verifyMerchantOtp as verifyMerchantOtpAPI 
+    verifyMerchantOtp as verifyMerchantOtpAPI,
+    switchMerchant as switchMerchantAPI
 } from "../resolver/merchant";
 
 
@@ -21,33 +22,88 @@ export const AuthProvider = ({ children }) => {
     const [userData, setUserData] = useState(null);
     const [isChecking, setIsChecking] = useState(true);
     const [pendingMerchantLogin, setPendingMerchantLogin] = useState(null);
+    const [isSwitching, setIsSwitching] = useState(false);
     const navigate = useNavigate();
 
-    useEffect(() => {
-        const token = getToken();
-        const storedUser = localStorage.getItem(USER_DATA_KEY);
+    const normalizeUserData = (data) => {
+        if (!data) return null;
+        
+        const normalizedData = {
+            ...data,
+            userId: data.userId || data.id,
+        };
+        
+        return normalizedData;
+    };
 
-        if (token && isTokenValid(token) && storedUser) {
-            const parsedUserData = JSON.parse(storedUser);
-            setIsAuth(true);
-            setUserData(parsedUserData);
-        } else {
+    const validateAndRepairState = () => {
+        try {
+            const token = getToken();
+            const storedUser = localStorage.getItem(USER_DATA_KEY);
+            const shopeeId = localStorage.getItem(SHOP_ID);
+
+            if (!token || !isTokenValid(token)) {
+                logoutSuccess();
+                return false;
+            }
+
+            if (storedUser) {
+                const parsedUserData = JSON.parse(storedUser);
+                const normalizedUserData = normalizeUserData(parsedUserData);
+                const expectedShopeeId = normalizedUserData?.activeMerchant?.merchantShopeeId;
+                
+                if (shopeeId !== expectedShopeeId) {
+                    if (expectedShopeeId && expectedShopeeId !== "null" && expectedShopeeId !== "undefined") {
+                        localStorage.setItem(SHOP_ID, expectedShopeeId);
+                    } else {
+                        localStorage.removeItem(SHOP_ID);
+                    }
+                }
+                
+                setIsAuth(true);
+                setUserData(parsedUserData);
+                return true;
+            }
+            
+            return false;
+        } catch (error) {
+            console.error('State validation gagal:', error);
             logoutSuccess();
+            return false;
         }
+    };
+
+    useEffect(() => {
+        validateAndRepairState();
         setIsChecking(false);
     }, []);
 
     const updateData = (data) => {
-        setUserData(data);
-        localStorage.setItem(SHOP_ID, data?.activeMerchant?.merchantShopeeId || null);
-        localStorage.setItem(USER_DATA_KEY, JSON.stringify(data));
+        if (!data || typeof data !== 'object') {
+            return;
+        }
+
+        try {
+            const normalizedData = normalizeUserData(data);
+            const shopeeId = normalizedData?.activeMerchant?.merchantShopeeId;
+            
+            setUserData(normalizedData);
+            localStorage.setItem(USER_DATA_KEY, JSON.stringify(normalizedData));
+            
+            if (shopeeId && shopeeId !== "null" && shopeeId !== "undefined") {
+                localStorage.setItem(SHOP_ID, shopeeId);
+            } else {
+                localStorage.removeItem(SHOP_ID);
+            }
+        } catch (error) {
+            const currentData = JSON.parse(localStorage.getItem(USER_DATA_KEY) || "{}");
+            setUserData(normalizeUserData(currentData));
+        }
     };
 
     const loginSuccess = (data) => {
         setIsAuth(true);
-        setUserData(data);
-        localStorage.setItem(SHOP_ID, data?.activeMerchant?.merchantShopeeId || null);
-        localStorage.setItem(USER_DATA_KEY, JSON.stringify(data));
+        updateData(data);
         localStorage.setItem(TOKEN_KEY, data.accessToken);
     };
 
@@ -56,6 +112,71 @@ export const AuthProvider = ({ children }) => {
         setUserData(null);
         localStorage.removeItem(USER_DATA_KEY);
         localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(SHOP_ID);
+    };
+
+    const switchMerchant = async (merchantId) => {
+        if (!merchantId) {
+            throw new Error("Merchant ID dibutuhkan untuk switch merchant");
+        }
+
+        setIsSwitching(true);
+        
+        try {
+            const response = await switchMerchantAPI(merchantId);
+            
+            if (response &&  (response.success === true || response.code === 200 || response.status === 200 || response.status === "OK")) {
+                const currentUser = await getCurrentUserData();
+                if (currentUser) {
+                    updateData(currentUser);
+                    return { 
+                        success: true, 
+                        data: currentUser,
+                        switched: true
+                    };
+                }
+            }
+            
+            return { 
+                success: false, 
+                requiresLogin: true,
+                message: response?.message || "No active session found for this merchant"
+            };
+            
+        } catch (error) {
+            if (error.response?.status === 404 || error.response?.status === 401) {
+                return { 
+                    success: false, 
+                    requiresLogin: true,
+                    message: "No active session found for this merchant"
+                };
+            }
+            
+            throw error;
+        } finally {
+            setIsSwitching(false);
+        }
+    };
+
+    const getCurrentUserData = async () => {
+        try {
+            if (!userData?.userId) return null;
+            
+            const response = await axios.get(`${import.meta.env.VITE_BE_API_URL}/api/users/${userData.userId}`, {
+                headers: {
+                    Authorization: `Bearer ${getToken()}`
+                }
+            });
+            
+            if (response.status === 200 && response.data) {
+                return response.data;
+            }
+            
+            return null;
+        } catch (error) {
+            console.error("Failed to get current user data:", error);
+            return null;
+        }
     };
 
     const requestPhoneOTP = async () => {
@@ -67,7 +188,7 @@ export const AuthProvider = ({ children }) => {
             });
 
             if (response.data.code != 200 || response.data.status != "OK") {
-                throw new Error("Failed to request phone OTP");
+                throw new Error("Gaga untuk mendapatkan OTP, silahkan coba lagi nanti");
             }
 
             return { success: true, data: response.data };
@@ -101,7 +222,7 @@ export const AuthProvider = ({ children }) => {
                 updateData(updatedUserData);
                 return newMerchant;
             } else {
-                throw new Error("Invalid response format from server");
+                throw new Error("Invalid response");
             }
         } catch (error) {
             throw error;
@@ -112,7 +233,7 @@ export const AuthProvider = ({ children }) => {
         try {
             const response = await loginMerchantAPI(username, password);
             
-            if (response === true) {
+            if (response === true || response.success === true || response.code === 200 || response.status === 200 || response.status === "OK") {
                 setPendingMerchantLogin({
                     username,
                     merchantId
@@ -128,34 +249,38 @@ export const AuthProvider = ({ children }) => {
 
     const verifyMerchantOTP = async (otp) => {
         if (!pendingMerchantLogin) {
-            throw new Error("No pending merchant login");
+            throw new Error("Tidak ada login merchant yang tertunda");
         }
 
         try {
             const { username, merchantId } = pendingMerchantLogin;
             const response = await verifyMerchantOtpAPI(username, merchantId, otp);
-            console.log("di auth verifyMerchantOtpAPI response:", response);
 
             if (response.code == 200 || response.status == 200 || response.status == "OK" || response.code == 200) {
                 setPendingMerchantLogin(null);
-                
-                const selectedMerchant = userData.merchants.find(m => m.id === merchantId);
-                if (selectedMerchant) {
-                    const updatedUserData = {
-                        ...userData,
-                        activeMerchant: {
-                            ...selectedMerchant,
-                            shopeeData: response.data?.data
-                        }
-                    };
-                    updateData(updatedUserData);
+                const currentUser = await getCurrentUserData();
+                if (currentUser) {
+                    updateData(currentUser);
+                } else {
+                    const selectedMerchant = userData.merchants.find(m => m.id === merchantId);
+                    if (selectedMerchant) {
+                        const updatedUserData = {
+                            ...userData,
+                            activeMerchant: {
+                                ...selectedMerchant,
+                                shopeeData: response.data?.data,
+                                lastLogin: new Date().toISOString()
+                            }
+                        };
+                        updateData(updatedUserData);
+                    }
                 }
                 
                 return { success: true, data: response.data, shopeeData: response.data?.data };
             } else {
                 return { 
                     success: false, 
-                    message: response.message || "OTP verification failed" 
+                    message: response.message || "Gagal verifikasi OTP, silahkan coba lagi nanti" 
                 };
             }
         } catch (error) {
@@ -168,10 +293,21 @@ export const AuthProvider = ({ children }) => {
         navigate("/", { replace: true });
     };
 
+    useEffect(() => {
+        if (pendingMerchantLogin) {
+            const timer = setTimeout(() => {
+                setPendingMerchantLogin(null);
+            }, 10 * 60 * 1000);
+
+            return () => clearTimeout(timer);
+        }
+    }, [pendingMerchantLogin]);
+
     return (
         <AuthContext.Provider value={{
             isAuth,
             isChecking,
+            isSwitching,
             loginSuccess,
             logoutSuccess,
             handleUnauthorized,
@@ -182,7 +318,10 @@ export const AuthProvider = ({ children }) => {
             verifyMerchantOTP,
             pendingMerchantLogin,
             requestPhoneOTP,
-            updateData
+            updateData,
+            switchMerchant,
+            getCurrentUserData,
+            validateAndRepairState
         }}>
             {children}
         </AuthContext.Provider>

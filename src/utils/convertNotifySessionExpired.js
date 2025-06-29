@@ -10,7 +10,7 @@ const convertNotifySessionExpired = (time_createdAt) => {
 
     const daysSinceCreated = moment().diff(moment(time_createdAt), "days");
 
-    if (daysSinceCreated >= 25) {
+    if (daysSinceCreated > 10) {
         return {
             type: "urgent",
             text: "Session inactive, login again"

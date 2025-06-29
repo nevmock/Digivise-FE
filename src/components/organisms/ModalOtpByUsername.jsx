@@ -64,7 +64,6 @@ const MerchantModalOTPByUsername = ({ onClose, merchant}) => {
 
         try {
             const result = await verifyMerchantOTP(formData.otp);
-            console.log("dimodal. Hasil verifikasi OTP: ", result);
 
             if (result.success === true || result.code === 0 || result.message.includes("succ") || result.status === "OK" || result?.status === 200 || result?.code === 200) {
                 onClose();
