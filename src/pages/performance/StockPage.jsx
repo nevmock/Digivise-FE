@@ -252,7 +252,7 @@ export default function PerformanceStockPage() {
         getShopeeId,
         currentFromDate,
         currentToDate,
-        1000000000000
+        1000000000
       );
 
       const response = await axiosRequest.get(apiUrl);
@@ -1029,9 +1029,9 @@ export default function PerformanceStockPage() {
 
   // SALES CLASSIFICATION ADS FEATURE
   const typeClasificationOptions = [
-    { value: "best_seller", label: "Best Seller" },
-    { value: "middle_moving", label: "Middle Moving" },
-    { value: "slow_moving", label: "Slow Moving" },
+    { value: "Best Seller", label: "Best Seller" },
+    { value: "Middle Moving", label: "Middle Moving" },
+    { value: "Slow Moving", label: "Slow Moving" },
   ];
 
   const handleClassificationChange = (selectedOptions) => {
@@ -1042,22 +1042,24 @@ export default function PerformanceStockPage() {
 
   const handleSortStock = (order) => {
     if (sortOrderData === order) {
-      setSortOrderData(null);
-      setFilteredData([...chartRawData]);
+        setSortOrderData(null);
+        const { fromDate, toDate } = getCurrentDateRange();
+        if (fromDate && toDate) {
+          const currentFilters = buildCurrentFilters();
+          fetchTableData(fromDate, toDate, currentPage, currentFilters);
+        }
     } else {
-      setSortOrderData(order);
-      const sortedData = [...filteredData].sort((a, b) => {
-        const aLatestData = getLatestStockData(a);
-        const bLatestData = getLatestStockData(b);
-        const aStock = aLatestData?.totalAvailableStock || 0;
-        const bStock = bLatestData?.totalAvailableStock || 0;
-
-        return order === "asc" ? aStock - bStock : bStock - aStock;
-      });
-
-      setFilteredData(sortedData);
+        setSortOrderData(order);
+        const sortedData = [...filteredData].sort((a, b) => {
+          const aLatestData = getLatestStockData(a);
+          const bLatestData = getLatestStockData(b);
+          const aStock = aLatestData?.totalAvailableStock || 0;
+          const bStock = bLatestData?.totalAvailableStock || 0;
+          return order === "asc" ? aStock - bStock : bStock - aStock;
+        });
+        setFilteredData(sortedData);
     }
-  };
+};
 
   const toggleOpenCalendar = () => {
     if (showCalendar) {
@@ -1094,7 +1096,6 @@ export default function PerformanceStockPage() {
   useEffect(() => {
     setVariantsChartData(memoizedVariantsChartData);
   }, [memoizedVariantsChartData]);
-
 
   const chartInstanceRef = useRef(null);
   useEffect(() => {

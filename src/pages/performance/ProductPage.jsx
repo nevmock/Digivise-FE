@@ -806,9 +806,9 @@ export default function PerformanceProductPage() {
 
   // SALES CLASSIFICATION ADS FEATURE
   const typeClasificationOptions = [
-    { value: "best_seller", label: "Best Seller" },
-    { value: "middle_moving", label: "Middle Moving" },
-    { value: "slow_moving", label: "Slow Moving" },
+    { value: "Best Seller", label: "Best Seller" },
+    { value: "Middle Moving", label: "Middle Moving" },
+    { value: "Slow Moving", label: "Slow Moving" },
   ];
 
   const handleClassificationChange = (selectedOptions) => {
