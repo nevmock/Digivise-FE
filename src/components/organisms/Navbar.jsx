@@ -20,7 +20,6 @@ const Navbar = () => {
         logoutSuccess, 
         switchMerchant, 
         isSwitching,
-        getCurrentUserData 
     } = useAuth();
     const [showDropdown, setShowDropdown] = useState(false);
     const [showModalFormCreateMerchant, setShowModalFormCreateMerchant] = useState(false);
@@ -85,7 +84,7 @@ const Navbar = () => {
         }
 
         if (userNow?.activeMerchant?.id === merchant.id) {
-            toast.error(`You are already logged in to ${merchant.name}`);
+            toast.error(`Kamu sudah login ke ${merchant.name}`);
             return;
         }
 
@@ -99,15 +98,16 @@ const Navbar = () => {
                 setShowDropdown(false);
                 
                 await fetchGetCurrentUser();
+                navigate("/dashboard", { replace: true });
+                window.location.reload();
             } else if (result.requiresLogin === true) {
+                toast.error("Kamu harus login terlebih dahulu untuk merchant ini");
                 handleOpenLoginModal(merchant);
             } else {
                 handleOpenLoginModal(merchant);
             }
-            navigate("/dashboard", { replace: true });
-            window.location.reload();
         } catch (error) {
-            toast.error('Failed to switch merchant. Please try again.');
+            toast.error('Gagal switch merchant, silakan coba lagi');
             handleOpenLoginModal(merchant);
         } finally {
             setSwitchingMerchantId(null);
@@ -206,7 +206,7 @@ const Navbar = () => {
                                         </button>
                                         
                                         {showDropdown && (
-                                            <div className="dropdown-menu show position-absolute shadow p-2 rounded" style={{ width: "260px" }}>
+                                            <div className="dropdown-menu show position-absolute shadow p-2 rounded" style={{ width: "260px" }} title="Switch Merchant">
                                                 {userNow?.merchants.map((merchant) => {
                                                     const isActive = activeMerchant?.id === merchant.id;
                                                     const isSwitchingThis = switchingMerchantId === merchant.id;
@@ -228,7 +228,7 @@ const Navbar = () => {
                                                             <div className="d-flex align-items-center">
                                                                 <img
                                                                     src={avatarProfile}
-                                                                    className="rounded-circle me-3"
+                                                                    className="rounded-circle me-2"
                                                                     width="45"
                                                                     height="45"
                                                                 />
@@ -241,30 +241,28 @@ const Navbar = () => {
                                                                         </div>
                                                                         
                                                                         <div className="d-flex align-items-center gap-2">
-                                                                            {merchant.lastLogin && (
-                                                                                <small className={`text-${convertNotifySessionExpired(merchant.lastLogin).type === "urgent" ? "danger" : "success"}`}>
-                                                                                    {convertNotifySessionExpired(merchant.lastLogin).text}
-                                                                                </small>
-                                                                            )}
+                                                                            <small className={`text-${convertNotifySessionExpired(merchant.lastLogin).type === "urgent" ? "danger" : "success"}`}>
+                                                                                {convertNotifySessionExpired(merchant.lastLogin).text}
+                                                                            </small>
                                                                         </div>
                                                                     </div>
                                                                 </div>
 
                                                                 <div 
-                                                                    className="ms-2 refresh-icon-area"
+                                                                    className="ms-1 refresh-icon-area"
                                                                     onClick={(e) => !isSwitchingThis && handleRefreshIconClick(merchant, e)}
                                                                     style={{
                                                                         padding: "4px",
                                                                         borderRadius: "4px",
                                                                         cursor: isSwitchingThis ? "not-allowed" : "pointer"
                                                                     }}
-                                                                    title="Login to this merchant"
+                                                                    title="Login/refresh to this merchant"
                                                                 >
                                                                     {isSwitchingThis ? (
                                                                         <div className="spinner-border spinner-border-sm text-primary" />
                                                                     ) : (
                                                                         <IoMdRefresh 
-                                                                            size={24} 
+                                                                            size={28} 
                                                                             className="text-primary"
                                                                             style={{
                                                                                 transition: "transform 0.2s ease"
@@ -300,7 +298,6 @@ const Navbar = () => {
                                 )}
                             </div>
 
-                            {/* Modals */}
                             {showModalFormCreateMerchant &&
                                 createPortal(
                                     <CreateMerchantModal 
@@ -332,11 +329,11 @@ const Navbar = () => {
                             }
 
                             <div className="topbar-item">
-                                <button type="button" className="topbar-button" id="light-dark-mode" onClick={toggleTheme}>
+                                <button type="button" className="topbar-button custom-size-icon" id="light-dark-mode" onClick={toggleTheme}>
                                     {themeMode === "light" ? (
-                                        <iconify-icon icon="solar:moon-outline" className="fs-22 align-middle light-mode" />
+                                        <iconify-icon icon="solar:moon-outline" className="fs-26 align-middle light-mode" />
                                     ) : (
-                                        <iconify-icon icon="solar:sun-2-outline" className="fs-22 align-middle dark-mode" />
+                                        <iconify-icon icon="solar:sun-2-outline" className="fs-26 align-middle dark-mode" />
                                     )}
                                 </button>
                             </div>
