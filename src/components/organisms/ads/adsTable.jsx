@@ -1522,14 +1522,14 @@ const AdsTable = ({ shoppeeId }) => {
       isAnimated: true,
     },
     closed: {
-      backgroundColor: "#000000FF",
-      textColor: "#000000FF",
+      backgroundColor: "#C5C5C5FF",
+      textColor: "#C5C5C5FF",
       label: "Nonaktif",
       isAnimated: false,
     },
     ended: {
-      backgroundColor: "#000000",
-      textColor: "#000000",
+      backgroundColor: "#C5C5C5FF",
+      textColor: "#C5C5C5FF",
       label: "Berakhir",
       isAnimated: false,
     },
@@ -1554,8 +1554,8 @@ const AdsTable = ({ shoppeeId }) => {
   };
 
     return stateMap[state] || {
-      backgroundColor: "#000000FF",
-      textColor: "#000000FF",
+      backgroundColor: "#C5C5C5FF",
+      textColor: "#C5C5C5FF",
       label: "Tidak Diketahui",
       isAnimated: false,
     };
