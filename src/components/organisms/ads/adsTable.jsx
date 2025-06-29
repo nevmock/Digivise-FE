@@ -299,10 +299,12 @@ const AdsTable = ({ shoppeeId }) => {
       if (filters.placement && filters.placement.value !== "all") {
         apiUrl += `&productPlacement=${filters.placement.value}`;
       }
+      console.log('Fetching table data with URL:', apiUrl);
 
       const response = await axiosRequest.get(apiUrl);
       const data = await response.data;
       const content = data.content || [];
+      console.log('Table data fetched successfully:', content);
 
       setFilteredData(content);
       setTotalPages(data?.totalPages || 1);
@@ -2266,7 +2268,7 @@ const AdsTable = ({ shoppeeId }) => {
                                       <div className="d-flex flex-column">
                                         <span>
                                           {
-                                            entry.data[0].broadOrder === undefined || entry.data[0].broadOrder === null ? "-" : formatTableValue(entry.data[0].broadOrder, "none")
+                                            entry.data[0].broadOrder === undefined || entry.data[0].broadOrder === null ? "-" : formatTableValue(entry.data[0].broadOrder, "simple_currency")
                                           }
                                         </span>
                                         <span className={`${formatValueRatio(entry.data[0].broadOrderComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
@@ -2293,7 +2295,7 @@ const AdsTable = ({ shoppeeId }) => {
                                       <div className="d-flex flex-column">
                                         <span>
                                           {
-                                            entry.data[0].broadOrderAmount === undefined || entry.data[0].broadOrderAmount === null ? "-" : formatTableValue(entry.data[0].broadOrderAmount, "none")
+                                            entry.data[0].broadOrderAmount === undefined || entry.data[0].broadOrderAmount === null ? "-" : formatTableValue(entry.data[0].broadOrderAmount, "simple_currency")
                                           }
                                         </span>
                                         <span className={`${formatValueRatio(entry.data[0].broadOrderAmountComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
@@ -2335,7 +2337,7 @@ const AdsTable = ({ shoppeeId }) => {
                                       <div className="d-flex flex-column">
                                         <span>
                                           {
-                                            entry.data[0].directOrder === undefined || entry.data[0].directOrder === null ? "-" : formatTableValue(entry.data[0].directOrder, "none")
+                                            entry.data[0].directOrder === undefined || entry.data[0].directOrder === null ? "-" : formatTableValue(entry.data[0].directOrder, "simple_currency")
                                           }
                                         </span>
                                         <span className={`${formatValueRatio(entry.data[0].directOrderComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
@@ -2349,7 +2351,7 @@ const AdsTable = ({ shoppeeId }) => {
                                       <div className="d-flex flex-column">
                                         <span>
                                           {
-                                            entry.data[0].directOrderAmount === undefined || entry.data[0].directOrderAmount === null ? "-" : formatTableValue(entry.data[0].directOrderAmount, "none")
+                                            entry.data[0].directOrderAmount === undefined || entry.data[0].directOrderAmount === null ? "-" : formatTableValue(entry.data[0].directOrderAmount, "simple_currency")
                                           }
                                         </span>
                                         <span className={`${formatValueRatio(entry.data[0].directOrderAmountComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
@@ -2377,7 +2379,7 @@ const AdsTable = ({ shoppeeId }) => {
                                       <div className="d-flex flex-column">
                                         <span>
                                           {
-                                            entry.data[0].directRoi === undefined || entry.data[0].directRoi === null ? "-" : formatTableValue(entry.data[0].directRoi, "none")
+                                            entry.data[0].directRoi === undefined || entry.data[0].directRoi === null ? "-" : formatTableValue(entry.data[0].directRoi, "simple_currency")
                                           }
                                         </span>
                                         <span className={`${formatValueRatio(entry.data[0].directRoiComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
