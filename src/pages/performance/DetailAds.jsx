@@ -1294,11 +1294,27 @@ export default function DetailAds() {
         return html;
     };
 
+
+    const convertNameKeyword = (keyword) => {
+        if (!keyword || keyword == null || keyword === undefined) return "-";
+
+        if (keyword == "targeting") {
+            return "Rekomendasi";
+        } else if (keyword == "search_product") {
+            return "Pencarian";
+        } else {
+            return keyword;
+        }
+    }
+
     return (
         <BaseLayout>
             <button
                 className="btn btn-secondary mb-3"
-                onClick={() => navigate("/dashboard/performance/ads", { replace: true })}
+                onClick={() => {
+                    navigate("/dashboard/performance/ads", { replace: true });
+                    window.location.reload();
+                }}
                 style={{ backgroundColor: "#8042D4", border: "none" }}
             >
                 Kembali
@@ -1710,7 +1726,9 @@ export default function DetailAds() {
                                                         )}
                                                         {selectedColumns.includes("keyword") && (
                                                             <td style={{ width: "200px" }}>
-                                                                <span>{entry.data[0].keyword || '-'}</span>
+                                                                <span>{
+                                                                    convertNameKeyword(entry.data[0].keyword)
+                                                                }</span>
                                                             </td>
                                                         )}
                                                         {selectedColumns.includes("dailyBudget") && (

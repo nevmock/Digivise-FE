@@ -67,7 +67,7 @@ export const AuthProvider = ({ children }) => {
             
             return false;
         } catch (error) {
-            console.error('State validation gagal:', error);
+            console.error('Validation state gagal:', error);
             logoutSuccess();
             return false;
         }
@@ -140,7 +140,7 @@ export const AuthProvider = ({ children }) => {
             return { 
                 success: false, 
                 requiresLogin: true,
-                message: response?.message || "No active session found for this merchant"
+                message: response?.message || "Tidak ada sesi aktif ditemukan untuk merchant ini"
             };
             
         } catch (error) {
@@ -148,7 +148,7 @@ export const AuthProvider = ({ children }) => {
                 return { 
                     success: false, 
                     requiresLogin: true,
-                    message: "No active session found for this merchant"
+                    message: "Tidak ada sesi aktif ditemukan untuk merchant ini"
                 };
             }
             
@@ -187,8 +187,8 @@ export const AuthProvider = ({ children }) => {
                 }
             });
 
-            if (response.data.code != 200 || response.data.status != "OK") {
-                throw new Error("Gaga untuk mendapatkan OTP, silahkan coba lagi nanti");
+            if (response.data.code != 200 || response.data.status != "OK" || response.data.status != 200 || response.data.success != true) {
+                throw new Error("Gagal untuk mendapatkan OTP, silahkan coba lagi nanti");
             }
 
             return { success: true, data: response.data };
@@ -222,7 +222,7 @@ export const AuthProvider = ({ children }) => {
                 updateData(updatedUserData);
                 return newMerchant;
             } else {
-                throw new Error("Invalid response");
+                throw new Error("Data merchant tidak valid");
             }
         } catch (error) {
             throw error;

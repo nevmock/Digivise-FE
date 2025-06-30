@@ -822,7 +822,6 @@ export default function PerformanceProductPage() {
     fetchData(getAllDaysInLast7Days(), "minggu_ini", 1);
   }, []);
 
-  // Update totals when raw/main data changes
   useEffect(() => {
     if (chartRawData.length > 0) {
       const totals = calculateMetricTotalsValue(chartRawData);
@@ -1377,7 +1376,7 @@ export default function PerformanceProductPage() {
             <div className="card">
               <div className="card-body">
                 {/* Header & Date Filter */}
-                <div className="d-flex justify-content-between align-items-start pb-1">
+                <div className="d-flex justify-content-between align-items-start pb-2">
                   <h5>{totalElements} total produk</h5>
                   <div style={{ position: "relative" }}>
                     <button
