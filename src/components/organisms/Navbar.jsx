@@ -38,7 +38,7 @@ const Navbar = () => {
         setIsLoading(true);
         try {
             const response = await axiosRequest.get(`/api/users/${userData.userId}`);
-            if (response.status === 200 || response.code === 200 || response.status === "OK" || response.code === "OK" || response.data) {
+            if (response.data && (response.status === 200 || response.code === 200 || response.status === "OK" || response.code === "OK")) {
                 const currentUser = response.data;
                 setUserNow(currentUser);
             }
@@ -60,7 +60,7 @@ const Navbar = () => {
             if (userData.activeMerchant?.id !== userNow.activeMerchant?.id) {
                 setUserNow(prev => ({
                     ...prev,
-                    activeMerchant: userData.activeMerchant
+                    activeMerchant: userNow.activeMerchant
                 }));
             }
         }
@@ -78,14 +78,13 @@ const Navbar = () => {
     const closeModalLoginMerchant = () => setShowModalFormLoginUsernameMerchant(false);
     const closeModalOTPUsername = () => setShowModalFormOTPUsername(false);
 
-    const handleMerchantClick = async (merchant) => {
-        if (event.target.closest('.refresh-icon-area')) {
+    const handleMerchantClick = async (merchant, event) => {
+        if (event?.target.closest('.refresh-icon-area')) {
             return;
         }
 
         if (userNow?.activeMerchant?.id === merchant.id) {
             toast.error(`Kamu sudah login ke ${merchant?.name || "Merchant tersebut"}`);
-            // toast.error(`Kamu sudah login ke ${merchant?.merchantName || "Merchant tersebut"}`);
             return;
         }
 
@@ -96,7 +95,6 @@ const Navbar = () => {
             
             if (result.success === true && result.switched === true) {
                 toast.success(`Berhasil switch ke merchant ${merchant.name || "tersebut"}`);
-                // toast.success(`Berhasil switch ke merchant ${merchant.merchantName || "tersebut"}`);
                 setShowDropdown(false);
                 await fetchGetCurrentUser();
                 navigate("/dashboard", { replace: true });
@@ -104,12 +102,13 @@ const Navbar = () => {
                     window.location.reload();
                 }, 500);
             } else if (result.requiresLogin === true) {
-                toast.error("Kamu harus login terlebih dahulu untuk merchant tersebut");
+                toast.warning("Harap login terlebih dahulu untuk switch merchant ini");
                 handleOpenLoginModal(merchant);
             } else {
                 handleOpenLoginModal(merchant);
             }
         } catch (error) {
+            console.error("Gagal switch merchant, kesalahan pada server:", error);
             toast.error('Gagal switch merchant, silakan coba lagi');
             handleOpenLoginModal(merchant);
         } finally {
@@ -172,29 +171,8 @@ const Navbar = () => {
         }
     };
 
-    const activeMerchant = userNow?.activeMerchant || null;
-
-    // const handleMerchantClickV2 = async (merchantId) => {
-    //     e.stopPropagation();
-    //     setIsLoading(true);
-
-    //     try {
-    //         const result = await loginToMerchant(merchantId);
-
-    //         if (result.success == true && result.requiresOTP == true) {
-    //             toast.success("Kode OTP telah dikirim ke email Anda");
-    //             onClose();
-    //             onOTPRequired(result);
-    //         } else {
-    //             toast.error("Username atau password salah");
-    //         }
-    //     } catch (error) {
-    //         toast.error("Gagal login ke merchant, silakan coba lagi");
-    //         console.error("Gagal login ke merchant, kesalahan pada server:", error);
-    //     } finally {
-    //         setIsLoading(false);
-    //     }
-    // };
+    const activeMerchant = userNow?.activeMerchant || userData?.activeMerchant || null;
+    const merchants = userNow?.merchants || userData?.merchants || [];
 
     return (
         <>
@@ -212,7 +190,7 @@ const Navbar = () => {
                         </div>
                         <div className="d-flex align-items-center gap-2">
                             <div className="topbar-item position-relative" ref={dropdownRef}>
-                                {userNow?.merchants && userNow?.merchants.length > 0 ? (
+                                {merchants && merchants.length > 0 ? (
                                     <>
                                         <button 
                                             type="button" 
@@ -232,7 +210,7 @@ const Navbar = () => {
                                         
                                         {showDropdown && (
                                             <div className="dropdown-menu show position-absolute shadow p-2 rounded" style={{ width: "280px" }} title="Switch Merchant">
-                                                {userNow?.merchants.map((merchant) => {
+                                                {merchants.map((merchant) => {
                                                     const isActive = activeMerchant?.id === merchant.id;
                                                     const isSwitchingThis = switchingMerchantId === merchant.id;
                                                     
@@ -262,7 +240,6 @@ const Navbar = () => {
                                                                         <div className="d-flex align-items-center justify-content-between">
                                                                             <strong className="" style={{ maxWidth: "160px" }}>
                                                                                 {merchant.name || "-"}
-                                                                                {/* {merchant.merchantName || "-"} */}
                                                                             </strong>
                                                                         </div>
                                                                         
@@ -276,7 +253,6 @@ const Navbar = () => {
 
                                                                 <div 
                                                                     className="ms-1 refresh-icon-area"
-                                                                    // onClick={(e) => !isSwitchingThis && handleMerchantClickV2(merchant.id)}
                                                                     onClick={(e) => !isSwitchingThis && handleRefreshIconClick(merchant, e)}
                                                                     style={{
                                                                         padding: "4px",
