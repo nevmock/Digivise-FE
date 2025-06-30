@@ -13,10 +13,9 @@ export default function MerchantKpiPage() {
   const { userData } = useAuth();
   const [kpiData, setKpiData] = useState([]);
   const [isUpdating, setIsUpdating] = useState(false);
-  const isMounted = useRef(false);
-  const [userNow, setUserNow] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-
+  const [userNow, setUserNow] = useState(null);
+  const isMounted = useRef(false);
 
   const fetchGetCurrentUser = async () => {
     setIsLoading(true);
@@ -37,8 +36,14 @@ export default function MerchantKpiPage() {
   };
 
   useEffect(() => {
-    fetchGetCurrentUser();
+    if (userData?.userId) {
+      fetchGetCurrentUser();
+    }
   }, [userData.userId]);
+
+  const activeMerchant = userNow?.activeMerchant;
+  const merchantId = userNow?.activeMerchant?.id;
+  const userId = userNow?.id;
 
   useEffect(() => {
     return () => {
@@ -46,22 +51,23 @@ export default function MerchantKpiPage() {
     };
   }, []);
 
-  const merchantData = userNow && userNow.merchants !== null && userNow.activeMerchant !== null;
-  const activeMerchant = userNow?.activeMerchant;
-  
   const transformApiDataToKpiList = (apiData) => {
+    if (!apiData || typeof apiData !== 'object') {
+      throw new Error('Invalid API data format');
+    }
+
     return [
-      { name: "CPC", key: "maxCpc", value: apiData.maxCpc, category: "efeciency" },
-      { name: "ACOS", key: "maxAcos", value: apiData.maxAcos, category: "efeciency" },
-      { name: "Faktor Skala", key: "cpcScaleFactor", value: apiData.cpcScaleFactor, category: "efeciency" },
-      { name: "Max Adjustment", key: "maxAdjustment", value: apiData.maxAdjustment, category: "efeciency" },
-      { name: "Min Adjustment", key: "minAdjustment", value: apiData.minAdjustment, category: "efeciency" },
-      { name: "Minimum Klik", key: "minKlik", value: apiData.minKlik, category: "efeciency" },
-      { name: "Max Klik", key: "maxKlik", value: apiData.maxKlik, category: "efeciency" },
-      { name: "Min Bid Search", key: "minBidSearch", value: apiData.minBidSearch, category: "efeciency" },
-      { name: "Min Bid Reco", key: "minBidReco", value: apiData.minBidReco, category: "efeciency" },
-      { name: "Faktor Skala ACOS", key: "acosScaleFactor", value: apiData.acosScaleFactor, category: "scaleup" },
-      { name: "Multiplier", key: "multiplier", value: apiData.multiplier, category: "scaleup" },
+      { name: "CPC", key: "maxCpc", value: apiData.maxCpc || 0, category: "efeciency" },
+      { name: "ACOS", key: "maxAcos", value: apiData.maxAcos || 0, category: "efeciency" },
+      { name: "Faktor Skala", key: "cpcScaleFactor", value: apiData.cpcScaleFactor || 0, category: "efeciency" },
+      { name: "Max Adjustment", key: "maxAdjustment", value: apiData.maxAdjustment || 0, category: "efeciency" },
+      { name: "Min Adjustment", key: "minAdjustment", value: apiData.minAdjustment || 0, category: "efeciency" },
+      { name: "Minimum Klik", key: "minKlik", value: apiData.minKlik || 0, category: "efeciency" },
+      { name: "Max Klik", key: "maxKlik", value: apiData.maxKlik || 0, category: "efeciency" },
+      { name: "Min Bid Search", key: "minBidSearch", value: apiData.minBidSearch || 0, category: "efeciency" },
+      { name: "Min Bid Reco", key: "minBidReco", value: apiData.minBidReco || 0, category: "efeciency" },
+      { name: "Faktor Skala ACOS", key: "acosScaleFactor", value: apiData.acosScaleFactor || 0, category: "scaleup" },
+      { name: "Multiplier", key: "multiplier", value: apiData.multiplier || 0, category: "scaleup" },
     ];
   };
 
@@ -77,7 +83,7 @@ export default function MerchantKpiPage() {
     try {
       setIsLoading(true);
       isMounted.current = true;
-      const merchantId = userData?.activeMerchant?.id;
+
       const response = await getKpiData(merchantId);
       if ((response && isMounted.current) || response?.status === 200 || response?.code === 200 || response?.status === "OK" || response?.code === "OK") {
         const transformed = transformApiDataToKpiList(response);
@@ -88,7 +94,6 @@ export default function MerchantKpiPage() {
         toast.error("Gagal mengambil data KPI");
         console.error("Gagal mengambil KPI data, kesalahan pada server", error);
       }
-      console.error("Gagal mengambil KPI data:", error);
     } finally {
       if (isMounted.current) {
         setIsLoading(false);
@@ -97,15 +102,13 @@ export default function MerchantKpiPage() {
   };
 
   const handleUpdate = async () => {
+    if (!kpiData || kpiData.length === 0) {
+      toast.warning("Tidak ada data KPI yang dapat diperbarui");
+      return;
+    }
+
     try {
       setIsUpdating(true);
-
-      const merchantId = userNow?.activeMerchant?.id;
-      const userId = userNow?.id;
-
-      if (!userId) {
-        throw new Error("Data user ID tidak ditemukan");
-      }
   
       const payload = {
         ...transformKpiListToApiPayload(kpiData),
@@ -114,11 +117,11 @@ export default function MerchantKpiPage() {
       }
 
       const response = await axiosRequest.put("/api/kpis", payload);
-      if (response?.status == 200 && response) {
+      if (response && (response?.status === 200 || response?.code === 200 || response?.status === "OK" || response?.code === "OK")) {
         toast.success("Data KPI berhasil diperbarui");
         await fetchKPIData(); 
       } else {
-        toast.error("Gagal memperbarui data KPI");
+        throw new Error("Invalid response from server");
       }
     } catch (error) {
       if (isMounted.current) {
@@ -138,8 +141,9 @@ export default function MerchantKpiPage() {
     }
   }, [activeMerchant]);
 
-  if (!merchantData) {
-    return (
+  const getShopeeId = localStorage.getItem("shopeeId");
+  if (getShopeeId == null || getShopeeId === null || getShopeeId === "null" || getShopeeId === "undefined") {
+      return (
       <BaseLayout>
         <div className="alert alert-warning">
           Tidak ada merchant aktif. Silahkan buat merchant atau login ke merchant terlebih dahulu.
@@ -160,7 +164,7 @@ export default function MerchantKpiPage() {
               <Loading size={40} />
             </div>
           ) : (
-            <div className="card px-3 py-3">
+            <div className="card px-2 px-sm-3 py-3">
               <h5 className="text-left">Merchant Key Performance Indicator (KPI)</h5>
               <div className="row row-cols-1 row-cols-md-2 g-3">
                 <div className="col">

@@ -1,17 +1,21 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 export default function KpiSection({ title, category, globalKpiData, setGlobalKpiData }) {
     const [localData, setLocalData] = useState([]);
 
-    useEffect(() => {
-        const filtered = globalKpiData
+    const filteredData = useMemo(() => {
+        return globalKpiData
             .filter((item) => item.category === category)
             .map((item) => ({
                 ...item,
                 newValue: item.newValue ?? item.value,
             }));
-        setLocalData(filtered);
     }, [globalKpiData, category]);
+
+    useEffect(() => {
+        setLocalData(filteredData);
+    }, [filteredData]);
+
 
     const handleInputChange = (index, newValue) => {
         const updated = [...localData];
@@ -66,11 +70,13 @@ export default function KpiSection({ title, category, globalKpiData, setGlobalKp
                                                 border: "1px solid #ced4da",
                                                 borderRadius: "0.25rem",
                                             }}
+                                            min={0}
                                             type="number"
                                             value={item.newValue}
                                             onChange={(e) =>
                                                 handleInputChange(index, e.target.value)
                                             }
+                                            placeholder="Enter new value"
                                         />
                                     </td>
                                 </tr>
