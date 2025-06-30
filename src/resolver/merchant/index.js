@@ -24,8 +24,10 @@ export async function getMerchantListById(user_id) {
     }
 };
 
+// export async function createMerchant(username, password, sectorIndustry, officeAddress, factoryAddress) {
 export async function createMerchant(name, sectorIndustry, officeAddress, factoryAddress) {
     try {
+        // const response = await axiosRequest.post(`/api/merchants`, { username, password, sectorIndustry, officeAddress, factoryAddress });
         const response = await axiosRequest.post(`/api/merchants`, { name, sectorIndustry, officeAddress, factoryAddress });
         return response.data;
     } catch (error) {
@@ -33,9 +35,9 @@ export async function createMerchant(name, sectorIndustry, officeAddress, factor
     }
 };
 
-export async function loginMerchant(username, password) {
+export async function loginMerchant(username, password, merchantId) {
     try {
-        const response = await axiosRequest.post(`/api/merchants/login`, { username, password });
+        const response = await axiosRequest.post(`/api/merchants/login`, { username, password, merchantId });
         return response.data;
     } catch (error) {
         throw error;

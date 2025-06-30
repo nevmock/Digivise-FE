@@ -7,7 +7,7 @@ import { FaAngleLeft, FaAngleRight, FaAngleDown, FaAngleUp } from "react-icons/f
 
 import axiosRequest from "../../utils/request";
 import useDebounce from "../../hooks/useDebounce";
-import convertStatusToLabel from "../../utils/convertStatusToLabel";
+import formatStyleSalesClassification from "../../utils/convertFormatSalesClassification";
 import formatTableValue from "../../utils/formatTableValue";
 import BaseLayout from "../../components/organisms/BaseLayout";
 import iconArrowUp from "../../assets/icon/arrow-up.png";
@@ -1002,8 +1002,8 @@ export default function PerformanceStockPage() {
     { key: "stock", label: "Stok" },
     { key: "code", label: "Kode" },
     { key: "salesAvailability", label: "Availability" },
-    { key: "status", label: "Status" },
-    { key: "classification", label: "Sales Clasification" },
+    // { key: "status", label: "Status" },
+    { key: "salesClassification", label: "Sales Clasification" },
   ];
 
   const [selectedColumns, setSelectedColumns] = useState(
@@ -1303,7 +1303,7 @@ export default function PerformanceStockPage() {
       <BaseLayout>
         <div className="d-flex flex-column gap-1">
           <div className="d-flex align-items-center">
-            <h3>Peforma stock</h3>
+            <h3>Performa stock</h3>
           </div>
           <div className="card">
             <div className="card-body">
@@ -1428,7 +1428,7 @@ export default function PerformanceStockPage() {
                   {/* Filter & Table */}
                   <div className="d-flex flex-column gap-3 gap-md-2">
                     {/* Status filter */}
-                    <div
+                    {/* <div
                       className="d-flex align-items-center gap-1 gap-md-2 flex-wrap mt-2"
                       style={{ width: "fit-content", listStyleType: "none" }}
                     >
@@ -1519,9 +1519,9 @@ export default function PerformanceStockPage() {
                           Dihapus
                         </div>
                       </div>
-                    </div>
+                    </div> */}
                     {/* Other filter*/}
-                    <div className="d-flex flex-column mb-1 sm-mb-3 gap-2">
+                    <div className="d-flex flex-column mb-1 sm-mb-3 gap-2 mt-2">
                       <div
                         id="container-other-filters"
                         className="d-flex w-full justify-content-between align-items-center"
@@ -1745,19 +1745,36 @@ export default function PerformanceStockPage() {
                                           </td>
                                         )}
 
-                                        {selectedColumns.includes("status") && (
+                                        {/* {selectedColumns.includes("status") && (
                                           <td style={{ width: "160px" }}>
                                             {
                                               latestStockData.state === null || latestStockData.state === undefined ? "-" : convertStatusToLabel(latestStockData.state)
                                             }
                                           </td>
-                                        )}
+                                        )} */}
 
-                                        {selectedColumns.includes("classification") && (
-                                          <td>
-                                            <span>{latestStockData?.classification === undefined || latestStockData?.classification === null ? "-" : latestStockData?.classification}</span>
+                                        {selectedColumns.includes("salesClassification") && (
+                                          <td style={{ width: "200px" }}>
+                                            <div className="d-flex gap-1 align-items-center">
+                                              <div
+                                                className="marker"
+                                                style={{
+                                                  backgroundColor: formatStyleSalesClassification(entry.data[0].salesClassification).backgroundColor,
+                                                }}
+                                              ></div>
+                                              <span
+                                                style={{
+                                                  fontSize: "14px",
+                                                }}
+                                              >
+                                                {
+                                                  entry.data[0].salesClassification === undefined || entry.data[0].salesClassification === null ? "-" : formatStyleSalesClassification(entry.data[0].salesClassification).label
+                                                }
+                                              </span>
+                                            </div>
                                           </td>
                                         )}
+
                                       </tr>
                                       {expandedVariantProduct[latestStockData.productId] && (
                                         latestStockData?.modelStocks && latestStockData.modelStocks.length > 0 ? (

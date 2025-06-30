@@ -20,6 +20,7 @@ const Navbar = () => {
         logoutSuccess, 
         switchMerchant, 
         isSwitching,
+        // loginToMerchant
     } = useAuth();
     const [showDropdown, setShowDropdown] = useState(false);
     const [showModalFormCreateMerchant, setShowModalFormCreateMerchant] = useState(false);
@@ -65,7 +66,6 @@ const Navbar = () => {
         }
     }, [userData?.activeMerchant, userNow]);
 
-
     const toggleTheme = () => {
         setThemeMode(prev => (prev === "light" ? "dark" : "light"));
     };
@@ -84,7 +84,8 @@ const Navbar = () => {
         }
 
         if (userNow?.activeMerchant?.id === merchant.id) {
-            toast.error(`Kamu sudah login ke ${merchant.name}`);
+            toast.error(`Kamu sudah login ke ${merchant?.name || "Merchant tersebut"}`);
+            // toast.error(`Kamu sudah login ke ${merchant?.merchantName || "Merchant tersebut"}`);
             return;
         }
 
@@ -94,14 +95,16 @@ const Navbar = () => {
             const result = await switchMerchant(merchant.id);
             
             if (result.success === true && result.switched === true) {
-                toast.success(`Switched ke ${merchant.name} berhasil`);
+                toast.success(`Berhasil switch ke merchant ${merchant.name || "tersebut"}`);
+                // toast.success(`Berhasil switch ke merchant ${merchant.merchantName || "tersebut"}`);
                 setShowDropdown(false);
-                
                 await fetchGetCurrentUser();
                 navigate("/dashboard", { replace: true });
-                window.location.reload();
+                setTimeout(() => {
+                    window.location.reload();
+                }, 500);
             } else if (result.requiresLogin === true) {
-                toast.error("Kamu harus login terlebih dahulu untuk merchant ini");
+                toast.error("Kamu harus login terlebih dahulu untuk merchant tersebut");
                 handleOpenLoginModal(merchant);
             } else {
                 handleOpenLoginModal(merchant);
@@ -171,6 +174,28 @@ const Navbar = () => {
 
     const activeMerchant = userNow?.activeMerchant || null;
 
+    // const handleMerchantClickV2 = async (merchantId) => {
+    //     e.stopPropagation();
+    //     setIsLoading(true);
+
+    //     try {
+    //         const result = await loginToMerchant(merchantId);
+
+    //         if (result.success == true && result.requiresOTP == true) {
+    //             toast.success("Kode OTP telah dikirim ke email Anda");
+    //             onClose();
+    //             onOTPRequired(result);
+    //         } else {
+    //             toast.error("Username atau password salah");
+    //         }
+    //     } catch (error) {
+    //         toast.error("Gagal login ke merchant, silakan coba lagi");
+    //         console.error("Gagal login ke merchant, kesalahan pada server:", error);
+    //     } finally {
+    //         setIsLoading(false);
+    //     }
+    // };
+
     return (
         <>
             <header className="app-topbar">
@@ -206,7 +231,7 @@ const Navbar = () => {
                                         </button>
                                         
                                         {showDropdown && (
-                                            <div className="dropdown-menu show position-absolute shadow p-2 rounded" style={{ width: "260px" }} title="Switch Merchant">
+                                            <div className="dropdown-menu show position-absolute shadow p-2 rounded" style={{ width: "280px" }} title="Switch Merchant">
                                                 {userNow?.merchants.map((merchant) => {
                                                     const isActive = activeMerchant?.id === merchant.id;
                                                     const isSwitchingThis = switchingMerchantId === merchant.id;
@@ -235,8 +260,9 @@ const Navbar = () => {
                                                                 <div className="flex-grow-1">
                                                                     <div className="d-flex flex-column gap-1">
                                                                         <div className="d-flex align-items-center justify-content-between">
-                                                                            <strong className="text-truncate" style={{ maxWidth: "140px" }}>
-                                                                                {merchant.name}
+                                                                            <strong className="" style={{ maxWidth: "160px" }}>
+                                                                                {merchant.name || "-"}
+                                                                                {/* {merchant.merchantName || "-"} */}
                                                                             </strong>
                                                                         </div>
                                                                         
@@ -250,13 +276,14 @@ const Navbar = () => {
 
                                                                 <div 
                                                                     className="ms-1 refresh-icon-area"
+                                                                    // onClick={(e) => !isSwitchingThis && handleMerchantClickV2(merchant.id)}
                                                                     onClick={(e) => !isSwitchingThis && handleRefreshIconClick(merchant, e)}
                                                                     style={{
                                                                         padding: "4px",
                                                                         borderRadius: "4px",
                                                                         cursor: isSwitchingThis ? "not-allowed" : "pointer"
                                                                     }}
-                                                                    title="Login/refresh to this merchant"
+                                                                    title="Refresh & login to this merchant"
                                                                 >
                                                                     {isSwitchingThis ? (
                                                                         <div className="spinner-border spinner-border-sm text-primary" />
@@ -278,6 +305,7 @@ const Navbar = () => {
                                                 })}
                                                 
                                                 <button 
+                                                    title="Add a new merchant"
                                                     className="btn btn-success w-100 mt-2" 
                                                     onClick={() => setShowModalFormCreateMerchant(true)}
                                                     disabled={isSwitching}
@@ -293,7 +321,7 @@ const Navbar = () => {
                                         className="btn btn-success" 
                                         onClick={() => setShowModalFormCreateMerchant(true)}
                                     >
-                                        Create Merchant
+                                        Add Merchant
                                     </button>
                                 )}
                             </div>

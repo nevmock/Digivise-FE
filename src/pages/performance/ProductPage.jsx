@@ -10,6 +10,7 @@ import useDebounce from "../../hooks/useDebounce";
 import BaseLayout from "../../components/organisms/BaseLayout";
 import formatValueRatio from "../../utils/convertFormatRatioValue";
 import formatTableValue from "../../utils/formatTableValue";
+import formatStyleSalesClassification from "../../utils/convertFormatSalesClassification";
 import Loading from "../../components/atoms/Loading/Loading";
 
 
@@ -287,9 +288,9 @@ export default function PerformanceProductPage() {
         apiUrl += `&name=${encodeURIComponent(filters.searchQuery.trim())}`;
       }
       
-      if (filters.statusFilter && filters.statusFilter !== "all") {
-        apiUrl += `&state=${filters.statusFilter}`;
-      }
+      // if (filters.statusFilter && filters.statusFilter !== "all") {
+      //   apiUrl += `&state=${filters.statusFilter}`;
+      // }
 
       if (filters.classification && filters.classification.length > 0) {
         const classificationValues = filters.classification.map(cls => cls.label);
@@ -777,7 +778,7 @@ export default function PerformanceProductPage() {
   const allColumns = [
     { key: "name", label: "Nama" },
     // { key: "insight", label: "Insight" },
-    // { key: "salesClassification", label: "Sales Classification" },
+    { key: "salesClassification", label: "Sales Classification" },
     { key: "pv", label: "Pengunjung" },
     { key: "addToCartUnits", label: "Add To Cart" },
     { key: "uvToAddToCartRate", label: "Add To Cart (Percentage)" },
@@ -1546,7 +1547,7 @@ export default function PerformanceProductPage() {
                       {/* Filters & Table */}
                       <div className="d-flex flex-column gap-2">
                         {/* Status filter */}
-                        <div
+                        {/* <div
                           className="d-flex align-items-center gap-1 gap-md-2 flex-wrap"
                           style={{ width: "fit-content", listStyleType: "none" }}
                         >
@@ -1613,9 +1614,9 @@ export default function PerformanceProductPage() {
                               Dihapus
                             </div>
                           </div>
-                        </div>
+                        </div> */}
                         {/* Other filter */}
-                        <div className="d-flex flex-column mb-3 gap-2">
+                        <div className="d-flex flex-column gap-2">
                           <div id="container-other-filters" className="d-flex w-full justify-content-between align-items-center">
                             <div id="container-other-filters-left" className="d-flex gap-2 flex-wrap">
                               {/* search bar */}
@@ -1780,13 +1781,27 @@ export default function PerformanceProductPage() {
                                           </span>
                                         </td>
                                       )} */}
-                                      {/* {selectedColumns.includes("salesClassification") && (
-                                        <td style={{ width: "260px" }}>
-                                          <span>
-                                            {entry.data[0].salesClassification === undefined || entry.data[0].salesClassification === null ? "-" : entry.data[0].salesClassification}
-                                          </span>
+                                      {selectedColumns.includes("salesClassification") && (
+                                        <td style={{ width: "200px" }}>
+                                          <div className="d-flex gap-1 align-items-center">
+                                            <div
+                                              className="marker"
+                                              style={{
+                                                backgroundColor: formatStyleSalesClassification(entry.data[0].salesClassification).backgroundColor,
+                                              }}
+                                            ></div>
+                                            <span
+                                              style={{
+                                                fontSize: "14px",
+                                              }}
+                                            >
+                                              {
+                                                entry.data[0].salesClassification === undefined || entry.data[0].salesClassification === null ? "-" : formatStyleSalesClassification(entry.data[0].salesClassification).label
+                                              }
+                                            </span>
+                                          </div>
                                         </td>
-                                      )} */}
+                                      )}
                                       {selectedColumns.includes("pv") && (
                                         <td>
                                           <div className="d-flex flex-column">

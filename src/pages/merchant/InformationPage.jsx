@@ -81,13 +81,7 @@ export default function MerchantInformationPage() {
                         </h4>
                       </div>
                       <div className="d-flex flex-column">
-                        <span>Nama Alias Merchant</span>
-                        <h4>
-                          {userNow?.activeMerchant?.name || "-"}
-                        </h4>
-                      </div>
-                      <div className="d-flex flex-column">
-                        <span>Nama Alias Merchant</span>
+                        <span>Shopee ID</span>
                         <h4>
                           {userNow?.activeMerchant?.merchantShopeeId || "-"}
                         </h4>

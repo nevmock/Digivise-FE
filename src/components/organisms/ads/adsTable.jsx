@@ -300,6 +300,8 @@ const AdsTable = ({ shoppeeId }) => {
         apiUrl += `&productPlacement=${filters.placement.value}`;
       }
 
+      // console.log("API URL:", apiUrl);
+
       const response = await axiosRequest.get(apiUrl);
       const data = await response.data;
       const content = data.content || [];
@@ -1803,7 +1805,7 @@ const AdsTable = ({ shoppeeId }) => {
                     </div>
                   </div>
                   {/* Other filter*/}
-                  <div className="d-flex flex-column mb-3 gap-2">
+                  <div className="d-flex flex-column mb-2 gap-2">
                     <div id="container-other-filters" className="d-flex w-full justify-content-between align-items-start">
                       <div id="container-other-filters-left" className="d-flex gap-2 flex-wrap">
                         {/* search bar */}
