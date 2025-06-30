@@ -26,6 +26,14 @@ const MerchantModalCreate = ({ onClose }) => {
             newErrors.name = "Merchant name is required";
         }
 
+        // if (isEmpty(formData.username)) {
+        //     newErrors.username = "Username is required";
+        // }
+
+        // if (isEmpty(formData.password)) {
+        //     newErrors.password = "Password is required";
+        // }
+
         if (isEmpty(formData.sectorIndustry)) {
             newErrors.sectorIndustry = "Sector industry is required";
         }
@@ -69,13 +77,15 @@ const MerchantModalCreate = ({ onClose }) => {
 
             setFormData({
                 name: "",
+                // username: "",
+                // password: "",
                 sectorIndustry: "",
                 officeAddress: "",
                 factoryAddress: "",
             });
             onClose();
             navigate("/dashboard", { replace: true });
-            toast.success(`Merchant "${newMerchant.name}" berhasil dibuat`);
+            toast.success(`Merchant "${newMerchant.name || ""}" berhasil dibuat`);
             window.location.reload();
         } catch (error) {
             toast.error("Gagal membuat merchant");
@@ -99,15 +109,17 @@ const MerchantModalCreate = ({ onClose }) => {
             tabIndex="-1"
         >
             <div className="bg-white p-4 rounded shadow-lg" style={{ width: "420px", maxHeight: "90vh", overflowY: "auto" }} ref={modalRef} onClick={(e) => e.stopPropagation()}>
-                <h5 className="text-center">Create Merchant</h5>
+                <h5 className="text-center">Create New Merchant</h5>
                 <hr />
                 <form onSubmit={handleSubmitFormData}>
                     {[
                         { name: "name", label: "Merchant Name", type: "text" },
+                        // { name: "username", label: "Username", type: "text", helper: "Masukan username akun shopee seller Anda" },
+                        // { name: "password", label: "Password", type: "password", helper: "Masukan password akun shopee seller Anda" },
                         { name: "sectorIndustry", label: "Sector Industry", type: "text" },
                         { name: "officeAddress", label: "Office Address", type: "text" },
                         { name: "factoryAddress", label: "Factory Address", type: "text" },
-                    ].map(({ name, label, type }) => (
+                    ].map(({ name, label, type, helper }) => (
                         <div className="mb-2" key={name}>
                             <label className="form-label" htmlFor={name}>
                                 {label}
@@ -122,6 +134,9 @@ const MerchantModalCreate = ({ onClose }) => {
                                     paddingLeft: "0.25rem !important",
                                 }}
                             />
+                            {/* {helper && (
+                                <small className="" style={{fontSize: "0.7rem"}}>*{helper}</small>
+                            )} */}
                             <div className="invalid-feedback">{errors[name]}</div>
                         </div>
                     ))}

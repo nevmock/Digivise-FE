@@ -91,7 +91,7 @@ const MerchantModalOTPByUsername = ({ onClose, merchant}) => {
 
         try {
             const result = await requestPhoneOTP();
-            if (result.data.success || result.data.code === 200 || result.data.status === "OK" || result.data.status === 200) {
+            if (result.data.code === 200 || result.data.status === "OK" || result.data.status === 200) {
                 toast.success("OTP telah dikirim ke handphone Anda");
                 onClose();
                 navigate("/verification-otp-phone");

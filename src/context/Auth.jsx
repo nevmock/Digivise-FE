@@ -199,7 +199,9 @@ export const AuthProvider = ({ children }) => {
 
     const createMerchant = async (merchantData) => {
         try {
+            // const { username, password, sectorIndustry, officeAddress, factoryAddress } = merchantData;
             const { name, sectorIndustry, officeAddress, factoryAddress } = merchantData;
+            // const response = await createMerchantAPI(username, password, sectorIndustry, officeAddress, factoryAddress);
             const response = await createMerchantAPI(name, sectorIndustry, officeAddress, factoryAddress);
 
             let newMerchant = null;
@@ -231,9 +233,8 @@ export const AuthProvider = ({ children }) => {
 
     const loginToMerchant = async (username, password, merchantId) => {
         try {
-            const response = await loginMerchantAPI(username, password);
-            
-            if (response === true || response.success === true || response.code === 200 || response.status === 200 || response.status === "OK") {
+            const response = await loginMerchantAPI(username, password, merchantId);
+            if (response && response == true) {
                 setPendingMerchantLogin({
                     username,
                     merchantId
@@ -246,7 +247,7 @@ export const AuthProvider = ({ children }) => {
             throw error;
         }
     };
-
+    
     const verifyMerchantOTP = async (otp) => {
         if (!pendingMerchantLogin) {
             throw new Error("Tidak ada login merchant yang tertunda");
