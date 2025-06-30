@@ -767,7 +767,6 @@ const AdsTable = ({ shoppeeId }) => {
   };
 
   function handleDateSelectionPreset(selectedDateOption, type = "minggu_ini") {
-    // Reset manual comparison dates
     setComparatorDateRange(null);
     setComparedDateRange(null);
     setDate(selectedDateOption);
@@ -775,7 +774,6 @@ const AdsTable = ({ shoppeeId }) => {
     setShowCalendar(false);
     setCurrentPage(1);
     
-    // Use new automatic comparison logic
     fetchData(selectedDateOption, type, 1);
   };
 
@@ -1564,7 +1562,7 @@ const AdsTable = ({ shoppeeId }) => {
       <div className="card">
         <div className="card-body">
           {/* Header & Date Filter */}
-          <div className="d-flex justify-content-between align-items-start pb-3">
+          <div className="d-flex justify-content-between align-items-start pb-2">
             <strong>{totalElements} total produk</strong>
             <div style={{ position: "relative" }}>
               <button
@@ -2431,7 +2429,7 @@ const AdsTable = ({ shoppeeId }) => {
                                   {selectedColumns.includes("detail") && (
                                     <td style={{ width: "100px" }}>
                                       {
-                                        <Link to={`/dashboard/performance/ads/detail/${entry.campaignId}`}>
+                                        <Link to={`/dashboard/performance/ads/detail/${entry.campaignId}`} onClick={() => { setTimeout(() => {window.location.reload();}, 100); }}>
                                           <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24"><path fill="currentColor" d="m16 8.4l-8.9 8.9q-.275.275-.7.275t-.7-.275t-.275-.7t.275-.7L14.6 7H7q-.425 0-.712-.288T6 6t.288-.712T7 5h10q.425 0 .713.288T18 6v10q0 .425-.288.713T17 17t-.712-.288T16 16z"></path></svg>
                                         </Link>
                                       }

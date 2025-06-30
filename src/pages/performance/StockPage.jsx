@@ -1308,7 +1308,7 @@ export default function PerformanceStockPage() {
           <div className="card">
             <div className="card-body">
               {/* Header & Date Filter */}
-              <div className="d-flex justify-content-between align-items-start pb-1">
+              <div className="d-flex justify-content-between align-items-start pb-2">
                 <h5>{totalElements} total produk</h5>
                 <div style={{ position: "relative" }}>
                   <button
