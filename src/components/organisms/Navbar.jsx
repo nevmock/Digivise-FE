@@ -244,7 +244,12 @@ const Navbar = () => {
                                                                         </div>
                                                                         
                                                                         <div className="d-flex align-items-center gap-2">
-                                                                            <small className={`text-${convertNotifySessionExpired(merchant.lastLogin).type === "urgent" ? "danger" : "success"}`}>
+                                                                            <small
+                                                                                style={{
+                                                                                    fontSize: "12px",
+                                                                                    color: convertNotifySessionExpired(merchant.lastLogin).type === "urgent" ? "#dc3545" : "#28a745"
+                                                                                }}
+                                                                            >
                                                                                 {convertNotifySessionExpired(merchant.lastLogin).text}
                                                                             </small>
                                                                         </div>

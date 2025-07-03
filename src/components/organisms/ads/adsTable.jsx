@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
+import { createPortal } from 'react-dom';
 import Select from "react-select";
 import Calendar from "react-calendar";
 import toast from "react-hot-toast";
 import * as echarts from "echarts";
-import { FaAngleLeft, FaAngleRight } from "react-icons/fa6";
+import { FaAngleLeft, FaAngleRight, FaAngleUp, FaAngleDown } from "react-icons/fa6";
+import { AiOutlineQuestionCircle } from "react-icons/ai";
 
 import axiosRequest from "../../../utils/request";
 import useDebounce from "../../../hooks/useDebounce";
@@ -49,11 +51,20 @@ const AdsTable = ({ shoppeeId }) => {
   const [showAlert, setShowAlert] = useState(false);
   const [animateCalendar, setAnimateCalendar] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isContentLoading, setIsContentLoading] = useState(false);
+  // const [isContentLoading, setIsContentLoading] = useState(false);
   const [isTableFilterLoading, setIsTableFilterLoading] = useState(false);
+  const [hoveredColumnKey, setHoveredColumnKey] = useState(null);
+  const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
+  const iconRefs = useRef({});
+  const [allTableData, setAllTableData] = useState([]);
+  const [sortConfig, setSortConfig] = useState({
+    column: null,
+    direction: null
+  });
+  const [isLoadingAllData, setIsLoadingAllData] = useState(false);
 
 
-  
+
   // Define metric key with their display names and colors
   const metrics = {
     impression: {
@@ -125,7 +136,7 @@ const AdsTable = ({ shoppeeId }) => {
         currentFrom.setHours(0, 0, 0, 0);
         currentTo = new Date();
         currentTo.setHours(23, 59, 59, 999);
-        
+
         previousFrom = new Date();
         previousFrom.setDate(previousFrom.getDate() - 1);
         previousFrom.setHours(0, 0, 0, 0);
@@ -141,7 +152,7 @@ const AdsTable = ({ shoppeeId }) => {
         currentTo = new Date();
         currentTo.setDate(currentTo.getDate() - 1);
         currentTo.setHours(23, 59, 59, 999);
-        
+
         previousFrom = new Date();
         previousFrom.setDate(previousFrom.getDate() - 2);
         previousFrom.setHours(0, 0, 0, 0);
@@ -156,7 +167,7 @@ const AdsTable = ({ shoppeeId }) => {
         currentFrom = new Date();
         currentFrom.setDate(currentFrom.getDate() - 6);
         currentFrom.setHours(0, 0, 0, 0);
-        
+
         previousTo = new Date();
         previousTo.setDate(previousTo.getDate() - 7);
         previousTo.setHours(23, 59, 59, 999);
@@ -171,7 +182,7 @@ const AdsTable = ({ shoppeeId }) => {
         currentFrom.setHours(0, 0, 0, 0);
         currentTo = new Date(today.getFullYear(), today.getMonth() + 1, 0);
         currentTo.setHours(23, 59, 59, 999);
-        
+
         previousFrom = new Date(today.getFullYear(), today.getMonth() - 1, 1);
         previousFrom.setHours(0, 0, 0, 0);
         previousTo = new Date(today.getFullYear(), today.getMonth(), 0);
@@ -190,7 +201,7 @@ const AdsTable = ({ shoppeeId }) => {
           currentTo = new Date(currentSelection);
           currentTo.setHours(23, 59, 59, 999);
         }
-        
+
         const duration = currentTo.getTime() - currentFrom.getTime();
         previousTo = new Date(currentFrom.getTime() - 24 * 60 * 60 * 1000);
         previousTo.setHours(23, 59, 59, 999);
@@ -204,7 +215,7 @@ const AdsTable = ({ shoppeeId }) => {
         currentFrom = new Date();
         currentFrom.setDate(currentFrom.getDate() - 6);
         currentFrom.setHours(0, 0, 0, 0);
-        
+
         previousTo = new Date();
         previousTo.setDate(previousTo.getDate() - 7);
         previousTo.setHours(23, 59, 59, 999);
@@ -220,7 +231,7 @@ const AdsTable = ({ shoppeeId }) => {
   };
 
   // Function to calculate totals for each metric based on raw data affected by time filter
-  function calculateMetricTotalsValue (products) {
+  function calculateMetricTotalsValue(products) {
     // Make an object to store totals for each available metric
     const totals = {};
     // Foreach metric on all available metrics
@@ -240,13 +251,69 @@ const AdsTable = ({ shoppeeId }) => {
     return totals;
   };
 
+  const handleSort = (a, b, config) => {
+    const { column, direction } = config;
+    let aValue = a.data[0][column];
+    let bValue = b.data[0][column];
+
+    if (aValue === null || aValue === undefined) aValue = 0;
+    if (bValue === null || bValue === undefined) bValue = 0;
+
+    const numericColumns = [
+      'dailyBudget', 'cost', 'broadGmv', 'roas', 'impression',
+      'click', 'ctr', 'broadOrder', 'cr', 'broadOrderAmount',
+      'cpc', 'acos', 'directOrder', 'directOrderAmount',
+      'directGmv', 'directRoi', 'directCir', 'directCr', 'cpdc'
+    ];
+
+    if (numericColumns.includes(column)) {
+      aValue = parseFloat(aValue) || 0;
+      bValue = parseFloat(bValue) || 0;
+    }
+
+    let comparison = 0;
+    if (aValue > bValue) {
+      comparison = 1;
+    } else if (aValue < bValue) {
+      comparison = -1;
+    }
+
+    return direction === 'desc' ? comparison * -1 : comparison;
+  };
+
+  const handleSortToggle = (columnKey, direction) => {
+    setSortConfig(prevConfig => {
+      if (prevConfig.column === columnKey && prevConfig.direction === direction) {
+        fetchOriginalData();
+        return { column: null, direction: null };
+      }
+
+      return { column: columnKey, direction: direction };
+    });
+  };
+
+  const processTableData = () => {
+    if (allTableData.length === 0) return filteredData;
+
+    let processedData = [...allTableData];
+
+    if (sortConfig.column && sortConfig.direction) {
+      processedData.sort((a, b) => handleSort(a, b, sortConfig));
+    }
+
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+
+    return processedData.slice(startIndex, endIndex);
+  };
+
   const fetchChartData = async (dateRanges) => {
     try {
       const from1ISO = toLocalISOString(dateRanges.current.from);
       const to1ISO = toLocalISOString(dateRanges.current.to);
 
       const apiUrl = `/api/product-ads/chart?shopId=${shopId}&from=${from1ISO}&to=${to1ISO}&limit=1000000000`;
-      
+
       const response = await axiosRequest.get(apiUrl);
       const data = await response.data;
       const content = data.content || [];
@@ -264,8 +331,8 @@ const AdsTable = ({ shoppeeId }) => {
     }
   };
 
-  const fetchTableData = async (dateRanges, page = 1, filters = {}) => {
-    setIsTableFilterLoading(true);
+  const fetchAllTableData = async (dateRanges, filters = {}) => {
+    setIsLoadingAllData(true);
 
     try {
       const from1ISO = toLocalISOString(dateRanges?.current?.from);
@@ -273,13 +340,12 @@ const AdsTable = ({ shoppeeId }) => {
       const from2ISO = toLocalISOString(dateRanges?.previous?.from);
       const to2ISO = toLocalISOString(dateRanges?.previous?.to);
 
-      const backendPage = Math.max(0, page - 1);
-      let apiUrl = `/api/product-ads?shopId=${shopId}&from1=${from1ISO}&to1=${to1ISO}&from2=${from2ISO}&to2=${to2ISO}&limit=50&page=${backendPage}`;
+      let apiUrl = `/api/product-ads?shopId=${shopId}&from1=${from1ISO}&to1=${to1ISO}&from2=${from2ISO}&to2=${to2ISO}&limit=1000000000&page=0`;
 
       if (filters.searchQuery && filters.searchQuery.trim() !== "") {
         apiUrl += `&title=${encodeURIComponent(filters.searchQuery.trim())}`;
       }
-      
+
       if (filters.statusFilter && filters.statusFilter !== "all") {
         apiUrl += `&state=${filters.statusFilter}`;
       }
@@ -300,7 +366,58 @@ const AdsTable = ({ shoppeeId }) => {
         apiUrl += `&productPlacement=${filters.placement.value}`;
       }
 
-      // console.log("API URL:", apiUrl);
+      const response = await axiosRequest.get(apiUrl);
+      const data = await response.data;
+      const content = data.content || [];
+
+      setAllTableData(content);
+      setTotalElements(content.length);
+
+      return content;
+    } catch (error) {
+      toast.error("Gagal mengambil semua data tabel iklan produk");
+      console.error('Gagal mengambil semua data tabel iklan produk, kesalahan pada server:', error);
+      return [];
+    } finally {
+      setIsLoadingAllData(false);
+    }
+  };
+
+  const fetchTableData = async (dateRanges, page = 1, filters = {}) => {
+    setIsTableFilterLoading(true);
+
+    try {
+      const from1ISO = toLocalISOString(dateRanges?.current?.from);
+      const to1ISO = toLocalISOString(dateRanges?.current?.to);
+      const from2ISO = toLocalISOString(dateRanges?.previous?.from);
+      const to2ISO = toLocalISOString(dateRanges?.previous?.to);
+
+      const backendPage = Math.max(0, page - 1);
+      let apiUrl = `/api/product-ads?shopId=${shopId}&from1=${from1ISO}&to1=${to1ISO}&from2=${from2ISO}&to2=${to2ISO}&limit=50&page=${backendPage}`;
+
+      if (filters.searchQuery && filters.searchQuery.trim() !== "") {
+        apiUrl += `&title=${encodeURIComponent(filters.searchQuery.trim())}`;
+      }
+
+      if (filters.statusFilter && filters.statusFilter !== "all") {
+        apiUrl += `&state=${filters.statusFilter}`;
+      }
+
+      if (filters.typeAds && filters.typeAds.length > 0) {
+        const typeValues = filters.typeAds.map(type => type.value);
+        if (!typeValues.includes("all")) {
+          apiUrl += `&biddingStrategy=${typeValues.join(",")}`;
+        }
+      }
+
+      if (filters.classification && filters.classification.length > 0) {
+        const classificationValues = filters.classification.map(cls => cls.label);
+        apiUrl += `&salesClassification=${classificationValues.join(",")}`;
+      }
+
+      if (filters.placement && filters.placement.value !== "all") {
+        apiUrl += `&productPlacement=${filters.placement.value}`;
+      }
 
       const response = await axiosRequest.get(apiUrl);
       const data = await response.data;
@@ -320,12 +437,32 @@ const AdsTable = ({ shoppeeId }) => {
     }
   };
 
+  const fetchOriginalData = () => {
+    setCurrentPage(1);
+
+    if (rangeParameters && rangeParameters.isComparison) {
+      const currentFilters = buildCurrentFilters();
+      const dateRanges = {
+        current: rangeParameters.current,
+        previous: rangeParameters.previous
+      };
+      fetchTableData(dateRanges, 1, currentFilters);
+    } else {
+      const dateRanges = generateComparisonDateRanges(date, flagCustomRoasDate);
+      const currentFilters = buildCurrentFilters();
+      fetchTableData(dateRanges, 1, currentFilters);
+    }
+
+    setAllTableData([]);
+    setSortConfig({ column: null, direction: null });
+  };
+
   const fetchData = async (currentSelection, selectionType, page = 1) => {
     setIsLoading(true);
-    
+
     try {
       const dateRanges = generateComparisonDateRanges(currentSelection, selectionType);
-      
+
       const currentFilters = {
         searchQuery: debouncedSearchTerm,
         statusFilter: statusAdsFilter,
@@ -341,10 +478,22 @@ const AdsTable = ({ shoppeeId }) => {
         selectionType: selectionType
       });
 
-      await Promise.all([
-        fetchChartData(dateRanges),
-        fetchTableData(dateRanges, page, currentFilters)
-      ]);
+      if (sortConfig.column && sortConfig.direction) {
+        await Promise.all([
+          fetchChartData(dateRanges),
+          fetchAllTableData(dateRanges, currentFilters)
+        ]);
+      } else {
+        await Promise.all([
+          fetchChartData(dateRanges),
+          fetchTableData(dateRanges, page, currentFilters)
+        ]);
+      }
+
+      // await Promise.all([
+      //   fetchChartData(dateRanges),
+      //   fetchTableData(dateRanges, page, currentFilters)
+      // ]);
 
     } catch (error) {
       toast.error("Gagal mengambil data iklan produk");
@@ -380,7 +529,7 @@ const AdsTable = ({ shoppeeId }) => {
       const day = String(localDate.getDate()).padStart(2, '0');
       return `${year}-${month}-${day}`;
     };
-    
+
     const today = new Date();
     return Array.from({ length: 7 }, (_, i) => {
       const d = new Date(today);
@@ -471,7 +620,7 @@ const AdsTable = ({ shoppeeId }) => {
     if (rangeParameters && rangeParameters.isComparison) {
       fromDate = rangeParameters.current.from;
       toDate = rangeParameters.current.to;
-      
+
       const sameDay = fromDate.toDateString() === toDate.toDateString();
       if (sameDay) {
         const dateStr = getLocalDateString(fromDate);
@@ -564,7 +713,7 @@ const AdsTable = ({ shoppeeId }) => {
           });
         } else {
           const dataByDate = {};
-          
+
           adsProduct.data.forEach((productData) => {
             if (!productData.shopeeFrom || productData.shopeeFrom === null) return;
 
@@ -644,23 +793,23 @@ const AdsTable = ({ shoppeeId }) => {
     if (comparatorDateRange || comparedDateRange) {
       let startText = "";
       let endText = "";
-      
+
       // Get start date text
       if (comparatorDateRange) {
         startText = `${comparatorDateRange[0].toLocaleDateString("id-ID")} - ${comparatorDateRange[1].toLocaleDateString("id-ID")}`;
       }
-      
+
       // Get end date text
       if (comparedDateRange) {
         endText = `${comparedDateRange[0].toLocaleDateString("id-ID")} - ${comparedDateRange[1].toLocaleDateString("id-ID")}`;
       }
-      
+
       // Combine texts
       if (startText && endText) {
         return `${startText} vs ${endText}`;
       }
     }
-    
+
     // Default text
     return typeof date === 'string' ? date : (Array.isArray(date) ? "1 Minggu terakhir" : "Pilih Tanggal");
   };
@@ -668,7 +817,7 @@ const AdsTable = ({ shoppeeId }) => {
   const isConfirmButtonDisabled = () => {
     const hasComparatorSelection = !!(comparatorDateRange);
     const hasComparedSelection = !!(comparedDateRange);
-    
+
     return !(hasComparatorSelection && hasComparedSelection);
   };
 
@@ -715,7 +864,7 @@ const AdsTable = ({ shoppeeId }) => {
 
   function handleComparisonDatesConfirm() {
     const validation = validateDateRanges();
-    
+
     if (!validation.isValid) {
       toast.error("Filter tanggal tidak valid, silakan periksa kembali tanggal yang dipilih.");
       return;
@@ -775,7 +924,7 @@ const AdsTable = ({ shoppeeId }) => {
     setFlagCustomRoasDate(type);
     setShowCalendar(false);
     setCurrentPage(1);
-    
+
     fetchData(selectedDateOption, type, 1);
   };
 
@@ -797,28 +946,28 @@ const AdsTable = ({ shoppeeId }) => {
   // FILTER COLUMNS FEATURE
   const allColumns = [
     { key: "info_iklan", label: "Info iklan" },
-    { key: "dailyBudget", label: "Modal" },
+    { key: "dailyBudget", label: "Modal", toolTip: "Modal yang kamu tentukan untuk iklanmu. Iklanmu akan dihentikan sementara jika biaya telah mencapai Total Modal atau Modal Harian. Jika biaya telah mencapai Modal Harian, iklanmu akan dilanjutkan keesokan harinya." },
     { key: "insight", label: "Insight" },
     { key: "salesClassification", label: "Sales Classification" },
-    { key: "cost", label: "Biaya Iklan" },
-    { key: "broadGmv", label: "Penjualan dari iklan" },
-    { key: "roas", label: "ROAS" },
+    { key: "cost", label: "Biaya Iklan", toolTip: "Biaya yang dikeluarkan untuk iklanmu." },
+    { key: "broadGmv", label: "Penjualan dari iklan", toolTip: "Total penjualan yang dihasilkan dari produk yang terjual dalam 7 hari setelah iklan diklik." },
+    { key: "roas", label: "ROAS", toolTip: "ROAS (Efektivitas Iklan) menunjukkan total penjualan yang dihasilkan dari iklanmu sesuai dengan biaya yang ditentukan. Efektivitas Iklan = Penjualan dari Iklan ÷ Biaya Iklan. (Catatan: Mohon tinjau Efektivitas Iklan secara rutin setiap minggunya)" },
     { key: "customRoas", label: "Custom ROAS" },
-    { key: "impression", label: "Iklan dilihat" },
-    { key: "click", label: "Jumlah Klik" },
-    { key: "ctr", label: "Presentase Klik" }, 
-    { key: "broadOrder", label: "Konversi" },
-    { key: "cr", label: "Tingkat Konversi" },
-    { key: "broadOrderAmount", label: "Produk Terjual" },
-    { key: "cpc", label: "Biaya per Konversi" },
-    { key: "acos", label: "Presentase Biaya Iklan (ACOS)" },
-    { key: "directOrder", label: "Konversi Langung" },
-    { key: "directOrderAmount", label: "Produk Terjual Langsung" },
-    { key: "directGmv", label: "Penjualan dari Iklan Langsung" },
-    { key: "directRoi", label: "ROAS (Efektifitas Iklan) Langsung" },
-    { key: "directCir", label: "ACOS Langsung" },
-    { key: "directCr", label: "Tingkat Konversi Langsung" },
-    { key: "cpdc", label: "Biaya per Konversi Langsung" },
+    { key: "impression", label: "Iklan dilihat", toolTip: "Jumlah Pembeli yang melihat iklanmu." },
+    { key: "click", label: "Jumlah Klik", toolTip: "Jumlah klik pada iklan. Pembeli yang meng-klik iklanmu lebih dari satu akan dihitung sebagai satu klik." },
+    { key: "ctr", label: "Presentase Klik", toolTip: "Persentase Klik mengukur seberapa sering Pembeli yang melihat dan akhirnya mengklik iklanmu. Persentase Klik = Jumlah Klik ÷ Jumlah Dilihat x 100%" },
+    { key: "broadOrder", label: "Konversi", toolTip: "Jumlah produk unik terjual per pesanan dalam 7 hari setelah mengklik iklan. Catatan: jika kuantitas produk terjual lebih dari satu per pesanan, maka akan dihitung sebagai satu konversi." },
+    { key: "cr", label: "Tingkat Konversi", toolTip: "Tingkat Konversi menunjukkan seberapa sering Pembeli membeli produk yang diiklankan setelah iklan diklik. Tingkat Konversi = Konversi ÷ Jumlah klik x 100%" },
+    { key: "broadOrderAmount", label: "Produk Terjual", toolTip: "Jumlah produk yang terjual dalam 7 hari setelah iklan diklik." },
+    { key: "cpc", label: "Biaya per Konversi", toolTip: "Biaya per konversi adalah biaya rata-rata tiap konversi. Biaya per konversi = Biaya iklan ÷ konversi." },
+    { key: "acos", label: "Presentase Biaya Iklan (ACOS)", toolTip: "Persentase Biaya Iklan (ACOS) menunjukkan jumlah biaya iklan terhadap penjualan dari iklan yang dihasilkan. ACOS = Biaya yang dikeluarkan ÷ Total Penjualan x 100%" },
+    { key: "directOrder", label: "Konversi Langung", toolTip: "Jumlah produk yang diiklankan dan dibeli oleh Pembeli dalam 7 hari. Jika pembeli mengklik beberapa produk yang diiklankan dan membelinya dalam waktu 7 hari dalam satu pesanan, setiap produk yang diiklankan akan dihitung sebagai 1 pembeli." },
+    { key: "directOrderAmount", label: "Produk Terjual Langsung", toolTip: "Jumlah produk yang diiklankan terjual dalam 7 hari setelah iklan diklik." },
+    { key: "directGmv", label: "Penjualan dari Iklan Langsung", toolTip: "Jumlah penjualan dihasilkan jika produk yang diiklankan dibeli dalam 7 hari setelah Pembeli mengeklik iklannya." },
+    { key: "directRoi", label: "ROAS (Efektifitas Iklan) Langsung", toolTip: "Efektivitas Iklan Langsung menunjukkan total penjualan yang dihasilkan dari produk yang diiklankan sesuai dengan biaya yang dikeluarkan. Efektivitas Iklan Langsung = Penjualan langsung ÷ biaya iklan." },
+    { key: "directCir", label: "ACOS Langsung", toolTip: "Persentase Biaya Iklan (ACOS) Langsung adalah perbandingan total pengeluaran yang didapat dari penjualan produk yang diiklankan. ACOS = Total Biaya iklan ÷ Total Penjualan Langsung x 100%" },
+    { key: "directCr", label: "Tingkat Konversi Langsung", toolTip: "Tingkat Konversi Langsung menunjukkan seberapa sering Pembeli membeli produk yang diiklankan setelah iklan diklik. Tingkat Konversi Langsung = Konversi langsung ÷ Jumlah klik x 100%" },
+    { key: "cpdc", label: "Biaya per Konversi Langsung", toolTip: "Biaya per Konversi Langsung adalah rata-rata biaya konversi. Dihitung dari jumlah biaya dibagi jumlah konversi langsung. Biaya per Konversi = Total biaya iklan ÷ Konversi Langsung" },
     { key: "detail", label: "Detail Iklan" }
   ];
 
@@ -935,8 +1084,8 @@ const AdsTable = ({ shoppeeId }) => {
 
       chartInstance.current = echarts.init(chartRef.current);
 
-      const activeSeries = chartData.series?.filter(series => 
-        selectedMetrics.some(metric => 
+      const activeSeries = chartData.series?.filter(series =>
+        selectedMetrics.some(metric =>
           metrics[metric]?.label === series.name
         )
       ) || [];
@@ -945,13 +1094,14 @@ const AdsTable = ({ shoppeeId }) => {
         return;
       }
 
-      const seriesConfig = activeSeries.map(s => ({
+      const seriesConfig = activeSeries.map((s, index) => ({
         name: s.name,
         type: 'line',
         smooth: true,
         showSymbol: false,
         emphasis: { focus: 'series' },
         data: s.data,
+        yAxisIndex: index, // Assign different Y-axis for each series
         lineStyle: {
           color: s.color,
           width: 2
@@ -961,13 +1111,48 @@ const AdsTable = ({ shoppeeId }) => {
         }
       }));
 
-      const hasData = seriesConfig.some(s => 
+      // const seriesConfig = activeSeries.map(s => ({
+      //   name: s.name,
+      //   type: 'line',
+      //   smooth: true,
+      //   showSymbol: false,
+      //   emphasis: { focus: 'series' },
+      //   data: s.data,
+      //   lineStyle: {
+      //     color: s.color,
+      //     width: 2
+      //   },
+      //   itemStyle: {
+      //     color: s.color
+      //   }
+      // }));
+
+      const yAxisConfig = activeSeries.map((series, index) => ({
+        type: 'value',
+        position: index % 2 === 0 ? 'left' : 'right',
+        offset: Math.floor(index / 2) * 80,
+        axisLine: {
+          show: false,
+        },
+        axisLabel: {
+          show: false,
+          color: series.color
+        },
+        axisTick: {
+          show: false
+        },
+        splitLine: {
+          show: index === 0
+        }
+      }));
+
+      const hasData = seriesConfig.some(s =>
         s.data?.some(value => value !== null && value !== undefined)
       );
 
       let xAxisData = chartData.timeIntervals || [];
       const isSingleDay = chartData.isSingleDay || false;
-      
+
       if (xAxisData.some(item => item.includes(":"))) {
         xAxisData = xAxisData.map(item => item.split(" ")[1]);
       } else {
@@ -977,7 +1162,8 @@ const AdsTable = ({ shoppeeId }) => {
       const option = {
         toolbox: { feature: { saveAsImage: {} } },
         grid: {
-          left: calculateLeftMargin(seriesConfig),
+          // left: calculateLeftMargin(seriesConfig),
+          left: 30,
           right: 50,
           bottom: 50,
           containLabel: false
@@ -1006,11 +1192,12 @@ const AdsTable = ({ shoppeeId }) => {
             formatter: getAxisLabelFormatter(xAxisData.length)
           },
         },
-        yAxis: {
-          // name: selectedMetrics.length === 1 ? metrics[selectedMetrics[0]]?.label : "Total",
-          type: "value",
-          splitLine: { show: true },
-        },
+        yAxis: yAxisConfig,
+        // yAxis: {
+        //   // name: selectedMetrics.length === 1 ? metrics[selectedMetrics[0]]?.label : "Total",
+        //   type: "value",
+        //   splitLine: { show: true },
+        // },
         series: seriesConfig
       };
 
@@ -1031,13 +1218,14 @@ const AdsTable = ({ shoppeeId }) => {
       chartInstance.current.setOption(option);
 
     } catch (err) {
-      console.error("Chart initialization error:", err);
+      console.error("Chart tidak bisa di initialize :", err);
       toast.error("Gagal memuat chart iklan produk");
     }
   }, [chartData, selectedMetrics, isMounted, isChartContainerReady]);
 
   useEffect(() => {
     setIsMounted(true);
+
     return () => {
       setIsMounted(false);
       setIsChartContainerReady(false);
@@ -1048,14 +1236,13 @@ const AdsTable = ({ shoppeeId }) => {
     };
   }, []);
 
-  // Simplified chart initialization trigger
   useEffect(() => {
     if (isChartContainerReady && chartData.series?.length > 0) {
       // Small delay to ensure DOM is fully rendered
       const timer = setTimeout(() => {
         initializeChart();
       }, 100);
-      
+
       return () => clearTimeout(timer);
     }
   }, [initializeChart, isChartContainerReady]);
@@ -1132,22 +1319,40 @@ const AdsTable = ({ shoppeeId }) => {
     return html;
   };
 
-  const handleStyleMatricFilterButton = (metricKey) => {
-    const isActive = selectedMetrics.includes(metricKey);
-    const metric = metrics[metricKey];
+  const SortIcon = ({ columnKey, currentSort }) => {
+    const isActive = currentSort.column === columnKey;
 
-    return {
-      backgroundColor: "#ffffff00",
-      borderTop: `solid ${isActive ? `${metric.color} 3px` : "rgb(179.4, 184.2, 189) 1px"}`,
-      borderRadius: "8px",
-      cursor: "pointer",
-      fontSize: "12px",
-      fontWeight: isActive ? "medium" : "normal",
-      transition: "all 0.3s ease",
-      flex: "1 1 200px",
-      height: "auto",
-      justifyContent: "center"
-    };
+    return (
+      <div className="d-flex flex-column ms-1" style={{ fontSize: '10px' }}>
+        <span
+          style={{
+            color: isActive && currentSort.direction === 'asc' ? '#007bff' : '#ccc',
+            lineHeight: '1',
+            cursor: 'pointer',
+            userSelect: 'none'
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleSortToggle(columnKey, 'asc');
+          }}
+          title="Sort Ascending"
+        ><FaAngleUp /></span>
+
+        <span
+          style={{
+            color: isActive && currentSort.direction === 'desc' ? '#007bff' : '#ccc',
+            lineHeight: '1',
+            cursor: 'pointer',
+            userSelect: 'none'
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleSortToggle(columnKey, 'desc');
+          }}
+          title="Sort Descending"
+        ><FaAngleDown /></span>
+      </div>
+    );
   };
 
 
@@ -1161,7 +1366,7 @@ const AdsTable = ({ shoppeeId }) => {
       }
       return pages;
     }
-    
+
     if (currentPage <= 3) {
       pages.push(1, 2, 3);
       if (totalPages > 4) {
@@ -1171,7 +1376,7 @@ const AdsTable = ({ shoppeeId }) => {
     } else if (currentPage >= totalPages - 2) {
       pages.push(1, 2);
       if (totalPages > 4) {
-          pages.push('...');
+        pages.push('...');
       }
       pages.push(totalPages - 2, totalPages - 1, totalPages);
     } else {
@@ -1189,13 +1394,18 @@ const AdsTable = ({ shoppeeId }) => {
     if (pageNumber >= 1 && pageNumber <= totalPages && pageNumber !== currentPage) {
       setCurrentPage(pageNumber);
 
+      if (allTableData.length > 0 && (sortConfig.column && sortConfig.direction)) {
+        return; // Let useEffect handle the pagination with sorted data
+      }
+
+      // If no sorting, fetch data for the current page (normal pagination)
       if (rangeParameters && rangeParameters.isComparison) {
         const currentFilters = buildCurrentFilters();
         const dateRanges = {
           current: rangeParameters.current,
           previous: rangeParameters.previous
         };
-        
+
         fetchTableData(dateRanges, pageNumber, currentFilters);
       } else {
         const dateRanges = generateComparisonDateRanges(date, flagCustomRoasDate);
@@ -1212,18 +1422,23 @@ const AdsTable = ({ shoppeeId }) => {
   };
 
   useEffect(() => {
-    if (filteredData.length > 0) {
+    if (allTableData.length > 0) {
+      // Use processed data (sorted + paginated)
+      const processed = processTableData();
+      setPaginatedData(processed);
+
+      const calculatedTotalPages = Math.ceil(allTableData.length / itemsPerPage);
+      setTotalPages(calculatedTotalPages || 1);
+    } else {
+      // Use original pagination system
       const startIndex = 0;
       const endIndex = Math.min(itemsPerPage, filteredData.length);
       setPaginatedData(filteredData.slice(startIndex, endIndex));
 
       const calculatedTotalPages = Math.ceil(totalElements / itemsPerPage);
       setTotalPages(calculatedTotalPages || 1);
-    } else {
-      setPaginatedData([]);
-      setTotalPages(1);
     }
-  }, [filteredData, itemsPerPage, totalElements]);
+  }, [allTableData, sortConfig, currentPage, itemsPerPage, filteredData, totalElements]);
 
   const renderPagination = () => {
     const visiblePages = getVisiblePageNumbers();
@@ -1416,7 +1631,30 @@ const AdsTable = ({ shoppeeId }) => {
   };
 
   useEffect(() => {
+    if (sortConfig.column && sortConfig.direction) {
+      // Fetch all data for sorting
+      let dateRanges;
+      if (rangeParameters && rangeParameters.isComparison) {
+        dateRanges = {
+          current: rangeParameters.current,
+          previous: rangeParameters.previous
+        };
+      } else {
+        dateRanges = generateComparisonDateRanges(date, flagCustomRoasDate);
+      }
+
+      const currentFilters = buildCurrentFilters();
+      fetchAllTableData(dateRanges, currentFilters);
+      setCurrentPage(1); // Reset to first page when sorting
+    }
+  }, [sortConfig]);
+
+  useEffect(() => {
     setCurrentPage(1);
+
+    // Reset sorting when filters change
+    setSortConfig({ column: null, direction: null });
+    setAllTableData([]);
 
     let dateRanges;
     if (rangeParameters && rangeParameters.isComparison) {
@@ -1432,7 +1670,42 @@ const AdsTable = ({ shoppeeId }) => {
     fetchTableData(dateRanges, 1, currentFilters);
   }, [debouncedSearchTerm, statusAdsFilter, selectedTypeAds, selectedOptionPlacement, selectedClassificationOption]);
 
+  // useEffect(() => {
+  //   setCurrentPage(1);
 
+  //   let dateRanges;
+  //   if (rangeParameters && rangeParameters.isComparison) {
+  //     dateRanges = {
+  //       current: rangeParameters.current,
+  //       previous: rangeParameters.previous
+  //     };
+  //   } else {
+  //     dateRanges = generateComparisonDateRanges(date, flagCustomRoasDate);
+  //   }
+
+  //   const currentFilters = buildCurrentFilters();
+  //   fetchTableData(dateRanges, 1, currentFilters);
+  // }, [debouncedSearchTerm, statusAdsFilter, selectedTypeAds, selectedOptionPlacement, selectedClassificationOption]);
+
+
+
+  const handleStyleMatricFilterButton = (metricKey) => {
+    const isActive = selectedMetrics.includes(metricKey);
+    const metric = metrics[metricKey];
+
+    return {
+      backgroundColor: "#ffffff00",
+      borderTop: `solid ${isActive ? `${metric.color} 3px` : "rgb(179.4, 184.2, 189) 1px"}`,
+      borderRadius: "8px",
+      cursor: "pointer",
+      fontSize: "12px",
+      fontWeight: isActive ? "medium" : "normal",
+      transition: "all 0.3s ease",
+      flex: "1 1 200px",
+      height: "auto",
+      justifyContent: "center"
+    };
+  };
 
   const handleUpdateCustomRoas = async (shopId, campaignId, customRoas) => {
     if (!customRoas || customRoas === "" || isNaN(customRoas)) {
@@ -1450,7 +1723,7 @@ const AdsTable = ({ shoppeeId }) => {
 
     try {
       const apiUrl = `/api/product-ads/custom-roas`;
-      
+
       const params = {
         shopId: shopId,
         campaignId: campaignId,
@@ -1460,20 +1733,20 @@ const AdsTable = ({ shoppeeId }) => {
       };
 
       const response = await axiosRequest.post(apiUrl, null, { params });
-      
+
       if (response.status === 200) {
         toast.success("Custom ROAS berhasil diupdate");
-        
-        setFilteredData(prevData => 
-          prevData.map(product => 
-            product.campaignId === campaignId 
+
+        setFilteredData(prevData =>
+          prevData.map(product =>
+            product.campaignId === campaignId
               ? {
-                  ...product,
-                  data: product.data.map(item => ({
-                    ...item,
-                    customRoas: parseFloat(customRoas)
-                  }))
-                }
+                ...product,
+                data: product.data.map(item => ({
+                  ...item,
+                  customRoas: parseFloat(customRoas)
+                }))
+              }
               : product
           )
         );
@@ -1487,7 +1760,7 @@ const AdsTable = ({ shoppeeId }) => {
         const currentFilters = buildCurrentFilters();
         await fetchTableData(rangeParameters, currentPage, currentFilters);
       }
-      
+
     } catch (error) {
       console.error('Gagal update custom ROAS, kesalahan pada server:', error);
       if (error.response) {
@@ -1513,50 +1786,72 @@ const AdsTable = ({ shoppeeId }) => {
 
   const getStateStyle = (state) => {
     const stateMap = {
-    ongoing: {
-      backgroundColor: "#00EB3FFF",
-      textColor: "#00D138FF",
-      label: "Berjalan",
-      isAnimated: true,
-    },
-    closed: {
-      backgroundColor: "#C5C5C5FF",
-      textColor: "#C5C5C5FF",
-      label: "Nonaktif",
-      isAnimated: false,
-    },
-    ended: {
-      backgroundColor: "#C5C5C5FF",
-      textColor: "#C5C5C5FF",
-      label: "Berakhir",
-      isAnimated: false,
-    },
-    all: {
-      backgroundColor: "#00EB3FFF",
-      textColor: "#00EB3FFF",
-      label: "Semua",
-      isAnimated: true,
-    },
-    scheduled: {
-      backgroundColor: "#00EB3FFF",
-      textColor: "#00EB3FFF",
-      label: "Terjadwal",
-      isAnimated: true, 
-    },
-    deleted: {
-      backgroundColor: "#FF0000FF",
-      textColor: "#FF0000FF",
-      label: "Dihapus",
-      isAnimated: false,
-    },
-  };
+      ongoing: {
+        backgroundColor: "#009D2AFF",
+        textColor: "#009D2AFF",
+        label: "Berjalan",
+        isAnimated: true,
+      },
+      closed: {
+        backgroundColor: "#A9A9A9FF",
+        textColor: "#A9A9A9FF",
+        label: "Nonaktif",
+        isAnimated: false,
+      },
+      ended: {
+        backgroundColor: "#A9A9A9FF",
+        textColor: "#A9A9A9FF",
+        label: "Berakhir",
+        isAnimated: false,
+      },
+      all: {
+        backgroundColor: "#009D2AFF",
+        textColor: "#009D2AFF",
+        label: "Semua",
+        isAnimated: true,
+      },
+      scheduled: {
+        backgroundColor: "#009D2AFF",
+        textColor: "#009D2AFF",
+        label: "Terjadwal",
+        isAnimated: true,
+      },
+      deleted: {
+        backgroundColor: "#FF0000FF",
+        textColor: "#FF0000FF",
+        label: "Dihapus",
+        isAnimated: false,
+      },
+    };
 
     return stateMap[state] || {
-      backgroundColor: "#C5C5C5FF",
-      textColor: "#C5C5C5FF",
+      backgroundColor: "#A9A9A9FF",
+      textColor: "#A9A9A9FF",
       label: "Tidak Diketahui",
       isAnimated: false,
     };
+  };
+
+  const updateTooltipPosition = (key) => {
+    if (iconRefs.current[key]) {
+      const rect = iconRefs.current[key].getBoundingClientRect();
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+
+      setTooltipPosition({
+        top: rect.top + scrollTop - 5,
+        left: rect.left + scrollLeft - 10
+      });
+    }
+  };
+
+  const handleMouseEnter = (key) => {
+    setHoveredColumnKey(key);
+    updateTooltipPosition(key);
+  };
+
+  const handleMouseLeave = () => {
+    setHoveredColumnKey(null);
   };
 
   return (
@@ -1588,52 +1883,52 @@ const AdsTable = ({ shoppeeId }) => {
                   }}
                 >
                   <div>
-                      <p className="pt-2" style={{ textAlign: "center" }}>
-                        Tanggal Pembanding
-                      </p>
-                      <Calendar 
-                          selectRange={true}
-                          onChange={handleComparatorDateChange} 
-                          value={comparatorDateRange} 
-                          maxDate={
-                            comparedDateRange ? comparedDateRange[1] : 
-                            new Date(2100, 0, 1)
-                          } 
-                          minDate={new Date(2000, 0, 1)} 
-                      />
-                      {(comparatorDateRange) && (
-                        <div className="text-center mt-1">
-                          <small className="text-success">
-                            {comparatorDateRange[0].toLocaleDateString("id-ID")} - ${comparatorDateRange[1].toLocaleDateString("id-ID")}
-                          </small>
-                        </div>
-                      )}
+                    <p className="pt-2" style={{ textAlign: "center" }}>
+                      Tanggal Pembanding
+                    </p>
+                    <Calendar
+                      selectRange={true}
+                      onChange={handleComparatorDateChange}
+                      value={comparatorDateRange}
+                      maxDate={
+                        comparedDateRange ? comparedDateRange[1] :
+                          new Date(2100, 0, 1)
+                      }
+                      minDate={new Date(2000, 0, 1)}
+                    />
+                    {(comparatorDateRange) && (
+                      <div className="text-center mt-1">
+                        <small className="text-success">
+                          {comparatorDateRange[0].toLocaleDateString("id-ID")} - {comparatorDateRange[1].toLocaleDateString("id-ID")}
+                        </small>
+                      </div>
+                    )}
                   </div>
-                  
+
                   <div>
-                      <p className="pt-2" style={{ textAlign: "center" }}>
-                          Tanggal Dibanding
-                      </p>
-                      <Calendar 
-                          selectRange={true}
-                          onChange={handleComparedDateChange} 
-                          value={comparedDateRange} 
-                          minDate={
-                            comparatorDateRange ? comparatorDateRange[0] : 
-                            new Date()
-                          } 
-                      />
-                      {(comparedDateRange) && (
-                        <div className="text-center mt-1">
-                          <small className="text-success">
-                            {comparedDateRange[0].toLocaleDateString("id-ID")} - ${comparedDateRange[1].toLocaleDateString("id-ID")}
-                          </small>
-                        </div>
-                      )}
+                    <p className="pt-2" style={{ textAlign: "center" }}>
+                      Tanggal Dibanding
+                    </p>
+                    <Calendar
+                      selectRange={true}
+                      onChange={handleComparedDateChange}
+                      value={comparedDateRange}
+                      minDate={
+                        comparatorDateRange ? comparatorDateRange[0] :
+                          new Date()
+                      }
+                    />
+                    {(comparedDateRange) && (
+                      <div className="text-center mt-1">
+                        <small className="text-success">
+                          {comparedDateRange[0].toLocaleDateString("id-ID")} - {comparedDateRange[1].toLocaleDateString("id-ID")}
+                        </small>
+                      </div>
+                    )}
                   </div>
 
                   <div id="custom-calendar-behavior-barrier" style={{ width: "1px", height: "auto", backgroundColor: "#D2D2D2FF", margin: "10px 12px" }}></div>
-                  
+
                   <div id="custom-calendar-behavior-button" className="d-flex justify-content-between mb-1">
                     <div
                       className="custom-content-calendar d-flex flex-column py-2 px-1"
@@ -1661,19 +1956,19 @@ const AdsTable = ({ shoppeeId }) => {
                         Reset
                       </button>
                       <button
-                          className="btn btn-primary w-100"
-                          onClick={handleComparisonDatesConfirm}
-                          disabled={isConfirmButtonDisabled()}
-                          style={
-                            isConfirmButtonDisabled() ? { cursor: "not-allowed" } : { cursor: "pointer" }
-                          }
+                        className="btn btn-primary w-100"
+                        onClick={handleComparisonDatesConfirm}
+                        disabled={isConfirmButtonDisabled()}
+                        style={
+                          isConfirmButtonDisabled() ? { cursor: "not-allowed" } : { cursor: "pointer" }
+                        }
                       >
-                          Terapkan
-                          {rangeParameters && rangeParameters.isRange && (
-                            <small className="d-block" style={{ fontSize: "10px" }}>
-                              Mode Perbandingan Range
-                            </small>
-                          )}
+                        Terapkan
+                        {rangeParameters && rangeParameters.isRange && (
+                          <small className="d-block" style={{ fontSize: "10px" }}>
+                            Mode Perbandingan Range
+                          </small>
+                        )}
                       </button>
                     </div>
                   </div>
@@ -1705,14 +2000,14 @@ const AdsTable = ({ shoppeeId }) => {
                         </strong>
                         <span className="card-text fs-4 fw-bold">
                           {
-                              metrics[metricKey].type === "currency"
-                                ? <span>Rp. {formatTableValue(metricsTotals[metricKey], "simple_currency")}</span>
-                                : metrics[metricKey].type === "simple_currency"
+                            metrics[metricKey].type === "currency"
+                              ? <span>Rp. {formatTableValue(metricsTotals[metricKey], "simple_currency")}</span>
+                              : metrics[metricKey].type === "simple_currency"
                                 ? <span>{formatTableValue(metricsTotals[metricKey], "simple_currency")}</span>
                                 : metrics[metricKey].type === "percentage"
                                   ? <span>{formatTableValue(metricsTotals[metricKey], "percentage")}</span>
                                   : <span>{formatTableValue(metricsTotals[metricKey], "coma")}</span>
-                              }
+                          }
                         </span>
                       </div>
                     </div>
@@ -1999,8 +2294,28 @@ const AdsTable = ({ shoppeeId }) => {
                       </div>
                     )}
                   </div>
-                  <div style={{ position: 'relative' }}>
+                  <div style={{ position: 'relative', overflow: "visible" }}>
                     {isTableFilterLoading && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          paddingTop: filteredData.length > 0 ? '85px' : '0px',
+                          backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                          display: 'flex',
+                          justifyContent: 'center',
+                          alignItems: 'start',
+                          zIndex: 10,
+                          minHeight: filteredData.length > 0 ? '200px' : '50px',
+                        }}
+                      >
+                        <Loading size={40} />
+                      </div>
+                    )}
+                    {isLoadingAllData && (
                       <div
                         style={{
                           position: 'absolute',
@@ -2028,10 +2343,11 @@ const AdsTable = ({ shoppeeId }) => {
                           minWidth: "max-content",
                           maxWidth: "none",
                           borderRadius: "8px",
+                          overflow: "visible"
                         }}
                       >
-                        <thead className="table-dark">
-                          <tr>
+                        <thead className="table-dark" style={{ overflow: "visible" }}>
+                          <tr style={{ overflow: "visible" }}>
                             {paginatedData.length !== 0 && paginatedData !== null && <th scope="col">No</th>}
                             {allColumns
                               .filter((col) =>
@@ -2039,16 +2355,71 @@ const AdsTable = ({ shoppeeId }) => {
                                 (col.key !== "customRoas" ||
                                   (flagCustomRoasDate == "hari_ini" && col.key === "customRoas"))
                               )
-                              .map((col) => (
-                                <th key={col.key}>
-                                  <div className="d-flex justify-content-start align-items-center">
-                                    {col.label}
-                                  </div>
-                                </th>
-                              ))
+                              .map((col, index, filteredCols) => {
+                                const isLastPosition = index === filteredCols.length - 1;
+                                const isSortable = !['info_iklan', 'insight', 'salesClassification'].includes(col.key);
+
+                                return (
+                                  <th key={col.key} className={sortConfig.column === col.key ? 'sort-active' : ''}>
+                                    <div className={`d-flex align-items-center gap-1 position-relative ${isLastPosition ? "justify-content-center" : "justify-content-start"
+                                      }`}>
+                                      {col.label}
+                                      {col.toolTip && (
+                                        <div
+                                          ref={(el) => iconRefs.current[col.key] = el}
+                                          style={{ cursor: "pointer", position: "relative" }}
+                                          onMouseEnter={() => handleMouseEnter(col.key)}
+                                          onMouseLeave={handleMouseLeave}
+                                        >
+                                          <AiOutlineQuestionCircle />
+                                        </div>
+                                      )}
+                                      {isSortable && (
+                                        <SortIcon columnKey={col.key} currentSort={sortConfig} />
+                                      )}
+                                    </div>
+                                  </th>
+                                )
+                              })
                             }
                           </tr>
                         </thead>
+                        {hoveredColumnKey && createPortal(
+                          <div
+                            style={{
+                              position: 'absolute',
+                              top: tooltipPosition.top,
+                              left: tooltipPosition.left,
+                              backgroundColor: '#fff',
+                              color: '#000',
+                              padding: '8px 10px',
+                              borderRadius: '4px',
+                              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)',
+                              zIndex: 10000,
+                              width: '200px',
+                              maxWidth: '200px',
+                              whiteSpace: 'normal',
+                              fontSize: '12px',
+                              border: '1px solid #ddd',
+                              transform: 'translateY(-100%)'
+                            }}
+                          >
+                            {allColumns.find(col => col.key === hoveredColumnKey)?.toolTip}
+                            <div
+                              style={{
+                                position: 'absolute',
+                                bottom: '-6px',
+                                left: '10px',
+                                width: '0',
+                                height: '0',
+                                borderLeft: '6px solid transparent',
+                                borderRight: '6px solid transparent',
+                                borderTop: '6px solid #fff'
+                              }}
+                            />
+                          </div>,
+                          document.body
+                        )}
                         <tbody>
                           {paginatedData.length !== 0 && paginatedData !== null ? (
                             paginatedData?.map((entry, index) => (
@@ -2109,11 +2480,11 @@ const AdsTable = ({ shoppeeId }) => {
                                   )}
                                   {selectedColumns.includes("dailyBudget") && (
                                     <td style={{ width: "180px" }}>
-                                        <span>
-                                          {
-                                            entry.data[0].dailyBudget === undefined || entry.data[0].dailyBudget === null ? "-" : formatTableValue(entry.data[0].dailyBudget, "currency")
-                                          }
-                                        </span>
+                                      <span>
+                                        {
+                                          entry.data[0].dailyBudget === undefined || entry.data[0].dailyBudget === null ? "-" : formatTableValue(entry.data[0].dailyBudget, "currency")
+                                        }
+                                      </span>
                                     </td>
                                   )}
                                   {selectedColumns.includes("insight") && (
@@ -2429,9 +2800,9 @@ const AdsTable = ({ shoppeeId }) => {
                                     </td>
                                   )}
                                   {selectedColumns.includes("detail") && (
-                                    <td style={{ width: "100px" }}>
+                                    <td style={{ width: "140px" }} className="text-center">
                                       {
-                                        <Link to={`/dashboard/performance/ads/detail/${entry.campaignId}`} onClick={() => { setTimeout(() => {window.location.reload();}, 100); }}>
+                                        <Link to={`/dashboard/performance/ads/detail/${entry.campaignId}`} onClick={() => { setTimeout(() => { window.location.reload(); }, 100); }}>
                                           <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24"><path fill="currentColor" d="m16 8.4l-8.9 8.9q-.275.275-.7.275t-.7-.275t-.275-.7t.275-.7L14.6 7H7q-.425 0-.712-.288T6 6t.288-.712T7 5h10q.425 0 .713.288T18 6v10q0 .425-.288.713T17 17t-.712-.288T16 16z"></path></svg>
                                         </Link>
                                       }
@@ -2450,7 +2821,7 @@ const AdsTable = ({ shoppeeId }) => {
                     </div>
                   </div>
                   {/* Pagination */}
-                  {paginatedData.length > 0 && paginatedData  !== null && renderPagination()}
+                  {paginatedData.length > 0 && paginatedData !== null && renderPagination()}
                 </div>
               </div>
             )

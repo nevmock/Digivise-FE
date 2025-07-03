@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from 'react-dom';
 import Select from "react-select";
 import Calendar from "react-calendar";
 import * as echarts from "echarts";
 import toast from "react-hot-toast";
-import { FaAngleLeft, FaAngleRight } from "react-icons/fa6";
+import { FaAngleLeft, FaAngleRight, FaAngleUp, FaAngleDown } from "react-icons/fa6";
+import { AiOutlineQuestionCircle } from "react-icons/ai";
 
 import axiosRequest from "../../utils/request";
 import useDebounce from "../../hooks/useDebounce";
@@ -44,8 +46,18 @@ export default function PerformanceProductPage() {
   const [showAlert, setShowAlert] = useState(false);
   const [animateCalendar, setAnimateCalendar] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isContentLoading, setIsContentLoading] = useState(false);
+  // const [isContentLoading, setIsContentLoading] = useState(false);
   const [isTableFilterLoading, setIsTableFilterLoading] = useState(false);
+  const [hoveredColumnKey, setHoveredColumnKey] = useState(null);
+  const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
+  const [arrowPosition, setArrowPosition] = useState({ left: '10px' });
+  const iconRefs = useRef({});
+  const [allTableData, setAllTableData] = useState([]);
+  const [sortConfig, setSortConfig] = useState({
+    column: null,
+    direction: null
+  });
+  const [isLoadingAllData, setIsLoadingAllData] = useState(false);
 
   const getShopeeId = localStorage.getItem("shopeeId");
   if (getShopeeId == null || getShopeeId === null || getShopeeId === "null" || getShopeeId === "undefined") {
@@ -249,6 +261,60 @@ export default function PerformanceProductPage() {
     return totals;
   };
 
+  const handleSort = (a, b, config) => {
+    const { column, direction } = config;
+    let aValue = a.data[0][column];
+    let bValue = b.data[0][column];
+
+    if (aValue === null || aValue === undefined) aValue = 0;
+    if (bValue === null || bValue === undefined) bValue = 0;
+
+    const numericColumns = [
+      'pv', 'addToCartUnits', 'uvToAddToCartRate', 'placedUnits', 'placedBuyersToConfirmedBuyersRate',
+      'uvToConfirmedBuyersRate', 'uvToPlacedBuyersRate', 'confirmedSales', 'placedSales', 'confirmedSellRatio'
+    ];
+
+    if (numericColumns.includes(column)) {
+      aValue = parseFloat(aValue) || 0;
+      bValue = parseFloat(bValue) || 0;
+    }
+
+    let comparison = 0;
+    if (aValue > bValue) {
+      comparison = 1;
+    } else if (aValue < bValue) {
+      comparison = -1;
+    }
+
+    return direction === 'desc' ? comparison * -1 : comparison;
+  };
+
+  const handleSortToggle = (columnKey, direction) => {
+    setSortConfig(prevConfig => {
+      if (prevConfig.column === columnKey && prevConfig.direction === direction) {
+        fetchOriginalData();
+        return { column: null, direction: null };
+      }
+
+      return { column: columnKey, direction: direction };
+    });
+  };
+
+  const processTableData = () => {
+    if (allTableData.length === 0) return filteredData;
+
+    let processedData = [...allTableData];
+
+    if (sortConfig.column && sortConfig.direction) {
+      processedData.sort((a, b) => handleSort(a, b, sortConfig));
+    }
+
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+
+    return processedData.slice(startIndex, endIndex);
+  };
+
   const fetchChartData = async (dateRanges) => {
     try {
       const from1ISO = toLocalISOString(dateRanges.current.from);
@@ -269,6 +335,43 @@ export default function PerformanceProductPage() {
       toast.error("Gagal mengambil data chart iklan produk");
       console.error('Gagal mengambil data chart iklan produk, kesalahan pada server:', error);
       return [];
+    }
+  };
+
+  const fetchAllTableData = async (dateRanges, filters = {}) => {
+    setIsLoadingAllData(true);
+
+    try {
+      const from1ISO = toLocalISOString(dateRanges?.current?.from);
+      const to1ISO = toLocalISOString(dateRanges?.current?.to);
+      const from2ISO = toLocalISOString(dateRanges?.previous?.from);
+      const to2ISO = toLocalISOString(dateRanges?.previous?.to);
+
+      let apiUrl = `/api/product-performance?shopId=${getShopeeId}&from1=${from1ISO}&to1=${to1ISO}&from2=${from2ISO}&to2=${to2ISO}&limit=1000000000&page=0`;
+
+      if (filters.searchQuery && filters.searchQuery.trim() !== "") {
+        apiUrl += `&name=${encodeURIComponent(filters.searchQuery.trim())}`;
+      }
+
+      if (filters.classification && filters.classification.length > 0) {
+        const classificationValues = filters.classification.map(cls => cls.label);
+        apiUrl += `&salesClassification=${classificationValues.join(",")}`;
+      }
+
+      const response = await axiosRequest.get(apiUrl);
+      const data = await response.data;
+      const content = data.content || [];
+
+      setAllTableData(content);
+      setTotalElements(content.length);
+
+      return content;
+    } catch (error) {
+      toast.error("Gagal mengambil semua data tabel produk");
+      console.error('Gagal mengambil semua data tabel produk, kesalahan pada server:', error);
+      return [];
+    } finally {
+      setIsLoadingAllData(false);
     }
   };
 
@@ -315,6 +418,26 @@ export default function PerformanceProductPage() {
     }
   };
 
+  const fetchOriginalData = () => {
+    setCurrentPage(1);
+
+    if (rangeParameters && rangeParameters.isComparison) {
+      const currentFilters = buildCurrentFilters();
+      const dateRanges = {
+        current: rangeParameters.current,
+        previous: rangeParameters.previous
+      };
+      fetchTableData(dateRanges, 1, currentFilters);
+    } else {
+      const dateRanges = generateComparisonDateRanges(date, flagCustomRoasDate);
+      const currentFilters = buildCurrentFilters();
+      fetchTableData(dateRanges, 1, currentFilters);
+    }
+
+    setAllTableData([]);
+    setSortConfig({ column: null, direction: null });
+  };
+
   const fetchData = async (currentSelection, selectionType, page = 1) => {
     setIsLoading(true);
     
@@ -334,10 +457,23 @@ export default function PerformanceProductPage() {
         selectionType: selectionType
       });
 
-      await Promise.all([
-        fetchChartData(dateRanges),
-        fetchTableData(dateRanges, page, currentFilters)
-      ]);
+      if (sortConfig.column && sortConfig.direction) {
+        await Promise.all([
+          fetchChartData(dateRanges),
+          fetchAllTableData(dateRanges, currentFilters)
+        ]);
+      } else {
+        await Promise.all([
+          fetchChartData(dateRanges),
+          fetchTableData(dateRanges, page, currentFilters)
+        ]);
+      }
+
+      // await Promise.all([
+      //   fetchChartData(dateRanges),
+      //   fetchTableData(dateRanges, page, currentFilters)
+      // ]);
+
     } catch (error) {
       toast.error("Gagal mengambil data iklan produk");
       console.error('Gagal mengambil data iklan produk, kesalahan pada server:', error);
@@ -349,7 +485,7 @@ export default function PerformanceProductPage() {
   const buildCurrentFilters = () => {
     return {
       searchQuery: debouncedSearchTerm,
-      statusFilter: statusProductFilter,
+      // statusFilter: statusProductFilter,
       classification: selectedClassificationOption,
     };
   };
@@ -779,16 +915,16 @@ export default function PerformanceProductPage() {
     { key: "name", label: "Nama" },
     // { key: "insight", label: "Insight" },
     { key: "salesClassification", label: "Sales Classification" },
-    { key: "pv", label: "Pengunjung" },
-    { key: "addToCartUnits", label: "Add To Cart" },
-    { key: "uvToAddToCartRate", label: "Add To Cart (Percentage)" },
-    { key: "placedUnits", label: "Produk Siap Dikirim" },
-    { key: "placedBuyersToConfirmedBuyersRate", label: "Convertion Rate (Pesanan Siap Dikirim Dibagi Pesanan Dibuat)" },
-    { key: "uvToConfirmedBuyersRate", label: "Convertion Rate (Pesanan Siap Dikirim)" },
-    { key: "uvToPlacedBuyersRate", label: "Convertion Rate (Pesanan yang Dibuat)" },
-    { key: "confirmedSales", label: "Penjualan (Pesanan Siap Dikirim)" },
-    { key: "placedSales", label: "Penjualan (Total Penjualan dari Pesanan Dibuat)" },
-    { key: "confirmedSellRatio", label: "Ratio Penjualan" },
+    { key: "pv", label: "Pengunjung", tooltip: "Total pengunjung unik yang melihat produk (mengunjungi >1 kali dihitung sebagai 1 Pengunjung). Catatan: Total ini termasuk produk Dihapus/Diarsipkan/Diblokir/Sedang Diperiksa." },
+    { key: "addToCartUnits", label: "Add To Cart", tooltip: "Jumlah produk yang ditambahkan ke keranjang, dalam jangka waktu tertentu." },
+    { key: "uvToAddToCartRate", label: "Add To Cart (Percentage)", tooltip: " Jumlah pengunjung yang telah menambahkan produk ke keranjang, dibagi jumlah pengunjung yang telah melihat halaman rincian produk dalam jangka waktu yang dipilih." },
+    { key: "placedUnits", label: "Produk Siap Dikirim", tooltip: "Jumlah SKU induk yang siap dikirim dalam jangka waktu tertentu." },
+    { key: "placedBuyersToConfirmedBuyersRate", label: "Convertion Rate (Pesanan Siap Dikirim Dibagi Pesanan Dibuat)", tooltip: "Jumlah Pembeli dengan pesanan siap dikirim dibagi jumlah Pembeli yang membuat pesanan dalam jangka waktu yang dipilih." },
+    { key: "uvToConfirmedBuyersRate", label: "Convertion Rate (Pesanan Siap Dikirim)", tooltip: "Jumlah Pembeli dengan pesanan siap dikirim dibagi dengan jumlah pengunjung yang telah melihat halaman rincian produk dalam jangka waktu yang dipilih." },
+    { key: "uvToPlacedBuyersRate", label: "Convertion Rate (Pesanan yang Dibuat)", tooltip: "Jumlah Pembeli yang membuat pesanan dibagi dengan jumlah pengunjung yang telah melihat halaman halaman rincian produk dalam jangka waktu yang dipilih." },
+    { key: "confirmedSales", label: "Penjualan (Pesanan Siap Dikirim)", tooltip: "Total nilai dari pesanan yang telah siap dikirim dalam jangka waktu tertentu. Nilai pesanan yang sudah siap dikirim sama dengan nilai saat checkout." },
+    { key: "placedSales", label: "Penjualan (Total Penjualan dari Pesanan Dibuat)", tooltip: "Nilai pesanan yang dibuat Pembeli dalam jangka waktu yang dipilih. Pesanan dibuat termasuk penjualan yang dibatalkan dan dikembalikan." },
+    { key: "confirmedSellRatio", label: "Ratio Penjualan", tooltip: "Jumlah Pembeli dengan pesanan siap dikirim dibagi dengan jumlah pengunjung yang telah melihat halaman rincian produk dalam jangka waktu yang dipilih." },
   ];
 
   const [selectedColumns, setSelectedColumns] = useState(
@@ -871,19 +1007,55 @@ export default function PerformanceProductPage() {
         return;
       }
 
-      const seriesConfig = activeSeries.map(s => ({
+      const seriesConfig = activeSeries.map((s, index) => ({
         name: s.name,
         type: 'line',
         smooth: true,
         showSymbol: false,
         emphasis: { focus: 'series' },
         data: s.data,
+        yAxisIndex: index, // Assign different Y-axis for each series
         lineStyle: {
           color: s.color,
           width: 2
         },
         itemStyle: {
           color: s.color
+        }
+      }));
+
+      // const seriesConfig = activeSeries.map(s => ({
+      //   name: s.name,
+      //   type: 'line',
+      //   smooth: true,
+      //   showSymbol: false,
+      //   emphasis: { focus: 'series' },
+      //   data: s.data,
+      //   lineStyle: {
+      //     color: s.color,
+      //     width: 2
+      //   },
+      //   itemStyle: {
+      //     color: s.color
+      //   }
+      // }));
+
+      const yAxisConfig = activeSeries.map((series, index) => ({
+        type: 'value',
+        position: index % 2 === 0 ? 'left' : 'right',
+        offset: Math.floor(index / 2) * 80,
+        axisLine: {
+          show: false,
+        },
+        axisLabel: {
+          show: false,
+          color: series.color
+        },
+        axisTick: {
+          show: false
+        },
+        splitLine: {
+          show: index === 0
         }
       }));
 
@@ -903,7 +1075,8 @@ export default function PerformanceProductPage() {
       const option = {
         toolbox: { feature: { saveAsImage: {} } },
         grid: {
-          left: calculateLeftMargin(seriesConfig),
+          // left: calculateLeftMargin(seriesConfig),
+          left: 20,
           right: 50,
           bottom: 50,
           containLabel: false
@@ -932,11 +1105,12 @@ export default function PerformanceProductPage() {
             formatter: getAxisLabelFormatter(xAxisData.length)
           },
         },
-        yAxis: {
-          // name: selectedMetrics.length === 1 ? metrics[selectedMetrics[0]]?.label : "Total",
-          type: "value",
-          splitLine: { show: true },
-        },
+        yAxis: yAxisConfig,
+        // yAxis: {
+        //   // name: selectedMetrics.length === 1 ? metrics[selectedMetrics[0]]?.label : "Total",
+        //   type: "value",
+        //   splitLine: { show: true },
+        // },
         series: seriesConfig
       };
 
@@ -957,13 +1131,14 @@ export default function PerformanceProductPage() {
       chartInstance.current.setOption(option);
 
     } catch (err) {
-      console.error("Chart initialization error:", err);
+      console.error("Chart tidak bisa di initialize :", err);
       toast.error("Gagal memuat chart iklan produk");
     }
   }, [chartData, selectedMetrics, isMounted, isChartContainerReady]);
   
   useEffect(() => {
     setIsMounted(true);
+
     return () => {
       setIsMounted(false);
       setIsChartContainerReady(false);
@@ -976,6 +1151,7 @@ export default function PerformanceProductPage() {
 
   useEffect(() => {
     if (isChartContainerReady && chartData.series?.length > 0) {
+      // Small delay to ensure DOM is fully rendered
       const timer = setTimeout(() => {
         initializeChart();
       }, 100);
@@ -984,6 +1160,7 @@ export default function PerformanceProductPage() {
     }
   }, [initializeChart, isChartContainerReady]);
 
+  // Update resize observer
   useEffect(() => {
     if (!isMounted || !chartRef.current || !isChartContainerReady) return;
 
@@ -1055,6 +1232,42 @@ export default function PerformanceProductPage() {
     return html;
   };
 
+  const SortIcon = ({ columnKey, currentSort }) => {
+    const isActive = currentSort.column === columnKey;
+
+    return (
+      <div className="d-flex flex-column ms-1" style={{ fontSize: '10px' }}>
+        <span
+          style={{
+            color: isActive && currentSort.direction === 'asc' ? '#007bff' : '#ccc',
+            lineHeight: '1',
+            cursor: 'pointer',
+            userSelect: 'none'
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleSortToggle(columnKey, 'asc');
+          }}
+          title="Sort Ascending"
+        ><FaAngleUp /></span>
+
+        <span
+          style={{
+            color: isActive && currentSort.direction === 'desc' ? '#007bff' : '#ccc',
+            lineHeight: '1',
+            cursor: 'pointer',
+            userSelect: 'none'
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleSortToggle(columnKey, 'desc');
+          }}
+          title="Sort Descending"
+        ><FaAngleDown /></span>
+      </div>
+    );
+  };
+
 
 
   // PAGINATION FEATURE
@@ -1094,13 +1307,18 @@ export default function PerformanceProductPage() {
     if (pageNumber >= 1 && pageNumber <= totalPages && pageNumber !== currentPage) {
       setCurrentPage(pageNumber);
 
+      if (allTableData.length > 0 && (sortConfig.column && sortConfig.direction)) {
+        return; // Let useEffect handle the pagination with sorted data
+      }
+
+      // If no sorting, fetch data for the current page (normal pagination)
       if (rangeParameters && rangeParameters.isComparison) {
         const currentFilters = buildCurrentFilters();
         const dateRanges = {
           current: rangeParameters.current,
           previous: rangeParameters.previous
         };
-        
+
         fetchTableData(dateRanges, pageNumber, currentFilters);
       } else {
         const dateRanges = generateComparisonDateRanges(date, flagCustomRoasDate);
@@ -1117,18 +1335,23 @@ export default function PerformanceProductPage() {
   };
 
   useEffect(() => {
-    if (filteredData.length > 0) {
+    if (allTableData.length > 0) {
+      // Use processed data (sorted + paginated)
+      const processed = processTableData();
+      setPaginatedData(processed);
+
+      const calculatedTotalPages = Math.ceil(allTableData.length / itemsPerPage);
+      setTotalPages(calculatedTotalPages || 1);
+    } else {
+      // Use original pagination system
       const startIndex = 0;
       const endIndex = Math.min(itemsPerPage, filteredData.length);
       setPaginatedData(filteredData.slice(startIndex, endIndex));
 
       const calculatedTotalPages = Math.ceil(totalElements / itemsPerPage);
       setTotalPages(calculatedTotalPages || 1);
-    } else {
-      setPaginatedData([]);
-      setTotalPages(1);
     }
-  }, [filteredData, itemsPerPage, totalElements]);
+  }, [allTableData, sortConfig, currentPage, itemsPerPage, filteredData, totalElements]);
 
   const renderPagination = () => {
     const visiblePages = getVisiblePageNumbers();
@@ -1321,7 +1544,30 @@ export default function PerformanceProductPage() {
   };
 
   useEffect(() => {
+    if (sortConfig.column && sortConfig.direction) {
+      // Fetch all data for sorting
+      let dateRanges;
+      if (rangeParameters && rangeParameters.isComparison) {
+        dateRanges = {
+          current: rangeParameters.current,
+          previous: rangeParameters.previous
+        };
+      } else {
+        dateRanges = generateComparisonDateRanges(date, flagCustomRoasDate);
+      }
+
+      const currentFilters = buildCurrentFilters();
+      fetchAllTableData(dateRanges, currentFilters);
+      setCurrentPage(1); // Reset to first page when sorting
+    }
+  }, [sortConfig]);
+
+  useEffect(() => {
     setCurrentPage(1);
+
+    // Reset sorting when filters change
+    setSortConfig({ column: null, direction: null });
+    setAllTableData([]);
 
     let dateRanges;
     if (rangeParameters && rangeParameters.isComparison) {
@@ -1335,7 +1581,7 @@ export default function PerformanceProductPage() {
 
     const currentFilters = buildCurrentFilters();
     fetchTableData(dateRanges, 1, currentFilters);
-  }, [debouncedSearchTerm, statusProductFilter, selectedClassificationOption]);
+  }, [debouncedSearchTerm, selectedClassificationOption]);
 
 
 
@@ -1365,6 +1611,55 @@ export default function PerformanceProductPage() {
       setShowCalendar(true);
       setTimeout(() => setAnimateCalendar(true), 100);
     }
+  };
+
+  const updateTooltipPosition = (key) => {
+    if (iconRefs.current[key]) {
+      const rect = iconRefs.current[key].getBoundingClientRect();
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+      
+      const tooltipWidth = 200;
+      const viewportWidth = window.innerWidth;
+      const padding = 20;
+      
+      let left = rect.left + scrollLeft;
+      
+      // Hitung posisi center icon untuk arrow
+      const iconCenterX = rect.left + scrollLeft + (rect.width / 2);
+      
+      // Cek apakah tooltip akan keluar dari viewport di sebelah kanan
+      if (rect.left + tooltipWidth + padding > viewportWidth) {
+        left = rect.right + scrollLeft - tooltipWidth;
+      }
+      
+      // Cek apakah tooltip akan keluar dari viewport di sebelah kiri
+      if (left < padding) {
+        left = padding + scrollLeft;
+      }
+      
+      // Hitung posisi arrow berdasarkan selisih posisi icon dengan tooltip
+      const arrowLeft = iconCenterX - left;
+      
+      // Pastikan arrow tidak keluar dari batas tooltip (6px dari tepi)
+      const finalArrowLeft = Math.max(6, Math.min(tooltipWidth - 12, arrowLeft));
+      
+      setTooltipPosition({
+        top: rect.top + scrollTop - 10,
+        left: left
+      });
+      
+      setArrowPosition({ left: `${finalArrowLeft - 5}px` });
+    }
+  };
+
+  const handleMouseEnter = (key) => {
+    setHoveredColumnKey(key);
+    updateTooltipPosition(key);
+  };
+
+  const handleMouseLeave = () => {
+    setHoveredColumnKey(null);
   };
 
   return (
@@ -1417,7 +1712,7 @@ export default function PerformanceProductPage() {
                             {(comparatorDateRange) && (
                                 <div className="text-center mt-1">
                                     <small className="text-success">
-                                        {comparatorDateRange[0].toLocaleDateString("id-ID")} - ${comparatorDateRange[1].toLocaleDateString("id-ID")}
+                                        {comparatorDateRange[0].toLocaleDateString("id-ID")} - {comparatorDateRange[1].toLocaleDateString("id-ID")}
                                     </small>
                                 </div>
                             )}
@@ -1707,8 +2002,28 @@ export default function PerformanceProductPage() {
                             </div>
                           )}
                         </div>
-                        <div style={{ position: 'relative' }}>
+                        <div style={{ position: 'relative', overflow: "visible" }}>
                           {isTableFilterLoading && (
+                            <div
+                              style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                paddingTop: filteredData.length > 0 ? '85px' : '50px',
+                                backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'start',
+                                zIndex: 10,
+                                minHeight: filteredData.length > 0 ? '600px' : '100px',
+                              }}
+                            >
+                              <Loading size={40} />
+                            </div>
+                          )}
+                          {isLoadingAllData && (
                             <div
                               style={{
                                 position: 'absolute',
@@ -1736,6 +2051,8 @@ export default function PerformanceProductPage() {
                               width: "100%",
                               minWidth: "max-content",
                               maxWidth: "none",
+                              borderRadius: "8px",
+                              overflow: "visible"
                             }}
                           >
                             <thead className="table-dark">
@@ -1743,16 +2060,71 @@ export default function PerformanceProductPage() {
                                 {paginatedData.length > 0 && paginatedData !== null && <th scope="col">No</th>}
                                   {allColumns
                                     .filter((col) => selectedColumns.includes(col.key))
-                                    .map((col) => (
-                                      <th key={col.key}>
-                                        <div className="d-flex justify-content-start gap-1 align-items-center">
-                                          {col.label}
-                                        </div>
-                                      </th>
-                                    ))
+                                    .map((col, index, filteredCols) => {
+                                      const isLastPosition = index === filteredCols.length - 1;
+                                      const isSortable = !['name', 'salesClassification'].includes(col.key);
+
+                                      return (
+                                        <th key={col.key}>
+                                          <div className={`d-flex align-items-center gap-1 position-relative ${isLastPosition ? "justify-content-center" : "justify-content-start"
+                                          }`}>
+                                            {col.label}
+                                            {col.tooltip && (
+                                              <div
+                                                ref={(el) => iconRefs.current[col.key] = el}
+                                                style={{ cursor: "pointer", position: "relative" }}
+                                                onMouseEnter={() => handleMouseEnter(col.key)}
+                                                onMouseLeave={handleMouseLeave}
+                                              >
+                                                <AiOutlineQuestionCircle />
+                                              </div>
+                                            )}
+                                            {isSortable && (
+                                              <SortIcon columnKey={col.key} currentSort={sortConfig} />
+                                            )}
+                                          </div>
+                                        </th>
+                                      )
+                                    })
                                   }
                               </tr>
                             </thead>
+                            {hoveredColumnKey && createPortal(
+                              <div
+                                style={{
+                                  position: 'absolute',
+                                  top: tooltipPosition.top,
+                                  left: tooltipPosition.left,
+                                  backgroundColor: '#fff',
+                                  color: '#000',
+                                  padding: '8px 10px',
+                                  borderRadius: '4px',
+                                  boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)',
+                                  zIndex: 10000,
+                                  width: '200px',
+                                  maxWidth: '200px',
+                                  whiteSpace: 'normal',
+                                  fontSize: '12px',
+                                  border: '1px solid #ddd',
+                                  transform: 'translateY(-100%)'
+                                }}
+                              >
+                                {allColumns.find(col => col.key === hoveredColumnKey)?.tooltip}
+                                <div
+                                  style={{
+                                    position: 'absolute',
+                                    bottom: '-6px',
+                                    left: arrowPosition.left,
+                                    width: '0',
+                                    height: '0',
+                                    borderLeft: '6px solid transparent',
+                                    borderRight: '6px solid transparent',
+                                    borderTop: '6px solid #fff'
+                                  }}
+                                />
+                              </div>,
+                              document.body
+                            )}
                             <tbody>
                               {paginatedData.length > 0 && paginatedData !== null ? (
                                 paginatedData?.map((entry, index) => (
@@ -1803,7 +2175,7 @@ export default function PerformanceProductPage() {
                                         </td>
                                       )}
                                       {selectedColumns.includes("pv") && (
-                                        <td>
+                                        <td style={{ width: "160px" }}>
                                           <div className="d-flex flex-column">
                                             <span>{entry.data[0].pv === undefined || entry.data[0].pv === null ? "-" : formatTableValue(entry.data[0].pv, "simple_currency")}</span>
                                             <span className={`${formatValueRatio(entry.data[0].pvComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
@@ -1813,7 +2185,7 @@ export default function PerformanceProductPage() {
                                         </td>
                                       )}
                                       {selectedColumns.includes("addToCartUnits") && (
-                                        <td>
+                                        <td style={{ width: "160px" }}>
                                           <div className="d-flex flex-column">
                                             <span>{entry.data[0].addToCartUnits === undefined || entry.data[0].addToCartUnits === null ? "-" : formatTableValue(entry.data[0].addToCartUnits, "simple_currency")}</span>
                                             <span className={`${formatValueRatio(entry.data[0].addToCartUnitsComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
@@ -1823,7 +2195,7 @@ export default function PerformanceProductPage() {
                                         </td>
                                       )}
                                       {selectedColumns.includes("uvToAddToCartRate") && (
-                                        <td>
+                                        <td style={{ width: "220px" }}>
                                           <div className="d-flex flex-column">
                                             <span>{entry.data[0].uvToAddToCartRate === undefined || entry.data[0].uvToAddToCartRate === null ? "-" : formatTableValue(entry.data[0].uvToAddToCartRate, "percentage")}</span>
                                             <span className={`${formatValueRatio(entry.data[0].uvToAddToCartRate).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
@@ -1833,7 +2205,7 @@ export default function PerformanceProductPage() {
                                         </td>
                                       )}
                                       {selectedColumns.includes("placedUnits") && (
-                                        <td>
+                                        <td style={{ width: "220px" }}>
                                           <div className="d-flex flex-column">
                                             <span>{entry.data[0].placedUnits === undefined || entry.data[0].placedUnits === null ? "-" : formatTableValue(entry.data[0].placedUnits, "simple_currency")}</span>
                                             <span className={`${formatValueRatio(entry.data[0].placedUnitsComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
@@ -1843,7 +2215,7 @@ export default function PerformanceProductPage() {
                                         </td>
                                       )}
                                       {selectedColumns.includes("placedBuyersToConfirmedBuyersRate") && (
-                                        <td>
+                                        <td style={{ width: "300px" }}>
                                           <div className="d-flex flex-column">
                                             <span>{entry.data[0].placedBuyersToConfirmedBuyersRate === undefined || entry.data[0].placedBuyersToConfirmedBuyersRate === null ? "-" : formatTableValue(entry.data[0].placedBuyersToConfirmedBuyersRate, "percentage")}</span>
                                             <span className={`${formatValueRatio(entry.data[0].placedBuyersToConfirmedBuyersRate).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
@@ -1853,7 +2225,7 @@ export default function PerformanceProductPage() {
                                         </td>
                                       )}
                                       {selectedColumns.includes("uvToConfirmedBuyersRate") && (
-                                        <td>
+                                        <td style={{ width: "260px" }}>
                                           <div className="d-flex flex-column">
                                             <span>{entry.data[0].uvToConfirmedBuyersRate === undefined || entry.data[0].uvToConfirmedBuyersRate === null ? "-" : formatTableValue(entry.data[0].uvToConfirmedBuyersRate, "percentage")}</span>
                                             <span className={`${formatValueRatio(entry.data[0].uvToConfirmedBuyersRate).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
@@ -1863,7 +2235,7 @@ export default function PerformanceProductPage() {
                                         </td>
                                       )}
                                       {selectedColumns.includes("uvToPlacedBuyersRate") && (
-                                        <td>
+                                        <td style={{ width: "260px" }}>
                                           <div className="d-flex flex-column">
                                             <span>{entry.data[0].uvToPlacedBuyersRate === undefined || entry.data[0].uvToPlacedBuyersRate === null ? "-" : formatTableValue(entry.data[0].uvToPlacedBuyersRate, "percentage")}</span>
                                             <span className={`${formatValueRatio(entry.data[0].uvToPlacedBuyersRate).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
@@ -1873,7 +2245,7 @@ export default function PerformanceProductPage() {
                                         </td>
                                       )}
                                       {selectedColumns.includes("confirmedSales") && (
-                                        <td>
+                                        <td style={{ width: "240px" }}>
                                           <div className="d-flex flex-column">
                                             <span>{entry.data[0].confirmedSales === undefined || entry.data[0].confirmedSales === null ? "-" : formatTableValue(entry.data[0].confirmedSales, "simple_currency")}</span>
                                             <span className={`${formatValueRatio(entry.data[0].confirmedSales).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
@@ -1883,7 +2255,7 @@ export default function PerformanceProductPage() {
                                         </td>
                                       )}
                                       {selectedColumns.includes("placedSales") && (
-                                        <td>
+                                        <td style={{ width: "260px" }}>
                                           <div className="d-flex flex-column">
                                             <span>{entry.data[0].placedSales === undefined || entry.data[0].placedSales === null ? "-" : formatTableValue(entry.data[0].placedSales, "simple_currency")}</span>
                                             <span className={`${formatValueRatio(entry.data[0].placedSalesComparison).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>
@@ -1893,7 +2265,7 @@ export default function PerformanceProductPage() {
                                         </td>
                                       )}
                                       {selectedColumns.includes("confirmedSellRatio") && (
-                                        <td>
+                                        <td style={{ width: "180px" }}>
                                           <div className="d-flex flex-column">
                                             <span>{entry.data[0].confirmedSellRatio === undefined || entry.data[0].confirmedSellRatio === null ? "-" : formatTableValue(entry.data[0].confirmedSellRatio, "percentage") }</span>
                                             <span className={`${formatValueRatio(entry.data[0].confirmedSellRatio).isNegative ? "text-danger" : "text-success"}`} style={{ fontSize: "10px" }}>

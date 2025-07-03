@@ -1,9 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import Calendar from "react-calendar";
+import { createPortal } from 'react-dom';
 import * as echarts from "echarts";
+import Calendar from "react-calendar";
 import toast from "react-hot-toast";
 import Skeleton from 'react-loading-skeleton';
+import { FaAngleUp, FaAngleDown } from "react-icons/fa6";
+import { AiOutlineQuestionCircle } from "react-icons/ai";
 
 import axiosRequest from "../../utils/request";
 import formatTableValue from "../../utils/formatTableValue";
@@ -12,17 +15,16 @@ import formatStyleSalesClassification from "../../utils/convertFormatSalesClassi
 import Loading from "../../components/atoms/Loading/Loading";
 import BaseLayout from "../../components/organisms/BaseLayout";
 
+
 export default function DetailAds() {
     const navigate = useNavigate();
     const { campaignId } = useParams();
-
     // Data
     const [keywordsData, setKeywordsData] = useState([]);
     const [productData, setProductData] = useState(null);
     const [chartData, setChartData] = useState([]);
     const [chartRawData, setChartRawData] = useState([]);
     const chartRef = useRef(null);
-
     // Filter
     const [comparatorDateRange, setComparatorDateRange] = useState(null);
     const [comparedDateRange, setComparedDateRange] = useState(null);
@@ -38,14 +40,24 @@ export default function DetailAds() {
     const [paginatedData, setPaginatedData] = useState([]);
     const [totalPages, setTotalPages] = useState(1);
     const [totalElements, setTotalElements] = useState(0);
-
     // Other
     const [showAlert, setShowAlert] = useState(false);
     const [animateCalendar, setAnimateCalendar] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [isTableFilterLoading, setIsTableFilterLoading] = useState(false);
+    const [allKeywordsData, setAllKeywordsData] = useState([]);
+    const [sortConfig, setSortConfig] = useState({
+        column: null,
+        direction: null
+    });
+    const [arrowPosition, setArrowPosition] = useState({ left: '10px' });
+    const [isLoadingAllData, setIsLoadingAllData] = useState(false);
+    const [hoveredColumnKey, setHoveredColumnKey] = useState(null);
+    const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
+    const iconRefs = useRef({});
 
-    // const getShopeeId = "252234165";
+
+
     const getShopeeId = localStorage.getItem("shopeeId");
     if (getShopeeId == null || getShopeeId === null || getShopeeId === "null" || getShopeeId === "undefined") {
         return (
@@ -222,6 +234,69 @@ export default function DetailAds() {
         };
     };
 
+    const handleSort = (a, b, config) => {
+        const { column, direction } = config;
+        let aValue = a.data[0][column];
+        let bValue = b.data[0][column];
+
+        // Handle null/undefined values
+        if (aValue === null || aValue === undefined) aValue = 0;
+        if (bValue === null || bValue === undefined) bValue = 0;
+
+        // Convert to numbers for numeric columns
+        const numericColumns = [
+            'dailyBudget', 'cost', 'broadGmv', 'roas', 'impression',
+            'click', 'ctr', 'broadOrder', 'cr', 'broadOrderAmount',
+            'cpc', 'acos', 'directOrder', 'directOrderAmount',
+            'directGmv', 'directRoi', 'directCir', 'directCr', 'cpdc'
+        ];
+
+        if (numericColumns.includes(column)) {
+            aValue = parseFloat(aValue) || 0;
+            bValue = parseFloat(bValue) || 0;
+        }
+
+        // Comparison logic
+        let comparison = 0;
+        if (aValue > bValue) {
+            comparison = 1;
+        } else if (aValue < bValue) {
+            comparison = -1;
+        }
+
+        return direction === 'desc' ? comparison * -1 : comparison;
+    };
+
+    const handleSortToggle = (columnKey, direction) => {
+        setSortConfig(prevConfig => {
+            // If same column and same direction clicked, reset (toggle off)
+            if (prevConfig.column === columnKey && prevConfig.direction === direction) {
+                fetchOriginalData();
+                return { column: null, direction: null };
+            }
+
+            // Otherwise, set the clicked direction
+            return { column: columnKey, direction: direction };
+        });
+    };
+
+    const processKeywordsData = () => {
+        if (allKeywordsData.length === 0) return keywordsData; // Use original pagination
+
+        let processedData = [...allKeywordsData];
+
+        // Apply sorting if active
+        if (sortConfig.column && sortConfig.direction) {
+            processedData.sort((a, b) => handleSort(a, b, sortConfig));
+        }
+
+        // Apply pagination
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+
+        return processedData.slice(startIndex, endIndex);
+    };
+
     const fetchProductData = async () => {
         try {
             const apiUrl = `/api/product-ads/newest?campaignId=${campaignId}`;
@@ -258,6 +333,34 @@ export default function DetailAds() {
         }
     };
 
+    const fetchAllKeywordsData = async (dateRanges) => {
+        setIsLoadingAllData(true);
+
+        try {
+            const from1ISO = toLocalISOString(dateRanges?.current?.from);
+            const to1ISO = toLocalISOString(dateRanges?.current?.to);
+            const from2ISO = toLocalISOString(dateRanges?.previous?.from);
+            const to2ISO = toLocalISOString(dateRanges?.previous?.to);
+
+            const apiUrl = `/api/product-keyword?shopId=${getShopeeId}&campaignId=${campaignId}&from1=${from1ISO}&to1=${to1ISO}&from2=${from2ISO}&to2=${to2ISO}&limit=1000000000&page=0`;
+
+            const response = await axiosRequest.get(apiUrl);
+            const data = response.data;
+            const content = data.content || [];
+
+            setAllKeywordsData(content);
+            setTotalElements(content.length);
+
+            return content;
+        } catch (error) {
+            toast.error("Gagal mengambil semua data keyword");
+            console.error('Error:', error);
+            return [];
+        } finally {
+            setIsLoadingAllData(false);
+        }
+    };
+
     const fetchTableData = async (dateRanges, page = 1) => {
         setIsTableFilterLoading(true);
 
@@ -288,6 +391,24 @@ export default function DetailAds() {
         }
     };
 
+    const fetchOriginalData = () => {
+        setCurrentPage(1);
+
+        if (rangeParameters && rangeParameters.isComparison) {
+            const dateRanges = {
+                current: rangeParameters.current,
+                previous: rangeParameters.previous
+            };
+            fetchTableData(dateRanges, 1);
+        } else {
+            const dateRanges = generateComparisonDateRanges(date, flagCustomRoasDate);
+            fetchTableData(dateRanges, 1);
+        }
+
+        setAllKeywordsData([]);
+        setSortConfig({ column: null, direction: null });
+    };
+
     const fetchData = async (currentSelection, selectionType, page = 1) => {
         setIsLoading(true);
 
@@ -301,16 +422,65 @@ export default function DetailAds() {
                 selectionType: selectionType,
             });
 
-            await Promise.all([
-                fetchChartData(dateRanges),
-                fetchTableData(dateRanges, page),
-            ]);
+            if (sortConfig.column && sortConfig.direction) {
+                await Promise.all([
+                    fetchChartData(dateRanges),
+                    fetchAllKeywordsData(dateRanges)
+                ]);
+            } else {
+                await Promise.all([
+                    fetchChartData(dateRanges),
+                    fetchTableData(dateRanges, page),
+                ]);
+            }
+
+            // await Promise.all([
+            //     fetchChartData(dateRanges),
+            //     fetchTableData(dateRanges, page),
+            // ]);
+
         } catch (error) {
             toast.error("Gagal mengambil data keyword");
             console.error("Gagal mengambil data keyword:", error);
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const SortIcon = ({ columnKey, currentSort }) => {
+        const isActive = currentSort.column === columnKey;
+
+        return (
+            <div className="d-flex flex-column ms-1" style={{ fontSize: '10px' }}>
+                <span
+                    style={{
+                        color: isActive && currentSort.direction === 'asc' ? '#007bff' : '#ccc',
+                        lineHeight: '1',
+                        cursor: 'pointer',
+                        userSelect: 'none'
+                    }}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        handleSortToggle(columnKey, 'asc');
+                    }}
+                    title="Sort Ascending"
+                ><FaAngleUp /></span>
+
+                <span
+                    style={{
+                        color: isActive && currentSort.direction === 'desc' ? '#007bff' : '#ccc',
+                        lineHeight: '1',
+                        cursor: 'pointer',
+                        userSelect: 'none'
+                    }}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        handleSortToggle(columnKey, 'desc');
+                    }}
+                    title="Sort Descending"
+                ><FaAngleDown /></span>
+            </div>
+        );
     };
 
     function calculateMetricTotalsValue(keywordProducts) {
@@ -750,6 +920,11 @@ export default function DetailAds() {
         if (pageNumber >= 1 && pageNumber <= totalPages && pageNumber !== currentPage) {
             setCurrentPage(pageNumber);
 
+            if (allKeywordsData.length > 0 && (sortConfig.column && sortConfig.direction)) {
+                return; // Let useEffect handle the pagination with sorted data
+            }
+
+            // Normal pagination
             if (rangeParameters && rangeParameters.isComparison) {
                 const dateRanges = {
                     current: rangeParameters.current,
@@ -950,27 +1125,27 @@ export default function DetailAds() {
 
     const allColumns = [
         { key: "keyword", label: "Kata Pencarian" },
-        { key: "dailyBudget", label: "Modal" },
-        { key: "insight", label: "Insight" },
+        { key: "dailyBudget", label: "Modal", toolTip: "Modal yang kamu tentukan untuk iklanmu. Iklanmu akan dihentikan sementara jika biaya telah mencapai Total Modal atau Modal Harian. Jika biaya telah mencapai Modal Harian, iklanmu akan dilanjutkan keesokan harinya." },
+        { key: "insight", label: "Insight", toolTip: "Insight iklan, klik untuk melihat detail" },
         { key: "salesClassification", label: "Sales Classification" },
-        { key: "cost", label: "Biaya Iklan" },
-        { key: "broadGmv", label: "Penjualan dari iklan" },
-        { key: "roas", label: "ROAS" },
-        { key: "impression", label: "Iklan dilihat" },
-        { key: "click", label: "Jumlah Klik" },
-        { key: "ctr", label: "Presentase Klik" },
-        { key: "broadOrder", label: "Konversi" },
-        { key: "cr", label: "Tingkat Konversi" },
-        { key: "broadOrderAmount", label: "Produk Terjual" },
-        { key: "cpc", label: "Biaya per Konversi" },
-        { key: "acos", label: "Presentase Biaya Iklan (ACOS)" },
-        { key: "directOrder", label: "Konversi Langung" },
-        { key: "directOrderAmount", label: "Produk Terjual Langsung" },
-        { key: "directGmv", label: "Penjualan dari Iklan Langsung" },
-        { key: "directRoi", label: "ROAS (Efektifitas Iklan) Langsung" },
-        { key: "directCir", label: "ACOS Langsung" },
-        { key: "directCr", label: "Tingkat Konversi Langsung" },
-        { key: "cpdc", label: "Biaya per Konversi Langsung" },
+        { key: "cost", label: "Biaya Iklan", toolTip: "Biaya yang dikeluarkan untuk iklanmu." },
+        { key: "broadGmv", label: "Penjualan dari iklan", toolTip: "Total penjualan yang dihasilkan dari produk yang terjual dalam 7 hari setelah iklan diklik." },
+        { key: "roas", label: "ROAS", toolTip: "ROAS (Efektivitas Iklan) menunjukkan total penjualan yang dihasilkan dari iklanmu sesuai dengan biaya yang ditentukan. Efektivitas Iklan = Penjualan dari Iklan ÷ Biaya Iklan. (Catatan: Mohon tinjau Efektivitas Iklan secara rutin setiap minggunya)" },
+        { key: "impression", label: "Iklan dilihat", toolTip: "Jumlah Pembeli yang melihat iklanmu." },
+        { key: "click", label: "Jumlah Klik", toolTip: "Jumlah klik pada iklan. Pembeli yang meng-klik iklanmu lebih dari satu akan dihitung sebagai satu klik." },
+        { key: "ctr", label: "Presentase Klik", toolTip: "Persentase Klik mengukur seberapa sering Pembeli yang melihat dan akhirnya mengklik iklanmu. Persentase Klik = Jumlah Klik ÷ Jumlah Dilihat x 100%" },
+        { key: "broadOrder", label: "Konversi", toolTip: "Jumlah produk unik terjual per pesanan dalam 7 hari setelah mengklik iklan. Catatan: jika kuantitas produk terjual lebih dari satu per pesanan, maka akan dihitung sebagai satu konversi." },
+        { key: "cr", label: "Tingkat Konversi", toolTip: "Tingkat Konversi menunjukkan seberapa sering Pembeli membeli produk yang diiklankan setelah iklan diklik. Tingkat Konversi = Konversi ÷ Jumlah klik x 100%" },
+        { key: "broadOrderAmount", label: "Produk Terjual", toolTip: "Jumlah produk yang terjual dalam 7 hari setelah iklan diklik." },
+        { key: "cpc", label: "Biaya per Konversi", toolTip: "Biaya per konversi adalah biaya rata-rata tiap konversi. Biaya per konversi = Biaya iklan ÷ konversi." },
+        { key: "acos", label: "Presentase Biaya Iklan (ACOS)", toolTip: "Persentase Biaya Iklan (ACOS) menunjukkan jumlah biaya iklan terhadap penjualan dari iklan yang dihasilkan. ACOS = Biaya yang dikeluarkan ÷ Total Penjualan x 100%" },
+        { key: "directOrder", label: "Konversi Langung", toolTip: "Jumlah produk yang diiklankan dan dibeli oleh Pembeli dalam 7 hari. Jika pembeli mengklik beberapa produk yang diiklankan dan membelinya dalam waktu 7 hari dalam satu pesanan, setiap produk yang diiklankan akan dihitung sebagai 1 pembeli." },
+        { key: "directOrderAmount", label: "Produk Terjual Langsung", toolTip: "Jumlah produk yang diiklankan terjual dalam 7 hari setelah iklan diklik." },
+        { key: "directGmv", label: "Penjualan dari Iklan Langsung", toolTip: "Jumlah penjualan dihasilkan jika produk yang diiklankan dibeli dalam 7 hari setelah Pembeli mengeklik iklannya." },
+        { key: "directRoi", label: "ROAS (Efektifitas Iklan) Langsung", toolTip: "Efektivitas Iklan Langsung menunjukkan total penjualan yang dihasilkan dari produk yang diiklankan sesuai dengan biaya yang dikeluarkan. Efektivitas Iklan Langsung = Penjualan langsung ÷ biaya iklan." },
+        { key: "directCir", label: "ACOS Langsung", toolTip: "Persentase Biaya Iklan (ACOS) Langsung adalah perbandingan total pengeluaran yang didapat dari penjualan produk yang diiklankan. ACOS = Total Biaya iklan ÷ Total Penjualan Langsung x 100%" },
+        { key: "directCr", label: "Tingkat Konversi Langsung", toolTip: "Tingkat Konversi Langsung menunjukkan seberapa sering Pembeli membeli produk yang diiklankan setelah iklan diklik. Tingkat Konversi Langsung = Konversi langsung ÷ Jumlah klik x 100%" },
+        { key: "cpdc", label: "Biaya per Konversi Langsung", toolTip: "Biaya per Konversi Langsung adalah rata-rata biaya konversi. Dihitung dari jumlah biaya dibagi jumlah konversi langsung. Biaya per Konversi = Total biaya iklan ÷ Konversi Langsung" },
     ];
 
     const [selectedColumns, setSelectedColumns] = useState(
@@ -1003,33 +1178,6 @@ export default function DetailAds() {
         };
     };
 
-    const formatMetricValue = (metricKey, value) => {
-        if (value === undefined || value === null) return "-";
-
-        switch (metricKey) {
-            case "impression":
-            case "click":
-            case "broadOrderAmount":
-                return Number(value).toLocaleString("id-ID");
-            case "ctr":
-            case "cr":
-                return (Number(value) * 100).toFixed(2) + "%";
-            case "cost":
-            case "cpc":
-            case "broadGmv":
-            case "directGmv":
-                return "Rp " + Number(value).toLocaleString("id-ID");
-            case "roas":
-            case "directRoi":
-                return Number(value).toFixed(2);
-            case "acos":
-            case "directCir":
-                return (Number(value) * 100).toFixed(2) + "%";
-            default:
-                return Number(value).toLocaleString("id-ID");
-        }
-    };
-
     const toggleOpenCalendar = () => {
         if (showCalendar) {
             setAnimateCalendar(false);
@@ -1056,6 +1204,61 @@ export default function DetailAds() {
         const chartData = generateMultipleKeywordChartData(date, selectedMetrics);
         setChartData(chartData);
     }, [date, selectedMetrics, chartRawData, rangeParameters, comparatorDateRange, comparedDateRange]);
+
+    useEffect(() => {
+        if (allKeywordsData.length > 0) {
+            // Use processed data (sorted + paginated)
+            const processed = processKeywordsData();
+            setPaginatedData(processed);
+
+            const calculatedTotalPages = Math.ceil(allKeywordsData.length / itemsPerPage);
+            setTotalPages(calculatedTotalPages || 1);
+        } else {
+            // Use original pagination system
+            setPaginatedData(keywordsData);
+
+            const calculatedTotalPages = Math.ceil(totalElements / itemsPerPage);
+            setTotalPages(calculatedTotalPages || 1);
+        }
+    }, [allKeywordsData, sortConfig, currentPage, itemsPerPage, keywordsData, totalElements]);
+
+    useEffect(() => {
+        if (sortConfig.column && sortConfig.direction) {
+            // Fetch all data for sorting
+            let dateRanges;
+            if (rangeParameters && rangeParameters.isComparison) {
+                dateRanges = {
+                    current: rangeParameters.current,
+                    previous: rangeParameters.previous
+                };
+            } else {
+                dateRanges = generateComparisonDateRanges(date, flagCustomRoasDate);
+            }
+
+            fetchAllKeywordsData(dateRanges);
+            setCurrentPage(1); // Reset to first page when sorting
+        }
+    }, [sortConfig]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+
+        // Reset sorting when itemsPerPage changes
+        setSortConfig({ column: null, direction: null });
+        setAllKeywordsData([]);
+
+        let dateRanges;
+        if (rangeParameters && rangeParameters.isComparison) {
+            dateRanges = {
+                current: rangeParameters.current,
+                previous: rangeParameters.previous
+            };
+        } else {
+            dateRanges = generateComparisonDateRanges(date, flagCustomRoasDate);
+        }
+
+        fetchTableData(dateRanges, 1);
+    }, [itemsPerPage]);
 
     const [isChartContainerReady, setIsChartContainerReady] = useState(false);
     const chartInstance = useRef(null);
@@ -1093,19 +1296,55 @@ export default function DetailAds() {
                 return;
             }
 
-            const seriesConfig = activeSeries.map(s => ({
+            const seriesConfig = activeSeries.map((s, index) => ({
                 name: s.name,
                 type: 'line',
                 smooth: true,
                 showSymbol: false,
                 emphasis: { focus: 'series' },
                 data: s.data,
+                yAxisIndex: index, // Assign different Y-axis for each series
                 lineStyle: {
                     color: s.color,
                     width: 2
                 },
                 itemStyle: {
                     color: s.color
+                }
+            }));
+
+            // const seriesConfig = activeSeries.map(s => ({
+            //     name: s.name,
+            //     type: 'line',
+            //     smooth: true,
+            //     showSymbol: false,
+            //     emphasis: { focus: 'series' },
+            //     data: s.data,
+            //     lineStyle: {
+            //         color: s.color,
+            //         width: 2
+            //     },
+            //     itemStyle: {
+            //         color: s.color
+            //     }
+            // }));
+
+            const yAxisConfig = activeSeries.map((series, index) => ({
+                type: 'value',
+                position: index % 2 === 0 ? 'left' : 'right',
+                offset: Math.floor(index / 2) * 80,
+                axisLine: {
+                    show: false,
+                },
+                axisLabel: {
+                    show: false,
+                    color: series.color
+                },
+                axisTick: {
+                    show: false
+                },
+                splitLine: {
+                    show: index === 0
                 }
             }));
 
@@ -1135,7 +1374,7 @@ export default function DetailAds() {
                     extraCssText: 'box-shadow: none;',
                     backgroundColor: "transparent",
                     borderWidth: 0,
-                    formatter: generateTooltipContent
+                    formatter: generateChartTooltipContent
                 },
                 legend: {
                     data: activeSeries.map(s => s.name),
@@ -1154,11 +1393,12 @@ export default function DetailAds() {
                         formatter: getAxisLabelFormatter(xAxisData.length)
                     },
                 },
-                yAxis: {
-                    // name: selectedMetrics.length === 1 ? metrics[selectedMetrics[0]]?.label : "Total",
-                    type: "value",
-                    splitLine: { show: true },
-                },
+                yAxis: yAxisConfig,
+                // yAxis: {
+                //     // name: selectedMetrics.length === 1 ? metrics[selectedMetrics[0]]?.label : "Total",
+                //     type: "value",
+                //     splitLine: { show: true },
+                // },
                 series: seriesConfig
             };
 
@@ -1220,22 +1460,6 @@ export default function DetailAds() {
         return () => resizeObserver.disconnect();
     }, [isMounted, isChartContainerReady]);
 
-    useEffect(() => {
-        setCurrentPage(1);
-
-        let dateRanges;
-        if (rangeParameters && rangeParameters.isComparison) {
-            dateRanges = {
-                current: rangeParameters.current,
-                previous: rangeParameters.previous
-            };
-        } else {
-            dateRanges = generateComparisonDateRanges(date, flagCustomRoasDate);
-        }
-
-        fetchTableData(dateRanges, 1);
-    }, [itemsPerPage]);
-
     const calculateLeftMargin = (series) => {
         const maxY = Math.max(...series.flatMap(s => s.data || []));
         if (maxY >= 1_000_000_000) return 110;
@@ -1257,7 +1481,7 @@ export default function DetailAds() {
         return (value, index) => (index % modulus === 0 ? value : '');
     };
 
-    const generateTooltipContent = (params) => {
+    const generateChartTooltipContent = (params) => {
         const date = params[0].axisValue;
         let html = `
       <div style="
@@ -1294,7 +1518,6 @@ export default function DetailAds() {
         return html;
     };
 
-
     const convertNameKeyword = (keyword) => {
         if (!keyword || keyword == null || keyword === undefined) return "-";
 
@@ -1305,7 +1528,56 @@ export default function DetailAds() {
         } else {
             return keyword;
         }
-    }
+    };
+
+    const updateTooltipPosition = (key) => {
+        if (iconRefs.current[key]) {
+            const rect = iconRefs.current[key].getBoundingClientRect();
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+
+            const tooltipWidth = 200;
+            const viewportWidth = window.innerWidth;
+            const padding = 20;
+
+            let left = rect.left + scrollLeft;
+
+            // Hitung posisi center icon untuk arrow
+            const iconCenterX = rect.left + scrollLeft + (rect.width / 2);
+
+            // Cek apakah tooltip akan keluar dari viewport di sebelah kanan
+            if (rect.left + tooltipWidth + padding > viewportWidth) {
+                left = rect.right + scrollLeft - tooltipWidth;
+            }
+
+            // Cek apakah tooltip akan keluar dari viewport di sebelah kiri
+            if (left < padding) {
+                left = padding + scrollLeft;
+            }
+
+            // Hitung posisi arrow berdasarkan selisih posisi icon dengan tooltip
+            const arrowLeft = iconCenterX - left;
+
+            // Pastikan arrow tidak keluar dari batas tooltip (6px dari tepi)
+            const finalArrowLeft = Math.max(6, Math.min(tooltipWidth - 12, arrowLeft));
+
+            setTooltipPosition({
+                top: rect.top + scrollTop - 10,
+                left: left
+            });
+
+            setArrowPosition({ left: `${finalArrowLeft - 5}px` });
+        }
+    };
+
+    const handleMouseEnter = (key) => {
+        setHoveredColumnKey(key);
+        updateTooltipPosition(key);
+    };
+
+    const handleMouseLeave = () => {
+        setHoveredColumnKey(null);
+    };
 
     return (
         <BaseLayout>
@@ -1496,7 +1768,7 @@ export default function DetailAds() {
                                                     {(comparatorDateRange) && (
                                                         <div className="text-center mt-1">
                                                             <small className="text-success">
-                                                                {comparatorDateRange[0].toLocaleDateString("id-ID")} - ${comparatorDateRange[1].toLocaleDateString("id-ID")}
+                                                                {comparatorDateRange[0].toLocaleDateString("id-ID")} - {comparatorDateRange[1].toLocaleDateString("id-ID")}
                                                             </small>
                                                         </div>
                                                     )}
@@ -1518,7 +1790,7 @@ export default function DetailAds() {
                                                     {(comparedDateRange) && (
                                                         <div className="text-center mt-1">
                                                             <small className="text-success">
-                                                                {comparedDateRange[0].toLocaleDateString("id-ID")} - ${comparedDateRange[1].toLocaleDateString("id-ID")}
+                                                                {comparedDateRange[0].toLocaleDateString("id-ID")} - {comparedDateRange[1].toLocaleDateString("id-ID")}
                                                             </small>
                                                         </div>
                                                     )}
@@ -1659,6 +1931,26 @@ export default function DetailAds() {
                                     <Loading size={40} />
                                 </div>
                             )}
+                            {isLoadingAllData && (
+                                <div
+                                    style={{
+                                        position: 'absolute',
+                                        top: 0,
+                                        left: 0,
+                                        right: 0,
+                                        bottom: 0,
+                                        // paddingTop: paginatedData.length > 0 ? '85px' : '0px',
+                                        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                                        display: 'flex',
+                                        justifyContent: 'center',
+                                        alignItems: 'start',
+                                        zIndex: 10,
+                                        // minHeight: paginatedData.length > 0 ? '200px' : '50px',
+                                    }}
+                                >
+                                    <Loading size={40} />
+                                </div>
+                            )}
                             <div className="p-2 d-flex flex-column gap-1">
                                 <div className="d-flex justify-content-between align-items-center mb-2">
                                     <h5>Keywords</h5>
@@ -1704,24 +1996,79 @@ export default function DetailAds() {
                                     }}>
                                         <thead className="table-dark">
                                             <tr>
-                                                {keywordsData.length !== 0 && keywordsData !== null && <th scope="col">No</th>}
+                                                {paginatedData.length !== 0 && paginatedData !== null && <th scope="col">No</th>}
                                                 {allColumns
                                                     .filter((col) => selectedColumns.includes(col.key))
-                                                    .map((col) => (
-                                                        <th key={col.key}>
-                                                            <div className="d-flex justify-content-start align-items-center">
-                                                                {col.label}
-                                                            </div>
-                                                        </th>
-                                                    ))
+                                                    .map((col) => {
+                                                        const isSortable = !['keyword', 'insight', 'salesClassification'].includes(col.key);
+
+                                                        return (
+                                                            <th key={col.key} style={{
+                                                                // width: col.key === "cpdc" ? "300px" : "auto",
+                                                            }}>
+                                                                <div className="d-flex justify-content-start align-items-center gap-1">
+                                                                    {col.label}
+                                                                    {col.toolTip && (
+                                                                        <div
+                                                                            ref={(el) => iconRefs.current[col.key] = el}
+                                                                            style={{ cursor: "pointer", position: "relative" }}
+                                                                            onMouseEnter={() => handleMouseEnter(col.key)}
+                                                                            onMouseLeave={handleMouseLeave}
+                                                                        >
+                                                                            <AiOutlineQuestionCircle />
+                                                                        </div>
+                                                                    )}
+                                                                    {isSortable && (
+                                                                        <SortIcon columnKey={col.key} currentSort={sortConfig} />
+                                                                    )}
+                                                                </div>
+                                                            </th>
+                                                        )
+                                                    })
                                                 }
                                             </tr>
                                         </thead>
+                                        {hoveredColumnKey && createPortal(
+                                            <div
+                                                style={{
+                                                    position: 'absolute',
+                                                    top: tooltipPosition.top,
+                                                    left: tooltipPosition.left,
+                                                    backgroundColor: '#fff',
+                                                    color: '#000',
+                                                    padding: '8px 10px',
+                                                    borderRadius: '4px',
+                                                    boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)',
+                                                    zIndex: 10000,
+                                                    width: '200px',
+                                                    maxWidth: '200px',
+                                                    whiteSpace: 'normal',
+                                                    fontSize: '12px',
+                                                    border: '1px solid #ddd',
+                                                    transform: 'translateY(-100%)'
+                                                }}
+                                            >
+                                                {allColumns.find(col => col.key === hoveredColumnKey)?.toolTip}
+                                                <div
+                                                    style={{
+                                                        position: 'absolute',
+                                                        bottom: '-6px',
+                                                        left: arrowPosition.left,
+                                                        width: '0',
+                                                        height: '0',
+                                                        borderLeft: '6px solid transparent',
+                                                        borderRight: '6px solid transparent',
+                                                        borderTop: '6px solid #fff'
+                                                    }}
+                                                />
+                                            </div>,
+                                            document.body
+                                        )}
                                         <tbody>
-                                            {keywordsData.length !== 0 && keywordsData !== null ? (
-                                                keywordsData?.map((entry, index) => (
+                                            {paginatedData.length !== 0 && paginatedData !== null ? (
+                                                paginatedData?.map((entry, index) => (
                                                     <tr key={entry.campaignId || index}>
-                                                        {keywordsData.length > 0 && keywordsData !== null && (
+                                                        {paginatedData.length > 0 && paginatedData !== null && (
                                                             <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
                                                         )}
                                                         {selectedColumns.includes("keyword") && (
@@ -1998,7 +2345,7 @@ export default function DetailAds() {
                                                             </td>
                                                         )}
                                                         {selectedColumns.includes("cpdc") && (
-                                                            <td style={{ width: "200px" }}>
+                                                            <td style={{ width: "220px" }}>
                                                                 <div className="d-flex flex-column">
                                                                     <span>
                                                                         {
@@ -2025,7 +2372,7 @@ export default function DetailAds() {
                                 </div>
 
                                 {/* Pagination */}
-                                {keywordsData.length > 0 && keywordsData !== null && renderPagination()}
+                                {paginatedData.length > 0 && paginatedData !== null && renderPagination()}
                             </div>
                         </div>
                     </div>
