@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { createPortal } from 'react-dom';
 import * as echarts from "echarts";
 import Calendar from "react-calendar";
 import Select from "react-select";
 import toast from "react-hot-toast";
 import { FaAngleLeft, FaAngleRight, FaAngleDown, FaAngleUp } from "react-icons/fa6";
+import { AiOutlineQuestionCircle } from "react-icons/ai";
 
 import axiosRequest from "../../utils/request";
 import useDebounce from "../../hooks/useDebounce";
@@ -297,9 +299,9 @@ export default function PerformanceStockPage() {
         apiUrl += `&name=${encodeURIComponent(filters.searchQuery.trim())}`;
       }
       
-      if (filters.statusFilter && filters.statusFilter !== "all") {
-        apiUrl += `&state=${filters.statusFilter}`;
-      }
+      // if (filters.statusFilter && filters.statusFilter !== "all") {
+      //   apiUrl += `&state=${filters.statusFilter}`;
+      // }
 
       if (filters.classification && filters.classification.length > 0) {
         const classificationValues = filters.classification.map(cls => cls.value);
@@ -810,7 +812,7 @@ export default function PerformanceStockPage() {
     const getWidthWindow = window.innerWidth;
 
     return (
-      <div className="custom-container-pagination mt-3">
+      <div className="custom-container-pagination">
         <div className="custom-pagination-select d-flex align-items-center gap-2">
           {/* <span
             style={{
@@ -999,7 +1001,7 @@ export default function PerformanceStockPage() {
   // FILTER COLUMNS FEATURE
   const allColumns = [
     { key: "name", label: "Nama" },
-    { key: "stock", label: "Stok" },
+    { key: "stock", label: "Stok", tooltip: "Stok merupakan total keseluruhan stok yang dimiliki Penjual, termasuk stok yang dikunci untuk promosi. Jika suatu produk memiliki stok yang dikunci untuk promosi, maka jumlah stok yang akan ditampilkan sudah termasuk stok yang tersedia untuk dijual." },
     { key: "code", label: "Kode" },
     { key: "salesAvailability", label: "Availability" },
     // { key: "status", label: "Status" },
@@ -1220,6 +1222,7 @@ export default function PerformanceStockPage() {
           itemWidth: 8,
         },
         xAxis: {
+          name: includesColon ? 'Time' : 'Date',
           type: "category",
           data: xAxisData,
           boundaryGap: false,
@@ -1297,6 +1300,32 @@ export default function PerformanceStockPage() {
 
     fetchData(fromDate, toDate, 1);
   }, []);
+
+  const [hoveredColumnKey, setHoveredColumnKey] = useState(null);
+  const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
+  const iconRefs = useRef({});
+
+  const updateTooltipPosition = (key) => {
+    if (iconRefs.current[key]) {
+      const rect = iconRefs.current[key].getBoundingClientRect();
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+      
+      setTooltipPosition({
+        top: rect.top + scrollTop - 5,
+        left: rect.left + scrollLeft - 10
+      });
+    }
+  };
+
+  const handleMouseEnter = (key) => {
+    setHoveredColumnKey(key);
+    updateTooltipPosition(key);
+  };
+
+  const handleMouseLeave = () => {
+    setHoveredColumnKey(null);
+  };
 
   return (
     <>
@@ -1649,6 +1678,7 @@ export default function PerformanceStockPage() {
                               width: "100%",
                               minWidth: "max-content",
                               maxWidth: "none",
+                              overflowX: "visible",
                             }}
                           >
                             {/* Head table */}
@@ -1661,32 +1691,44 @@ export default function PerformanceStockPage() {
                                     <th key={col.key}>
                                       <div className="d-flex justify-content-start gap-1 align-items-center fw-bold">
                                         {col.label}
+                                        {col.tooltip && (
+                                          <div
+                                            ref={(el) => iconRefs.current[col.key] = el}
+                                            style={{ cursor: "pointer", position: "relative" }}
+                                            onMouseEnter={() => handleMouseEnter(col.key)}
+                                            onMouseLeave={handleMouseLeave}
+                                          >
+                                            <AiOutlineQuestionCircle />
+                                          </div>
+                                        )}
                                         {col.key === "stock" && (
                                           <div className="d-flex flex-column">
-                                            <img
-                                              src={iconArrowUp}
-                                              alt="Sort Asc"
+                                            <span
+                                              title="Sort Ascending"
                                               style={{
-                                                width: "10px",
-                                                height: "10px",
-                                                cursor: "pointer",
-                                                opacity:
-                                                  sortOrderData === "asc" ? 1 : 0.5,
+                                                color: sortOrderData === "asc" ? "#007bff" : "#969696FF",
+                                                lineHeight: '1',
+                                                cursor: 'pointer',
+                                                userSelect: 'none',
+                                                fontSize: '10px'
                                               }}
                                               onClick={() => handleSortStock("asc")}
-                                            />
-                                            <img
-                                              src={iconArrowDown}
-                                              alt="Sort Desc"
+                                            >
+                                              <FaAngleUp />
+                                            </span>
+                                            <span
+                                              title="Sort Descending"
                                               style={{
-                                                width: "10px",
-                                                height: "10px",
-                                                cursor: "pointer",
-                                                opacity:
-                                                  sortOrderData === "desc" ? 1 : 0.5,
+                                                color: sortOrderData === "desc" ? "#007bff" : "#969696FF",
+                                                lineHeight: '1',
+                                                cursor: 'pointer',
+                                                userSelect: 'none',
+                                                fontSize: '10px'
                                               }}
                                               onClick={() => handleSortStock("desc")}
-                                            />
+                                            >
+                                              <FaAngleDown />
+                                            </span>
                                           </div>
                                         )}
                                       </div>
@@ -1694,6 +1736,42 @@ export default function PerformanceStockPage() {
                                   ))}
                               </tr>
                             </thead>
+                            {hoveredColumnKey && createPortal(
+                              <div
+                                style={{
+                                  position: 'absolute',
+                                  top: tooltipPosition.top,
+                                  left: tooltipPosition.left,
+                                  backgroundColor: '#fff',
+                                  color: '#000',
+                                  padding: '8px 10px',
+                                  borderRadius: '4px',
+                                  boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)',
+                                  zIndex: 10000,
+                                  width: '200px',
+                                  maxWidth: '200px',
+                                  whiteSpace: 'normal',
+                                  fontSize: '12px',
+                                  border: '1px solid #ddd',
+                                  transform: 'translateY(-100%)'
+                                }}
+                              >
+                                {allColumns.find(col => col.key === hoveredColumnKey)?.tooltip}
+                                <div
+                                  style={{
+                                    position: 'absolute',
+                                    bottom: '-6px',
+                                    left: '10px',
+                                    width: '0',
+                                    height: '0',
+                                    borderLeft: '6px solid transparent',
+                                    borderRight: '6px solid transparent',
+                                    borderTop: '6px solid #fff'
+                                  }}
+                                />
+                              </div>,
+                              document.body
+                            )}
                             {/* Body Table */}
                             <tbody>
                               {filteredData.length > 0 ? (
@@ -1714,7 +1792,7 @@ export default function PerformanceStockPage() {
                                         {selectedColumns.includes("name") && (
                                           <td
                                             style={{
-                                              width: "400px",
+                                              width: "500px",
                                               cursor: "pointer",
                                               color: selectedProduct?.productId == latestStockData.productId ? "#F6881F" : "",
                                             }}
@@ -1733,12 +1811,12 @@ export default function PerformanceStockPage() {
                                         )}
 
                                         {selectedColumns.includes("code") && (
-                                          <td>{latestStockData?.productId === undefined || latestStockData?.productId === null ? "-" : latestStockData?.productId}</td>
+                                          <td style={{ width: "160px" }}>{latestStockData?.productId === undefined || latestStockData?.productId === null ? "-" : latestStockData?.productId}</td>
                                           // <td>{latestStockData?.parentSku === undefined || latestStockData?.parentSku === null ? "-" : latestStockData?.parentSku}</td>
                                         )}
 
                                         {selectedColumns.includes("salesAvailability") && (
-                                          <td style={{ width: "180px" }}>
+                                          <td style={{ width: "200px" }}>
                                             <span className={`badge text-${latestStockData?.isSalesAvailable === true ? "success" : "danger"}`}>
                                               {latestStockData?.salesAvailability === undefined || latestStockData?.salesAvailability === null ? "-" : latestStockData?.salesAvailability}
                                             </span>
@@ -1790,7 +1868,7 @@ export default function PerformanceStockPage() {
                                                     className="list-group-item d-flex justify-content-start gap-2"
                                                   >
                                                     <span style={{ width: "8px" }}></span>
-                                                    <span style={{ width: "388px" }}>
+                                                    <span style={{ width: "615px" }}>
                                                       {variant.name}
                                                     </span>
                                                     <span>{variant.totalAvailableStock || 0} Stok</span>
