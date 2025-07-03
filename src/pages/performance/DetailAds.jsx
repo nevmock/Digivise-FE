@@ -107,10 +107,10 @@ export default function DetailAds() {
             dataKey: "broadGmv",
             type: "currency"
         },
-        dailyBudget: {
+        cost: {
             label: "Biaya Iklan",
             color: "#00B69A",
-            dataKey: "dailyBudget",
+            dataKey: "cost",
             type: "currency"
         },
         roas: {
@@ -314,7 +314,6 @@ export default function DetailAds() {
             const to1ISO = toLocalISOString(dateRanges.current.to);
 
             const apiUrl = `/api/product-keyword/chart?shopId=${getShopeeId}&campaignId=${campaignId}&from=${from1ISO}&to=${to1ISO}`;
-
             const response = await axiosRequest.get(apiUrl);
             const data = response.data;
             const content = Array.isArray(data) ? data : [];
@@ -483,24 +482,65 @@ export default function DetailAds() {
         );
     };
 
-    function calculateMetricTotalsValue(keywordProducts) {
+    // Function to calculate totals for each metric based on raw data affected by time filter
+    function calculateMetricTotalsValue(products) {
+        // Make an object to store totals for each metric
         const totals = {};
-        Object.keys(metrics).forEach((metricKey) => {
+
+        // Define which metrics are calculated vs summed
+        const calculatedMetrics = ['ctr', 'roas'];
+        const summedMetrics = Object.keys(metrics).filter(key => !calculatedMetrics.includes(key));
+
+        // First, calculate all summed metrics
+        summedMetrics.forEach(metricKey => {
             totals[metricKey] = 0;
-            keywordProducts.forEach((keywordProduct) => {
-                if (keywordProduct.data && keywordProduct.data.length > 0) {
-                    keywordProduct.data.forEach((keywordData) => {
-                        const dataKey = metrics[metricKey].dataKey;
-                        const value = keywordData[dataKey];
-                        if (value !== undefined && value !== null) {
-                            totals[metricKey] += Number(value);
-                        }
-                    });
-                }
+            products.forEach(product => {
+                if (product.data.length === 0) return;
+                product.data.forEach(productData => {
+                    const dataKey = metrics[metricKey].dataKey;
+                    const value = productData[dataKey];
+                    if (value !== undefined && value !== null) {
+                        totals[metricKey] += Number(value);
+                    }
+                });
             });
         });
+
+        // CTR = (Total Jumlah Klik ÷ Total Jumlah Dilihat) x 100%
+        if (totals.impression > 0) {
+            totals.ctr = (totals.click / totals.impression) * 100;
+        } else {
+            totals.ctr = 0;
+        }
+
+        // ROAS = Total Penjualan dari Iklan ÷ Total Biaya Iklan
+        if (totals.cost > 0) {
+            totals.roas = totals.broadGmv / totals.cost;
+        } else {
+            totals.roas = 0;
+        }
+
         return totals;
     };
+
+    // function calculateMetricTotalsValue(keywordProducts) {
+    //     const totals = {};
+    //     Object.keys(metrics).forEach((metricKey) => {
+    //         totals[metricKey] = 0;
+    //         keywordProducts.forEach((keywordProduct) => {
+    //             if (keywordProduct.data && keywordProduct.data.length > 0) {
+    //                 keywordProduct.data.forEach((keywordData) => {
+    //                     const dataKey = metrics[metricKey].dataKey;
+    //                     const value = keywordData[dataKey];
+    //                     if (value !== undefined && value !== null) {
+    //                         totals[metricKey] += Number(value);
+    //                     }
+    //                 });
+    //             }
+    //         });
+    //     });
+    //     return totals;
+    // };
 
     function getAllDaysInLast7Days() {
         const getLocalDateString = (date) => {
@@ -1127,7 +1167,7 @@ export default function DetailAds() {
         { key: "keyword", label: "Kata Pencarian" },
         { key: "dailyBudget", label: "Modal", toolTip: "Modal yang kamu tentukan untuk iklanmu. Iklanmu akan dihentikan sementara jika biaya telah mencapai Total Modal atau Modal Harian. Jika biaya telah mencapai Modal Harian, iklanmu akan dilanjutkan keesokan harinya." },
         { key: "insight", label: "Insight", toolTip: "Insight iklan, klik untuk melihat detail" },
-        { key: "salesClassification", label: "Sales Classification" },
+        // { key: "salesClassification", label: "Sales Classification" },
         { key: "cost", label: "Biaya Iklan", toolTip: "Biaya yang dikeluarkan untuk iklanmu." },
         { key: "broadGmv", label: "Penjualan dari iklan", toolTip: "Total penjualan yang dihasilkan dari produk yang terjual dalam 7 hari setelah iklan diklik." },
         { key: "roas", label: "ROAS", toolTip: "ROAS (Efektivitas Iklan) menunjukkan total penjualan yang dihasilkan dari iklanmu sesuai dengan biaya yang ditentukan. Efektivitas Iklan = Penjualan dari Iklan ÷ Biaya Iklan. (Catatan: Mohon tinjau Efektivitas Iklan secara rutin setiap minggunya)" },
@@ -1661,7 +1701,7 @@ export default function DetailAds() {
                                                 <span className="fw-bold">
                                                     {productData?.dailyBudget
                                                         ? `Rp ${Number(productData.dailyBudget).toLocaleString("id-ID")}`
-                                                        : "Loading..."}
+                                                        : "-"}
                                                 </span>
                                             </div>
                                             <div
@@ -1683,7 +1723,7 @@ export default function DetailAds() {
                                             <div className="d-flex flex-column">
                                                 <div className="d-flex justify-content-between flex-column align-items-center">
                                                     <span>Periode Iklan</span>
-                                                    <span className="fw-bold">Tidak terbatas</span>
+                                                    <span className="fw-bold">{productData.adsPeriod || "-"}</span>
                                                 </div>
                                             </div>
                                             <div
@@ -1706,7 +1746,7 @@ export default function DetailAds() {
                                                 <div className="d-flex flex-column d-flex flex-column align-items-center align-items-sm-end">
                                                     <span>Penempatan Iklan</span>
                                                     <span className="fw-bold">
-                                                        {productData?.productPlacement === "targeting" ? "Rekomendasi" : "Pencarian"}
+                                                        {productData?.productPlacement === "targeting" ? "Rekomendasi" : "Pencarian" || "-"}
                                                     </span>
                                                 </div>
                                             </div>
@@ -2094,7 +2134,7 @@ export default function DetailAds() {
                                                                 </span>
                                                             </td>
                                                         )}
-                                                        {selectedColumns.includes("salesClassification") && (
+                                                        {/* {selectedColumns.includes("salesClassification") && (
                                                             <td style={{ width: "200px" }}>
                                                                 <div className="d-flex gap-1 align-items-center">
                                                                     <div
@@ -2114,7 +2154,7 @@ export default function DetailAds() {
                                                                     </span>
                                                                 </div>
                                                             </td>
-                                                        )}
+                                                        )} */}
                                                         {selectedColumns.includes("cost") && (
                                                             <td style={{ width: "180px" }}>
                                                                 <div className="d-flex flex-column">

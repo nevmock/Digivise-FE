@@ -915,7 +915,7 @@ export default function PerformanceProductPage() {
     { key: "name", label: "Nama" },
     // { key: "insight", label: "Insight" },
     { key: "salesClassification", label: "Sales Classification" },
-    { key: "pv", label: "Pengunjung", tooltip: "Total pengunjung unik yang melihat produk (mengunjungi >1 kali dihitung sebagai 1 Pengunjung). Catatan: Total ini termasuk produk Dihapus/Diarsipkan/Diblokir/Sedang Diperiksa." },
+    { key: "pv", label: "Pengunjung", tooltip: "Total pengunjung unik yang melihat produk (mengunjungi >1 kali dihitung sebagai 1 Pengunjung). Catatan: Total ini termasuk produk Dihapus/Diarsipkan/ Diblokir/Sedang Diperiksa." },
     { key: "addToCartUnits", label: "Add To Cart", tooltip: "Jumlah produk yang ditambahkan ke keranjang, dalam jangka waktu tertentu." },
     { key: "uvToAddToCartRate", label: "Add To Cart (Percentage)", tooltip: " Jumlah pengunjung yang telah menambahkan produk ke keranjang, dibagi jumlah pengunjung yang telah melihat halaman rincian produk dalam jangka waktu yang dipilih." },
     { key: "placedUnits", label: "Produk Siap Dikirim", tooltip: "Jumlah SKU induk yang siap dikirim dalam jangka waktu tertentu." },
