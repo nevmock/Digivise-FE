@@ -103,10 +103,10 @@ const AdsTable = ({ shoppeeId }) => {
       dataKey: "broadGmv",
       type: "currency"
     },
-    dailyBudget: {
+    cost: {
       label: "Biaya Iklan",
       color: "#00B69A",
-      dataKey: "dailyBudget",
+      dataKey: "cost",
       type: "currency"
     },
     roas: {
@@ -232,10 +232,15 @@ const AdsTable = ({ shoppeeId }) => {
 
   // Function to calculate totals for each metric based on raw data affected by time filter
   function calculateMetricTotalsValue(products) {
-    // Make an object to store totals for each available metric
+    // Make an object to store totals for each metric
     const totals = {};
-    // Foreach metric on all available metrics
-    Object.keys(metrics).forEach(metricKey => {
+    
+    // Define which metrics are calculated vs summed
+    const calculatedMetrics = ['ctr', 'roas'];
+    const summedMetrics = Object.keys(metrics).filter(key => !calculatedMetrics.includes(key));
+    
+    // First, calculate all summed metrics
+    summedMetrics.forEach(metricKey => {
       totals[metricKey] = 0;
       products.forEach(product => {
         if (product.data.length === 0) return;
@@ -248,8 +253,44 @@ const AdsTable = ({ shoppeeId }) => {
         });
       });
     });
+    
+    // CTR = (Total Jumlah Klik ÷ Total Jumlah Dilihat) x 100%
+    if (totals.impression > 0) {
+      totals.ctr = (totals.click / totals.impression) * 100;
+    } else {
+      totals.ctr = 0;
+    }
+    
+    // ROAS = Total Penjualan dari Iklan ÷ Total Biaya Iklan
+    if (totals.cost > 0) {
+      totals.roas = totals.broadGmv / totals.cost;
+    } else {
+      totals.roas = 0;
+    }
+    
     return totals;
   };
+
+  // // Function to calculate totals for each metric based on raw data affected by time filter
+  // function calculateMetricTotalsValue(products) {
+  //   // Make an object to store totals for each metric
+  //   const totals = {};
+  //   // Forech metric on all metrics
+  //   Object.keys(metrics).forEach(metricKey => {
+  //     totals[metricKey] = 0;
+  //     products.forEach(product => {
+  //       if (product.data.length === 0) return;
+  //       product.data.forEach(productData => {
+  //         const dataKey = metrics[metricKey].dataKey;
+  //         const value = productData[dataKey];
+  //         if (value !== undefined && value !== null) {
+  //           totals[metricKey] += Number(value);
+  //         }
+  //       });
+  //     });
+  //   });
+  //   return totals;
+  // };
 
   const handleSort = (a, b, config) => {
     const { column, direction } = config;
@@ -1670,23 +1711,6 @@ const AdsTable = ({ shoppeeId }) => {
     fetchTableData(dateRanges, 1, currentFilters);
   }, [debouncedSearchTerm, statusAdsFilter, selectedTypeAds, selectedOptionPlacement, selectedClassificationOption]);
 
-  // useEffect(() => {
-  //   setCurrentPage(1);
-
-  //   let dateRanges;
-  //   if (rangeParameters && rangeParameters.isComparison) {
-  //     dateRanges = {
-  //       current: rangeParameters.current,
-  //       previous: rangeParameters.previous
-  //     };
-  //   } else {
-  //     dateRanges = generateComparisonDateRanges(date, flagCustomRoasDate);
-  //   }
-
-  //   const currentFilters = buildCurrentFilters();
-  //   fetchTableData(dateRanges, 1, currentFilters);
-  // }, [debouncedSearchTerm, statusAdsFilter, selectedTypeAds, selectedOptionPlacement, selectedClassificationOption]);
-
 
 
   const handleStyleMatricFilterButton = (metricKey) => {
@@ -2003,10 +2027,10 @@ const AdsTable = ({ shoppeeId }) => {
                             metrics[metricKey].type === "currency"
                               ? <span>Rp. {formatTableValue(metricsTotals[metricKey], "simple_currency")}</span>
                               : metrics[metricKey].type === "simple_currency"
-                                ? <span>{formatTableValue(metricsTotals[metricKey], "simple_currency")}</span>
-                                : metrics[metricKey].type === "percentage"
-                                  ? <span>{formatTableValue(metricsTotals[metricKey], "percentage")}</span>
-                                  : <span>{formatTableValue(metricsTotals[metricKey], "coma")}</span>
+                              ? <span>{formatTableValue(metricsTotals[metricKey], "simple_currency")}</span>
+                              : metrics[metricKey].type === "percentage"
+                              ? <span>{formatTableValue(metricsTotals[metricKey], "percentage")}</span>
+                              : <span>{formatTableValue(metricsTotals[metricKey], "coma")}</span>
                           }
                         </span>
                       </div>
@@ -2357,7 +2381,7 @@ const AdsTable = ({ shoppeeId }) => {
                               )
                               .map((col, index, filteredCols) => {
                                 const isLastPosition = index === filteredCols.length - 1;
-                                const isSortable = !['info_iklan', 'insight', 'salesClassification'].includes(col.key);
+                                const isSortable = !['info_iklan', 'insight', 'salesClassification', 'detail'].includes(col.key);
 
                                 return (
                                   <th key={col.key} className={sortConfig.column === col.key ? 'sort-active' : ''}>
