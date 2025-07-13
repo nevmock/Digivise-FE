@@ -3,7 +3,6 @@ import AdsTable from "../../components/organisms/ads/adsTable";
 
 
 export default function PerformanceAdsPage() {
-    // const getShopeeId = "252234165";
     const getShopeeId = localStorage.getItem("shopeeId");
     if (getShopeeId == null || getShopeeId === null || getShopeeId === "null" || getShopeeId === "undefined") {
         return (

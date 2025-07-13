@@ -20,7 +20,6 @@ const Navbar = () => {
         logoutSuccess, 
         switchMerchant, 
         isSwitching,
-        // loginToMerchant
     } = useAuth();
     const [showDropdown, setShowDropdown] = useState(false);
     const [showModalFormCreateMerchant, setShowModalFormCreateMerchant] = useState(false);
@@ -171,6 +170,18 @@ const Navbar = () => {
         }
     };
 
+    const getColorByStatus = (type) => {
+        switch (type) {
+            case "urgent":
+                return "#dc3545";
+            case "safe":
+                return "#28a745";
+            case "unknown":
+            default:
+                return "#424242FF";
+        }
+    };
+
     const activeMerchant = userNow?.activeMerchant || userData?.activeMerchant || null;
     const merchants = userNow?.merchants || userData?.merchants || [];
 
@@ -213,6 +224,7 @@ const Navbar = () => {
                                                 {merchants.map((merchant) => {
                                                     const isActive = activeMerchant?.id === merchant.id;
                                                     const isSwitchingThis = switchingMerchantId === merchant.id;
+                                                    const statusTypeLastLogin = convertNotifySessionExpired(merchant.lastLogin);
                                                     
                                                     return (
                                                         <div 
@@ -247,10 +259,10 @@ const Navbar = () => {
                                                                             <small
                                                                                 style={{
                                                                                     fontSize: "12px",
-                                                                                    color: convertNotifySessionExpired(merchant.lastLogin).type === "urgent" ? "#dc3545" : "#28a745"
+                                                                                    color: getColorByStatus(statusTypeLastLogin.type)
                                                                                 }}
                                                                             >
-                                                                                {convertNotifySessionExpired(merchant.lastLogin).text}
+                                                                                {statusTypeLastLogin.text}
                                                                             </small>
                                                                         </div>
                                                                     </div>

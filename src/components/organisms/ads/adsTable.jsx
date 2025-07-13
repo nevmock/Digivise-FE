@@ -349,6 +349,8 @@ const AdsTable = ({ shoppeeId }) => {
   };
 
   const fetchChartData = async (dateRanges) => {
+    setIsLoading(true);
+
     try {
       const from1ISO = toLocalISOString(dateRanges.current.from);
       const to1ISO = toLocalISOString(dateRanges.current.to);
@@ -357,7 +359,7 @@ const AdsTable = ({ shoppeeId }) => {
 
       const response = await axiosRequest.get(apiUrl);
       const data = await response.data;
-      const content = data.content || [];
+      const content = data?.content || [];
 
       setChartRawData(content);
       const totals = calculateMetricTotalsValue(content);

@@ -316,6 +316,8 @@ export default function PerformanceProductPage() {
   };
 
   const fetchChartData = async (dateRanges) => {
+    setIsLoading(true);
+    
     try {
       const from1ISO = toLocalISOString(dateRanges.current.from);
       const to1ISO = toLocalISOString(dateRanges.current.to);
@@ -324,7 +326,7 @@ export default function PerformanceProductPage() {
 
       const response = await axiosRequest.get(apiUrl);
       const data = await response.data;
-      const content = data.content || [];
+      const content = data?.content || [];
 
       setChartRawData(content);
       const totals = calculateMetricTotalsValue(content);
@@ -1734,7 +1736,7 @@ export default function PerformanceProductPage() {
                             {(comparedDateRange) && (
                               <div className="text-center mt-1">
                                   <small className="text-success">
-                                      {comparedDateRange[0].toLocaleDateString("id-ID")} - ${comparedDateRange[1].toLocaleDateString("id-ID")}
+                                      {comparedDateRange[0].toLocaleDateString("id-ID")} - {comparedDateRange[1].toLocaleDateString("id-ID")}
                                   </small>
                               </div>
                             )}
@@ -2045,7 +2047,7 @@ export default function PerformanceProductPage() {
                           )}
                         </div>
                         {/* Table container */}
-                        <div className="table-responsive">
+                        <div className="table-responsive" style={{ borderRadius: "4px" }}>
                           <table className="table table-centered" 
                             style={{
                               width: "100%",

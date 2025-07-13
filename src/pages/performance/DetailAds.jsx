@@ -309,6 +309,8 @@ export default function DetailAds() {
     };
 
     const fetchChartData = async (dateRanges) => {
+        setIsLoading(true);
+
         try {
             const from1ISO = toLocalISOString(dateRanges.current.from);
             const to1ISO = toLocalISOString(dateRanges.current.to);
@@ -345,7 +347,7 @@ export default function DetailAds() {
 
             const response = await axiosRequest.get(apiUrl);
             const data = response.data;
-            const content = data.content || [];
+            const content = data?.content || [];
 
             setAllKeywordsData(content);
             setTotalElements(content.length);
