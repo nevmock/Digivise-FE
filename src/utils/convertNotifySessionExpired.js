@@ -3,7 +3,7 @@ import moment from "moment";
 const convertNotifySessionExpired = (time_createdAt) => {
     if (!time_createdAt || !moment(time_createdAt).isValid()) {
         return {
-            type: "urgent",
+            type: "unknown",
             text: "Never logged in"
         };
     }
@@ -13,12 +13,12 @@ const convertNotifySessionExpired = (time_createdAt) => {
     if (daysSinceCreated > 10) {
         return {
             type: "urgent",
-            text: "Session inactive, login again"
+            text: "Session inactive, please login again"
         };
     }
 
     return {
-        type: "info",
+        type: "safe",
         text: "Session active"
     };
 };
