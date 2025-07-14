@@ -12,8 +12,6 @@ import useDebounce from "../../hooks/useDebounce";
 import formatStyleSalesClassification from "../../utils/convertFormatSalesClassification";
 import formatTableValue from "../../utils/formatTableValue";
 import BaseLayout from "../../components/organisms/BaseLayout";
-import iconArrowUp from "../../assets/icon/arrow-up.png";
-import iconArrowDown from "../../assets/icon/arrow-down.png";
 import Loading from "../../components/atoms/Loading/Loading";
 
 
@@ -24,23 +22,25 @@ export default function PerformanceStockPage() {
   const [chartData, setChartData] = useState([]);
   const chartRef = useRef(null);
   const [variantsChartData, setVariantsChartData] = useState([]);
+  const chartInstanceRef = useRef(null);
+  const [allSortedData, setAllSortedData] = useState([]);
   // Filter
   const [date, setDate] = useState(getAllDaysInLast7Days());
   const [dateRange, setDateRange] = useState([null, null]);
   const [dateMode, setDateMode] = useState('preset'); 
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [statusProductStockFilter, setStatusProductStockFilter] =
-    useState("all");
+  // const [statusProductStockFilter, setStatusProductStockFilter] =
+  //   useState("all");
   const [showTableColumn, setShowTableColumn] = useState(false);
   const [selectedClassificationOption, setSelectedClassificationOption] =
     useState([]);
   const [expandedVariantProduct, setExpandedVariantProduct] = useState({});
   const [sortOrderData, setSortOrderData] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
-  const [paginatedData, setPaginatedData] = useState([]);
+  // const [paginatedData, setPaginatedData] = useState([]);
   const [totalPages, setTotalPages] = useState(1);
   const [totalElements, setTotalElements] = useState(0);
   // Other
@@ -49,6 +49,7 @@ export default function PerformanceStockPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isContentLoading, setIsContentLoading] = useState(false);
   const [isTableFilterLoading, setIsTableFilterLoading] = useState(false);
+  const [isSortingMode, setIsSortingMode] = useState(false);
 
   const getShopeeId = localStorage.getItem("shopeeId");
   if (getShopeeId == null || getShopeeId === null || getShopeeId === "null" || getShopeeId === "undefined") {
@@ -162,15 +163,16 @@ export default function PerformanceStockPage() {
     return { from1, to1, from2, to2 };
   };
 
-  const buildApiUrlWithComparison = (baseUrl, getShopeeId, fromDate, toDate, limit, page = null) => {
-    const { from1, to1, from2, to2 } = calculateComparisonDates(fromDate, toDate);
+  // const buildApiUrlWithComparison = (baseUrl, getShopeeId, fromDate, toDate, limit, page = null) => {
+  const buildApiUrlWithComparison = (baseUrl, getShopeeId, limit, page = null) => {
+    // const { from1, to1, from2, to2 } = calculateComparisonDates(fromDate, toDate);
     
-    const from1ISO = toLocalISOString(from1);
-    const to1ISO = toLocalISOString(to1);
-    const from2ISO = toLocalISOString(from2);
-    const to2ISO = toLocalISOString(to2);
+    // const from1ISO = toLocalISOString(from1);
+    // const to1ISO = toLocalISOString(to1);
+    // const from2ISO = toLocalISOString(from2);
+    // const to2ISO = toLocalISOString(to2);
     
-    let apiUrl = `${baseUrl}?shopId=${getShopeeId}&from1=${from1ISO}&to1=${to1ISO}&from2=${from2ISO}&to2=${to2ISO}&limit=${limit}`;
+    let apiUrl = `${baseUrl}?shopId=${getShopeeId}&limit=${limit}`;
     
     if (page !== null) {
       const backendPage = Math.max(0, page - 1);
@@ -191,52 +193,56 @@ export default function PerformanceStockPage() {
     return apiUrl;
   };
 
-  const getCurrentDateRange = () => {
-    let fromDate, toDate;
+
+
+  // const getCurrentDateRange = () => {
+  //   let fromDate, toDate;
     
-    switch (dateMode) {
-      case 'range':
-        if (dateRange[0] && dateRange[1]) {
-          fromDate = new Date(dateRange[0]);
-          toDate = new Date(dateRange[1]);
-        }
-        break;
-      case 'single':
-        if (date) {
-          fromDate = new Date(date);
-          toDate = new Date(date);
-        }
-        break;
-      case 'preset':
-      default:
-        if (Array.isArray(date)) {
-          fromDate = new Date(date[0]);
-          toDate = new Date(date[date.length - 1]);
-        } else if (date === "Bulan Ini") {
-          const today = new Date();
-          fromDate = new Date(today.getFullYear(), today.getMonth(), 1);
-          toDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-        } else if (date) {
-          fromDate = new Date(date);
-          toDate = new Date(date);
-        } else {
-          const today = new Date();
-          fromDate = new Date();
-          fromDate.setDate(today.getDate() - 7);
-          toDate = today;
-        }
-        break;
-    }
+  //   switch (dateMode) {
+  //     case 'range':
+  //       if (dateRange[0] && dateRange[1]) {
+  //         fromDate = new Date(dateRange[0]);
+  //         toDate = new Date(dateRange[1]);
+  //       }
+  //       break;
+  //     case 'single':
+  //       if (date) {
+  //         fromDate = new Date(date);
+  //         toDate = new Date(date);
+  //       }
+  //       break;
+  //     case 'preset':
+  //     default:
+  //       if (Array.isArray(date)) {
+  //         fromDate = new Date(date[0]);
+  //         toDate = new Date(date[date.length - 1]);
+  //       } else if (date === "Bulan Ini") {
+  //         const today = new Date();
+  //         fromDate = new Date(today.getFullYear(), today.getMonth(), 1);
+  //         toDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+  //       } else if (date) {
+  //         fromDate = new Date(date);
+  //         toDate = new Date(date);
+  //       } else {
+  //         const today = new Date();
+  //         fromDate = new Date();
+  //         fromDate.setDate(today.getDate() - 7);
+  //         toDate = today;
+  //       }
+  //       break;
+  //   }
 
-    if (fromDate && toDate) {
-      fromDate.setHours(0, 0, 0, 0);
-      toDate.setHours(23, 59, 59, 999);
-    }
+  //   if (fromDate && toDate) {
+  //     fromDate.setHours(0, 0, 0, 0);
+  //     toDate.setHours(23, 59, 59, 999);
+  //   }
 
-    return { fromDate, toDate };
-  };
+  //   return { fromDate, toDate };
+  // };
 
   const fetchChartData = async (fromDate, toDate) => {
+    setIsLoading(true);
+
     try {
       let currentFromDate, currentToDate;
 
@@ -254,7 +260,7 @@ export default function PerformanceStockPage() {
         getShopeeId,
         currentFromDate,
         currentToDate,
-        1000000000
+        100000
       );
 
       const response = await axiosRequest.get(apiUrl);
@@ -269,29 +275,72 @@ export default function PerformanceStockPage() {
       toast.error("Gagal mengambil data chart stock produk");
       console.error('Gagal mengambil data chart stock produk, kesalahan pada server:', error);
       return [];
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const fetchTableData = async (fromDate, toDate, page = 1, filters = {}) => {
+    const fetchAllTableData = async (filters = {}) => {
     setIsTableFilterLoading(true);
 
     try {
-      let currentFromDate, currentToDate;
+        let apiUrl = buildApiUrlWithComparison(
+            '/api/product-stock/newest',
+            getShopeeId,
+            100000,
+            0
+        );
 
-      if (dateMode === 'range' && dateRange[0] && dateRange[1]) {
-        currentFromDate = new Date(dateRange[0]);
-        currentToDate = new Date(dateRange[1]);
-      } else {
-        currentFromDate = fromDate instanceof Date ? fromDate : new Date(fromDate);
-        currentToDate = toDate instanceof Date ? toDate : new Date(toDate);
-      }
+        if (filters.searchQuery && filters.searchQuery.trim() !== "") {
+            apiUrl += `&name=${encodeURIComponent(filters.searchQuery.trim())}`;
+        }
+
+        if (filters.classification && filters.classification.length > 0) {
+            const classificationValues = filters.classification.map(cls => cls.value);
+            apiUrl += `&salesClassification=${classificationValues.join(",")}`;
+        }
+
+        const response = await axiosRequest.get(apiUrl);
+        const data = response.data;
+        const content = data.content || [];
+
+        setAllSortedData(content);
+        setTotalElements(data?.totalElements || 0);
+
+        return content;
+    } catch (error) {
+        toast.error("Gagal mengambil data tabel stock produk");
+        console.error('Gagal mengambil data tabel stock produk, kesalahan pada server:', error);
+        return [];
+    } finally {
+        setIsTableFilterLoading(false);
+    }
+  }
+
+  // const fetchTableData = async (fromDate, toDate, page = 1, filters = {}) => {
+  const fetchTableData = async (page = 1, filters = {}, customItemsPerPage = null) => {
+    setIsTableFilterLoading(true);
+
+    try {
+      // let currentFromDate, currentToDate;
+
+      // if (dateMode === 'range' && dateRange[0] && dateRange[1]) {
+      //   currentFromDate = new Date(dateRange[0]);
+      //   currentToDate = new Date(dateRange[1]);
+      // } else {
+      //   currentFromDate = fromDate instanceof Date ? fromDate : new Date(fromDate);
+      //   currentToDate = toDate instanceof Date ? toDate : new Date(toDate);
+      // }
+
+      const effectiveItemsPerPage = customItemsPerPage || itemsPerPage;
 
       let apiUrl = buildApiUrlWithComparison(
-        '/api/product-stock/by-shop',
+        // '/api/product-stock/by-shop',
+        '/api/product-stock/newest',
         getShopeeId,
-        currentFromDate,
-        currentToDate,
-        itemsPerPage,
+        // currentFromDate,
+        // currentToDate,
+        effectiveItemsPerPage,
         page
       );
 
@@ -305,13 +354,15 @@ export default function PerformanceStockPage() {
 
       if (filters.classification && filters.classification.length > 0) {
         const classificationValues = filters.classification.map(cls => cls.value);
-        apiUrl += `&classification=${classificationValues.join(",")}`;
+        apiUrl += `&salesClassification=${classificationValues.join(",")}`;
       }
+
 
       const response = await axiosRequest.get(apiUrl);
       const data = response.data;
       const content = data.content || [];
 
+      // setOriginalFilteredData(content);
       setFilteredData(content);
       setTotalPages(data?.totalPages || 1);
       setTotalElements(data?.totalElements || 0);
@@ -326,6 +377,18 @@ export default function PerformanceStockPage() {
     }
   };
 
+  const applyFrontendPagination = (data, page, itemsPerPage) => {
+    const startIndex = (page - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedData = data.slice(startIndex, endIndex);
+    const totalPages = Math.ceil(data.length / itemsPerPage);
+    
+    setFilteredData(paginatedData);
+    setTotalPages(totalPages);
+    
+    return paginatedData;
+  };
+
   const fetchData = async (fromDate, toDate, page = 1) => {
     const isInitialLoad = !chartRawData.length;
     if (isInitialLoad) {
@@ -337,14 +400,22 @@ export default function PerformanceStockPage() {
     try {
       const currentFilters = {
         searchQuery: debouncedSearchTerm,
-        statusFilter: statusProductStockFilter,
+        // statusFilter: statusProductStockFilter,
         classification: selectedClassificationOption
       };
 
       await Promise.all([
         fetchChartData(fromDate, toDate),
-        fetchTableData(fromDate, toDate, page, currentFilters)
+        // fetchTableData(fromDate, toDate, page, currentFilters)
+        // fetchTableData(page, currentFilters)
+        isSortingMode ? 
+                    fetchAllTableData(currentFilters) : 
+                    fetchTableData(page, currentFilters)
       ]);
+
+      if (isSortingMode && allSortedData.length > 0) {
+                applyFrontendPagination(allSortedData, page, itemsPerPage);
+            }
     } catch (error) {
       toast.error("Gagal mengambil data stock produk");
       console.error('Gagal mengambil data stock produk, kesalahan pada server:', error);
@@ -357,16 +428,9 @@ export default function PerformanceStockPage() {
   const buildCurrentFilters = () => {
     return {
       searchQuery: debouncedSearchTerm,
-      statusFilter: statusProductStockFilter,
+      // statusFilter: statusProductStockFilter,
       classification: selectedClassificationOption,
     };
-  };
-
-  const getLatestStockData = (product) => {
-    if (!product.data || product.data.length === 0) return null;
-    return product.data.reduce((latest, current) =>
-      new Date(current.createdAt) > new Date(latest.createdAt) ? current : latest
-    );
   };
 
   const handleProductClick = (product) => {
@@ -375,7 +439,9 @@ export default function PerformanceStockPage() {
     // } else {
     //   setSelectedProduct(product);
     // }
-    setSelectedProduct((prev) => (prev?.productId === product.productId ? null : product));
+    const productData = product.data && product.data[0] ? product.data[0] : product;
+    setSelectedProduct((prev) => (prev?.productId === productData.productId ? null : productData));
+    // setSelectedProduct((prev) => (prev?.productId === product.productId ? null : product));
   };
   
   function generateChartData(selectedDate = null, product = null) {
@@ -792,11 +858,23 @@ export default function PerformanceStockPage() {
     if (pageNumber >= 1 && pageNumber <= totalPages && pageNumber !== currentPage) {
       setCurrentPage(pageNumber);
 
-      const { fromDate, toDate } = getCurrentDateRange();
-      if (fromDate && toDate) {
-        const currentFilters = buildCurrentFilters();
-        fetchTableData(fromDate, toDate, pageNumber, currentFilters);
-      }
+      if (isSortingMode) {
+                // Frontend pagination for sorted data
+                applyFrontendPagination(allSortedData, pageNumber, itemsPerPage);
+            } else {
+                // Backend pagination for normal data
+                const currentFilters = buildCurrentFilters();
+                fetchTableData(pageNumber, currentFilters);
+            }
+
+      // const currentFilters = buildCurrentFilters();
+      // fetchTableData(pageNumber, currentFilters);
+
+      // const { fromDate, toDate } = getCurrentDateRange();
+      // if (fromDate && toDate) {
+      //   const currentFilters = buildCurrentFilters();
+      //   fetchTableData(fromDate, toDate, pageNumber, currentFilters);
+      // }
     }
   };
 
@@ -804,6 +882,18 @@ export default function PerformanceStockPage() {
     const newItemsPerPage = parseInt(e.target.value, 10);
     setItemsPerPage(newItemsPerPage);
     setCurrentPage(1);
+
+    if (isSortingMode) {
+        // Recalculate frontend pagination
+        applyFrontendPagination(allSortedData, 1, newItemsPerPage);
+    } else {
+        // Fetch new data with new items per page
+        const currentFilters = buildCurrentFilters();
+        fetchTableData(1, currentFilters, newItemsPerPage);
+    }
+
+    // const currentFilters = buildCurrentFilters();
+    // fetchTableData(1, currentFilters);
   };
 
   const renderPagination = () => {
@@ -812,7 +902,7 @@ export default function PerformanceStockPage() {
     const getWidthWindow = window.innerWidth;
 
     return (
-      <div className="custom-container-pagination">
+      <div className="custom-container-pagination mt-2">
         <div className="custom-pagination-select d-flex align-items-center gap-2">
           {/* <span
             style={{
@@ -1041,27 +1131,182 @@ export default function PerformanceStockPage() {
   };
 
 
+  // UPDATED: handleSortStock with filter preservation
+    const handleSortStock = async (order) => {
+        setIsTableFilterLoading(true);
 
-  const handleSortStock = (order) => {
-    if (sortOrderData === order) {
-        setSortOrderData(null);
-        const { fromDate, toDate } = getCurrentDateRange();
-        if (fromDate && toDate) {
-          const currentFilters = buildCurrentFilters();
-          fetchTableData(fromDate, toDate, currentPage, currentFilters);
+        try {
+            if (sortOrderData === order) {
+                // RESET SORT - Back to normal pagination mode
+                setSortOrderData(null);
+                setIsSortingMode(false);
+                setCurrentPage(1);
+
+                // Fetch normal paginated data
+                const currentFilters = buildCurrentFilters();
+                await fetchTableData(1, currentFilters);
+
+            } else {
+                // APPLY SORT - Switch to sorting mode
+                setSortOrderData(order);
+                setIsSortingMode(true);
+                setCurrentPage(1);
+
+                // Fetch ALL data with current filters
+                const currentFilters = buildCurrentFilters();
+                const allData = await fetchAllTableData(currentFilters);
+
+                // Sort ALL data
+                const sortedData = [...allData].sort((a, b) => {
+                    const aStock = (a.data && a.data[0] && a.data[0].totalAvailableStock) || 0;
+                    const bStock = (b.data && b.data[0] && b.data[0].totalAvailableStock) || 0;
+                    return order === "asc" ? aStock - bStock : bStock - aStock;
+                });
+
+                setAllSortedData(sortedData);
+
+                // Apply frontend pagination to sorted data
+                applyFrontendPagination(sortedData, 1, itemsPerPage);
+            }
+        } catch (error) {
+            console.error('Error in sorting:', error);
+            toast.error("Gagal mengurutkan data");
+        } finally {
+            setIsTableFilterLoading(false);
         }
-    } else {
-        setSortOrderData(order);
-        const sortedData = [...filteredData].sort((a, b) => {
-          const aLatestData = getLatestStockData(a);
-          const bLatestData = getLatestStockData(b);
-          const aStock = aLatestData?.totalAvailableStock || 0;
-          const bStock = bLatestData?.totalAvailableStock || 0;
-          return order === "asc" ? aStock - bStock : bStock - aStock;
-        });
-        setFilteredData(sortedData);
-    }
-};
+    };
+
+  // const handleSortStock = async (order) => {
+  //       setIsTableFilterLoading(true);
+
+  //       try {
+  //           if (sortOrderData === order) {
+  //               // RESET SORT - Back to normal pagination mode
+  //               setSortOrderData(null);
+  //               setIsSortingMode(false);
+  //               setCurrentPage(1);
+
+  //               // Fetch normal paginated data
+  //               const currentFilters = buildCurrentFilters();
+  //               await fetchTableData(1, currentFilters);
+
+  //           } else {
+  //               // APPLY SORT - Switch to sorting mode
+  //               setSortOrderData(order);
+  //               setIsSortingMode(true);
+  //               setCurrentPage(1);
+
+  //               // Fetch ALL data with current filters
+  //               const currentFilters = buildCurrentFilters();
+  //               const allData = await fetchAllTableData(currentFilters);
+
+  //               // Sort ALL data
+  //               const sortedData = [...allData].sort((a, b) => {
+  //                   const aStock = (a.data && a.data[0] && a.data[0].totalAvailableStock) || 0;
+  //                   const bStock = (b.data && b.data[0] && b.data[0].totalAvailableStock) || 0;
+  //                   return order === "asc" ? aStock - bStock : bStock - aStock;
+  //               });
+
+  //               setAllSortedData(sortedData);
+
+  //               // Apply frontend pagination to sorted data
+  //               applyFrontendPagination(sortedData, 1, itemsPerPage);
+  //           }
+  //       } catch (error) {
+  //           console.error('Error in sorting:', error);
+  //           toast.error("Gagal mengurutkan data");
+  //       } finally {
+  //           setIsTableFilterLoading(false);
+  //       }
+  //   };
+
+  // const handleSortStock = async (order) => {
+  //       setIsTableFilterLoading(true);
+        
+  //       try {
+  //           if (sortOrderData === order) {
+  //               // RESET SORT - Back to normal pagination mode
+  //               setSortOrderData(null);
+  //               setIsSortingMode(false);
+  //               setCurrentPage(1);
+                
+  //               // Fetch normal paginated data
+  //               const currentFilters = buildCurrentFilters();
+  //               await fetchTableData(1, currentFilters);
+                
+  //           } else {
+  //               // APPLY SORT - Switch to sorting mode
+  //               setSortOrderData(order);
+  //               setIsSortingMode(true);
+  //               setCurrentPage(1);
+                
+  //               // Fetch ALL data first
+  //               const currentFilters = buildCurrentFilters();
+  //               const allData = await fetchAllTableData(currentFilters);
+                
+  //               // Sort ALL data
+  //               const sortedData = [...allData].sort((a, b) => {
+  //                   const aStock = (a.data && a.data[0] && a.data[0].totalAvailableStock) || 0;
+  //                   const bStock = (b.data && b.data[0] && b.data[0].totalAvailableStock) || 0;
+  //                   return order === "asc" ? aStock - bStock : bStock - aStock;
+  //               });
+                
+  //               setAllSortedData(sortedData);
+                
+  //               // Apply frontend pagination to sorted data
+  //               applyFrontendPagination(sortedData, 1, itemsPerPage);
+  //           }
+  //       } catch (error) {
+  //           console.error('Error in sorting:', error);
+  //           toast.error("Gagal mengurutkan data");
+  //       } finally {
+  //           setIsTableFilterLoading(false);
+  //       }
+  //   };
+
+//   const handleSortStock = (order) => {
+//     setIsTableFilterLoading(true);
+
+//     setTimeout(() => {
+//         if (sortOrderData === order) {
+//             // Reset sort - show original data
+//             setSortOrderData(null);
+//             setFilteredData([...originalFilteredData]);
+//         } else {
+//             // Apply sort
+//             setSortOrderData(order);
+//             const sortedData = [...originalFilteredData].sort((a, b) => {
+//                 // UPDATED: Direct access to product data without getLatestStockData
+//                 const aStock = (a.data && a.data[0] && a.data[0].totalAvailableStock) || 0;
+//                 const bStock = (b.data && b.data[0] && b.data[0].totalAvailableStock) || 0;
+//                 return order === "asc" ? aStock - bStock : bStock - aStock;
+//             });
+//             setFilteredData(sortedData);
+//         }
+//         setIsTableFilterLoading(false);
+//     }, 100);
+
+//     // if (sortOrderData === order) {
+//     //     setSortOrderData(null);
+//     //     const currentFilters = buildCurrentFilters();
+//     //     fetchTableData(currentPage, currentFilters);
+//     //     // const { fromDate, toDate } = getCurrentDateRange();
+//     //     // if (fromDate && toDate) {
+//     //     //   const currentFilters = buildCurrentFilters();
+//     //     //   fetchTableData(fromDate, toDate, currentPage, currentFilters);
+//     //     // }
+//     // } else {
+//     //     setSortOrderData(order);
+//     //     const sortedData = [...filteredData].sort((a, b) => {
+//     //       const aLatestData = getLatestStockData(a);
+//     //       const bLatestData = getLatestStockData(b);
+//     //       const aStock = aLatestData?.totalAvailableStock || 0;
+//     //       const bStock = bLatestData?.totalAvailableStock || 0;
+//     //       return order === "asc" ? aStock - bStock : bStock - aStock;
+//     //     });
+//     //     setFilteredData(sortedData);
+//     // }
+// };
 
   const toggleOpenCalendar = () => {
     if (showCalendar) {
@@ -1099,7 +1344,6 @@ export default function PerformanceStockPage() {
     setVariantsChartData(memoizedVariantsChartData);
   }, [memoizedVariantsChartData]);
 
-  const chartInstanceRef = useRef(null);
   useEffect(() => {
     if (!chartRef.current || !chartData.length) return;
 
@@ -1273,23 +1517,81 @@ export default function PerformanceStockPage() {
     };
   }, [chartData, variantsChartData, selectedProduct]);
 
-  useEffect(() => {
-    setCurrentPage(1);
+   useEffect(() => {
+        setCurrentPage(1);
 
-    const { fromDate, toDate } = getCurrentDateRange();
-    if (fromDate && toDate) {
-      const currentFilters = buildCurrentFilters();
-      fetchTableData(fromDate, toDate, 1, currentFilters);
-    }
-  }, [
-    debouncedSearchTerm, 
-    statusProductStockFilter, 
-    selectedClassificationOption,
-    dateMode, 
-    date, 
-    dateRange,
-    itemsPerPage
-  ]);
+        // FIXED: Don't reset sorting mode when filters change
+        // Instead, re-apply filters with current sorting state
+        
+        if (isSortingMode) {
+            // If sorting is active, refetch all data and re-apply sort
+            const refetchAndSort = async () => {
+                const currentFilters = buildCurrentFilters();
+                const allData = await fetchAllTableData(currentFilters);
+                
+                // Re-apply current sort order
+                const sortedData = [...allData].sort((a, b) => {
+                    const aStock = (a.data && a.data[0] && a.data[0].totalAvailableStock) || 0;
+                    const bStock = (b.data && b.data[0] && b.data[0].totalAvailableStock) || 0;
+                    return sortOrderData === "asc" ? aStock - bStock : bStock - aStock;
+                });
+                
+                setAllSortedData(sortedData);
+                applyFrontendPagination(sortedData, 1, itemsPerPage);
+            };
+            
+            refetchAndSort();
+        } else {
+            // Normal mode: fetch paginated data
+            const currentFilters = buildCurrentFilters();
+            fetchTableData(1, currentFilters);
+        }
+    }, [
+        debouncedSearchTerm,
+        selectedClassificationOption,
+    ]);
+  //  useEffect(() => {
+  //       setCurrentPage(1);
+        
+  //       // Reset sorting mode when filters change
+  //       if (isSortingMode) {
+  //           setSortOrderData(null);
+  //           setIsSortingMode(false);
+  //       }
+        
+  //       const currentFilters = buildCurrentFilters();
+  //       fetchTableData(1, currentFilters);
+  //   }, [
+  //       debouncedSearchTerm,
+  //       selectedClassificationOption,
+  //   ]);
+
+  // useEffect(() => {
+  //   setCurrentPage(1);
+  //   const currentFilters = buildCurrentFilters();
+  //   fetchTableData(1, currentFilters);
+
+  //   // const { fromDate, toDate } = getCurrentDateRange();
+  //   // if (fromDate && toDate) {
+  //   //   const currentFilters = buildCurrentFilters();
+  //   //   fetchTableData(fromDate, toDate, 1, currentFilters);
+  //   // }
+  // }, [
+  //   debouncedSearchTerm, 
+  //   // statusProductStockFilter, 
+  //   selectedClassificationOption,
+  //   // dateMode, 
+  //   // date, 
+  //   // dateRange,
+  //   itemsPerPage
+  // ]);
+
+  // useEffect(() => {
+  //       if (isSortingMode && allSortedData.length > 0) {
+  //           // Recalculate frontend pagination for sorted data
+  //           applyFrontendPagination(allSortedData, 1, itemsPerPage);
+  //       }
+  //   }, [itemsPerPage]);
 
   useEffect(() => {
     const today = new Date();
@@ -1444,7 +1746,7 @@ export default function PerformanceStockPage() {
                 </div>
               </div>
               {isLoading ? (
-                <div className="d-flex justify-content-center align-items-center" style={{ height: "100vh" }}>
+                <div className="d-flex justify-content-center align-items-start" style={{ height: "100vh" }}>
                   <Loading size={40} />
                 </div>
               ) : (
@@ -1776,16 +2078,17 @@ export default function PerformanceStockPage() {
                             <tbody>
                               {filteredData.length > 0 ? (
                                 filteredData.map((entry) => {
-                                  const latestStockData = getLatestStockData(entry);
+                                  // const latestStockData = getLatestStockData(entry);
+                                  const productData = entry.data && entry.data[0] ? entry.data[0] : {};
                                   return (
-                                    <React.Fragment key={entry.productId}>
+                                    <React.Fragment key={entry.productId || productData.productId}>
                                       <tr>
                                         {filteredData.length > 0 && (
                                           <td
-                                            onClick={() => toggleRow(latestStockData.productId)}
+                                            onClick={() => toggleRow(productData.productId)}
                                             style={{ cursor: "pointer", width: "20px" }}
                                           >
-                                            {expandedVariantProduct[latestStockData.productId] ? <FaAngleUp /> : <FaAngleDown />}
+                                            {expandedVariantProduct[productData.productId] ? <FaAngleUp /> : <FaAngleDown />}
                                           </td>
                                         )}
 
@@ -1794,31 +2097,31 @@ export default function PerformanceStockPage() {
                                             style={{
                                               width: "500px",
                                               cursor: "pointer",
-                                              color: selectedProduct?.productId == latestStockData.productId ? "#F6881F" : "",
+                                              color: selectedProduct?.productId == productData.productId ? "#F6881F" : "",
                                             }}
-                                            onClick={() => handleProductClick(latestStockData)}
+                                            onClick={() => handleProductClick(entry)}
                                           >
-                                            {latestStockData?.name || "-"}
+                                            {productData?.name || "-"}
                                           </td>
                                         )}
 
                                         {selectedColumns.includes("stock") && (
                                           <td style={{ width: "160px" }}>
                                             <div className="d-flex flex-column align-items-start">
-                                              <span>{latestStockData?.totalAvailableStock === undefined || latestStockData?.totalAvailableStock === null ? "-" : latestStockData?.totalAvailableStock} Stok</span>
+                                              <span>{productData?.totalAvailableStock === undefined || productData?.totalAvailableStock === null ? "-" : productData?.totalAvailableStock} Stok</span>
                                             </div>
                                           </td>
                                         )}
 
                                         {selectedColumns.includes("code") && (
-                                          <td style={{ width: "160px" }}>{latestStockData?.productId === undefined || latestStockData?.productId === null ? "-" : latestStockData?.productId}</td>
-                                          // <td>{latestStockData?.parentSku === undefined || latestStockData?.parentSku === null ? "-" : latestStockData?.parentSku}</td>
+                                          <td style={{ width: "160px" }}>{productData?.productId === undefined || productData?.productId === null ? "-" : productData?.productId}</td>
+                                          // <td>{productData?.parentSku === undefined || productData?.parentSku === null ? "-" : productData?.parentSku}</td>
                                         )}
 
                                         {selectedColumns.includes("salesAvailability") && (
                                           <td style={{ width: "200px" }}>
-                                            <span className={`badge text-${latestStockData?.isSalesAvailable === true ? "success" : "danger"}`}>
-                                              {latestStockData?.salesAvailability === undefined || latestStockData?.salesAvailability === null ? "-" : latestStockData?.salesAvailability}
+                                            <span className={`badge text-${productData?.isSalesAvailable === true ? "success" : "danger"}`}>
+                                              {productData?.salesAvailability === undefined || productData?.salesAvailability === null ? "-" : productData?.salesAvailability}
                                             </span>
                                           </td>
                                         )}
@@ -1826,7 +2129,7 @@ export default function PerformanceStockPage() {
                                         {/* {selectedColumns.includes("status") && (
                                           <td style={{ width: "160px" }}>
                                             {
-                                              latestStockData.state === null || latestStockData.state === undefined ? "-" : convertStatusToLabel(latestStockData.state)
+                                              productData.state === null || productData.state === undefined ? "-" : convertStatusToLabel(productData.state)
                                             }
                                           </td>
                                         )} */}
@@ -1854,15 +2157,15 @@ export default function PerformanceStockPage() {
                                         )}
 
                                       </tr>
-                                      {expandedVariantProduct[latestStockData.productId] && (
-                                        latestStockData?.modelStocks && latestStockData.modelStocks.length > 0 ? (
+                                      {expandedVariantProduct[productData.productId] && (
+                                        productData?.modelStocks && productData.modelStocks.length > 0 ? (
                                           <tr className="bg-light">
                                             <td
                                               colSpan={selectedColumns.length + 1}
                                               style={{ padding: "4px 4px", border: "none" }}
                                             >
                                               <ul className="list-group">
-                                                {latestStockData.modelStocks.map((variant) => (
+                                                {productData.modelStocks.map((variant) => (
                                                   <li
                                                     key={variant.id}
                                                     className="list-group-item d-flex justify-content-start gap-2"

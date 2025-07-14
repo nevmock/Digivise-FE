@@ -11,7 +11,6 @@ import { AiOutlineQuestionCircle } from "react-icons/ai";
 import axiosRequest from "../../utils/request";
 import formatTableValue from "../../utils/formatTableValue";
 import formatValueRatio from "../../utils/convertFormatRatioValue";
-import formatStyleSalesClassification from "../../utils/convertFormatSalesClassification";
 import Loading from "../../components/atoms/Loading/Loading";
 import BaseLayout from "../../components/organisms/BaseLayout";
 
@@ -331,6 +330,8 @@ export default function DetailAds() {
             setChartRawData([]);
             setMetricsTotals({});
             return [];
+        } finally {
+            setIsLoading(false);
         }
     };
 
