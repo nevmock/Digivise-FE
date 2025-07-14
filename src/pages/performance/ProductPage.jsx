@@ -32,7 +32,7 @@ export default function PerformanceProductPage() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedMetrics, setSelectedMetrics] = useState(["pv"]);
   const [metricsTotals, setMetricsTotals] = useState({});
-  const [statusProductFilter, setStatusProductFilter] = useState("all");
+  // const [statusProductFilter, setStatusProductFilter] = useState("all");
   const [selectedClassificationOption, setSelectedClassificationOption] = useState([]);
   const [showTableColumn, setShowTableColumn] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -322,12 +322,11 @@ export default function PerformanceProductPage() {
       const from1ISO = toLocalISOString(dateRanges.current.from);
       const to1ISO = toLocalISOString(dateRanges.current.to);
 
-      const apiUrl = `/api/product-performance/chart?shopId=${getShopeeId}&from=${from1ISO}&to=${to1ISO}&limit=1000000000`;
-
+      const apiUrl = `/api/product-performance/chart?shopId=${getShopeeId}&from=${from1ISO}&to=${to1ISO}&limit=100000`;
       const response = await axiosRequest.get(apiUrl);
       const data = await response.data;
       const content = data?.content || [];
-
+      
       setChartRawData(content);
       const totals = calculateMetricTotalsValue(content);
       setMetricsTotals(totals);
@@ -337,6 +336,8 @@ export default function PerformanceProductPage() {
       toast.error("Gagal mengambil data chart iklan produk");
       console.error('Gagal mengambil data chart iklan produk, kesalahan pada server:', error);
       return [];
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -349,7 +350,7 @@ export default function PerformanceProductPage() {
       const from2ISO = toLocalISOString(dateRanges?.previous?.from);
       const to2ISO = toLocalISOString(dateRanges?.previous?.to);
 
-      let apiUrl = `/api/product-performance?shopId=${getShopeeId}&from1=${from1ISO}&to1=${to1ISO}&from2=${from2ISO}&to2=${to2ISO}&limit=1000000000&page=0`;
+      let apiUrl = `/api/product-performance?shopId=${getShopeeId}&from1=${from1ISO}&to1=${to1ISO}&from2=${from2ISO}&to2=${to2ISO}&limit=100000&page=0`;
 
       if (filters.searchQuery && filters.searchQuery.trim() !== "") {
         apiUrl += `&name=${encodeURIComponent(filters.searchQuery.trim())}`;
@@ -401,11 +402,9 @@ export default function PerformanceProductPage() {
         const classificationValues = filters.classification.map(cls => cls.label);
         apiUrl += `&salesClassification=${classificationValues.join(",")}`;
       }
-
       const response = await axiosRequest.get(apiUrl);
       const data = await response.data;
       const content = data.content || [];
-
       setFilteredData(content);
       setTotalPages(data?.totalPages || 1);
       setTotalElements(data?.totalElements || 0);
@@ -448,7 +447,7 @@ export default function PerformanceProductPage() {
 
       const currentFilters = {
         searchQuery: debouncedSearchTerm,
-        statusFilter: statusProductFilter,
+        // statusFilter: statusProductFilter,
         classification: selectedClassificationOption,
       };
 
@@ -883,7 +882,7 @@ export default function PerformanceProductPage() {
 
       const currentFilters = {
         searchQuery: debouncedSearchTerm,
-        statusFilter: statusProductFilter,
+        // statusFilter: statusProductFilter,
         classification: selectedClassificationOption,
       };
 

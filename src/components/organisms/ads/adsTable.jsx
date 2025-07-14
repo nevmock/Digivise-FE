@@ -369,8 +369,9 @@ const AdsTable = ({ shoppeeId }) => {
     } catch (error) {
       toast.error("Gagal mengambil data chart iklan produk");
       console.error('Gagal mengambil data chart iklan produk, kesalahan pada server:', error);
-      setIsLoading(false);
       return [];
+    } finally {
+      setIsLoading(false);
     }
   };
 
