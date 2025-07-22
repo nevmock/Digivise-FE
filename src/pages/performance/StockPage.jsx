@@ -27,10 +27,8 @@ export default function PerformanceStockPage() {
   // Filter
   const [date, setDate] = useState(getAllDaysInLast7Days());
   const [dateRange, setDateRange] = useState([null, null]);
-  const [dateMode, setDateMode] = useState('preset'); 
+  const [dateMode, setDateMode] = useState('preset');
   const [selectedProduct, setSelectedProduct] = useState(null);
-  // const [statusProductStockFilter, setStatusProductStockFilter] =
-  //   useState("all");
   const [showTableColumn, setShowTableColumn] = useState(false);
   const [selectedClassificationOption, setSelectedClassificationOption] =
     useState([]);
@@ -40,7 +38,6 @@ export default function PerformanceStockPage() {
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
-  // const [paginatedData, setPaginatedData] = useState([]);
   const [totalPages, setTotalPages] = useState(1);
   const [totalElements, setTotalElements] = useState(0);
   // Other
@@ -50,10 +47,15 @@ export default function PerformanceStockPage() {
   const [isContentLoading, setIsContentLoading] = useState(false);
   const [isTableFilterLoading, setIsTableFilterLoading] = useState(false);
   const [isSortingMode, setIsSortingMode] = useState(false);
+  const [isRefreshLoading, setIsRefreshLoading] = useState(false);
+  const [tanggal, setTanggal] = useState(null);
+  const [hoveredColumnKey, setHoveredColumnKey] = useState(null);
+  const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
+  const iconRefs = useRef({});
 
   const getShopeeId = localStorage.getItem("shopeeId");
   if (getShopeeId == null || getShopeeId === null || getShopeeId === "null" || getShopeeId === "undefined") {
-      return (
+    return (
       <BaseLayout>
         <div className="alert alert-warning">
           Tidak ada merchant aktif. Silahkan buat merchant atau login ke merchant terlebih dahulu.
@@ -64,7 +66,6 @@ export default function PerformanceStockPage() {
 
 
 
-  // CUSTOM CHART WITH FILTER DATE & CLICK PRODUCT FEATURE
   function getAllDaysInLast7Days() {
     const getLocalDateString = (date) => {
       const year = date.getFullYear();
@@ -72,7 +73,7 @@ export default function PerformanceStockPage() {
       const day = String(date.getDate()).padStart(2, '0');
       return `${year}-${month}-${day}`;
     };
-    
+
     const today = new Date();
     return Array.from({ length: 7 }, (_, i) => {
       const d = new Date(today);
@@ -115,7 +116,6 @@ export default function PerformanceStockPage() {
 
     const dateArray = [];
 
-    // Calculate the difference in days between start and end dates
     const diffTime = Math.abs(end - start);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
@@ -123,7 +123,6 @@ export default function PerformanceStockPage() {
       return getHourlyIntervals(getLocalDateString(start));
     }
 
-    // Otherwise, return daily intervals
     let currentDate = new Date(start);
     while (currentDate <= end) {
       dateArray.push(getLocalDateString(currentDate));
@@ -146,102 +145,99 @@ export default function PerformanceStockPage() {
   const calculateComparisonDates = (fromDate, toDate) => {
     const start = new Date(fromDate);
     const end = new Date(toDate);
-    
+
     const durationMs = end.getTime() - start.getTime();
-    
+
     const from1 = new Date(start);
     const to1 = new Date(end);
 
     const from2 = new Date(start.getTime() - durationMs);
     const to2 = new Date(start.getTime() - 1);
-    
+
     from1.setHours(0, 0, 0, 0);
     to1.setHours(23, 59, 59, 999);
     from2.setHours(0, 0, 0, 0);
     to2.setHours(23, 59, 59, 999);
-    
+
     return { from1, to1, from2, to2 };
   };
 
-  // const buildApiUrlWithComparison = (baseUrl, getShopeeId, fromDate, toDate, limit, page = null) => {
-  const buildApiUrlWithComparison = (baseUrl, getShopeeId, limit, page = null) => {
-    // const { from1, to1, from2, to2 } = calculateComparisonDates(fromDate, toDate);
-    
-    // const from1ISO = toLocalISOString(from1);
-    // const to1ISO = toLocalISOString(to1);
-    // const from2ISO = toLocalISOString(from2);
-    // const to2ISO = toLocalISOString(to2);
-    
-    let apiUrl = `${baseUrl}?shopId=${getShopeeId}&limit=${limit}`;
-    
+  const buildApiUrlWithComparison = (baseUrl, getShopeeId, fromDate, toDate, limit, page = null) => {
+    const { from1, to1 } = calculateComparisonDates(fromDate, toDate);
+
+    const from1ISO = toLocalISOString(from1);
+    const to1ISO = toLocalISOString(to1);
+
+    let apiUrl = `${baseUrl}?shopId=${getShopeeId}&from1=${from1ISO}&to1=${to1ISO}&limit=${limit}`;
+
     if (page !== null) {
       const backendPage = Math.max(0, page - 1);
       apiUrl += `&page=${backendPage}`;
     }
-    
+
     return apiUrl;
   };
+
 
   const buildChartApiUrl = (baseUrl, getShopeeId, fromDate, toDate, limit) => {
     const { from1, to1 } = calculateComparisonDates(fromDate, toDate);
-    
+
     const from1ISO = toLocalISOString(from1);
     const to1ISO = toLocalISOString(to1);
-    
+
     const apiUrl = `${baseUrl}?shopId=${getShopeeId}&from=${from1ISO}&to=${to1ISO}&limit=${limit}`;
-    
+
     return apiUrl;
   };
 
+  const getCurrentDateRange = () => {
+    let fromDate, toDate;
 
+    switch (dateMode) {
+      case 'range':
+        if (dateRange[0] && dateRange[1]) {
+          fromDate = new Date(dateRange[0]);
+          toDate = new Date(dateRange[1]);
+        }
+        break;
+      case 'single':
+        if (date) {
+          fromDate = new Date(date);
+          toDate = new Date(date);
+        }
+        break;
+      case 'preset':
+      default:
+        if (Array.isArray(date)) {
+          fromDate = new Date(date[0]);
+          toDate = new Date(date[date.length - 1]);
+        } else if (date === "Bulan Ini") {
+          const today = new Date();
+          fromDate = new Date(today.getFullYear(), today.getMonth(), 1);
+          toDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        } else if (date) {
+          fromDate = new Date(date);
+          toDate = new Date(date);
+        } else {
+          const today = new Date();
+          fromDate = new Date();
+          fromDate.setDate(today.getDate() - 7);
+          toDate = today;
+        }
+        break;
+    }
 
-  // const getCurrentDateRange = () => {
-  //   let fromDate, toDate;
-    
-  //   switch (dateMode) {
-  //     case 'range':
-  //       if (dateRange[0] && dateRange[1]) {
-  //         fromDate = new Date(dateRange[0]);
-  //         toDate = new Date(dateRange[1]);
-  //       }
-  //       break;
-  //     case 'single':
-  //       if (date) {
-  //         fromDate = new Date(date);
-  //         toDate = new Date(date);
-  //       }
-  //       break;
-  //     case 'preset':
-  //     default:
-  //       if (Array.isArray(date)) {
-  //         fromDate = new Date(date[0]);
-  //         toDate = new Date(date[date.length - 1]);
-  //       } else if (date === "Bulan Ini") {
-  //         const today = new Date();
-  //         fromDate = new Date(today.getFullYear(), today.getMonth(), 1);
-  //         toDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-  //       } else if (date) {
-  //         fromDate = new Date(date);
-  //         toDate = new Date(date);
-  //       } else {
-  //         const today = new Date();
-  //         fromDate = new Date();
-  //         fromDate.setDate(today.getDate() - 7);
-  //         toDate = today;
-  //       }
-  //       break;
-  //   }
+    if (fromDate && toDate) {
+      fromDate.setHours(0, 0, 0, 0);
+      toDate.setHours(23, 59, 59, 999);
+    }
 
-  //   if (fromDate && toDate) {
-  //     fromDate.setHours(0, 0, 0, 0);
-  //     toDate.setHours(23, 59, 59, 999);
-  //   }
+    return { fromDate, toDate };
+  };
 
-  //   return { fromDate, toDate };
-  // };
-
+  const [isChartLoading, setIsChartLoading] = useState(false);
   const fetchChartData = async (fromDate, toDate) => {
-    setIsLoading(true);
+    setIsChartLoading(true);
 
     try {
       let currentFromDate, currentToDate;
@@ -269,77 +265,87 @@ export default function PerformanceStockPage() {
       const content = Array.isArray(data) ? data : [];
 
       setChartRawData(content);
-      
+
       return content;
     } catch (error) {
       toast.error("Gagal mengambil data chart stock produk");
       console.error('Gagal mengambil data chart stock produk, kesalahan pada server:', error);
       return [];
     } finally {
-      setIsLoading(false);
+      setIsChartLoading(false);
     }
   };
 
-    const fetchAllTableData = async (filters = {}) => {
+  const fetchAllTableData = async (fromDate, toDate, filters = {}) => {
     setIsTableFilterLoading(true);
 
     try {
-        let apiUrl = buildApiUrlWithComparison(
-            '/api/product-stock/newest',
-            getShopeeId,
-            100000,
-            0
-        );
+      let currentFromDate, currentToDate;
 
-        if (filters.searchQuery && filters.searchQuery.trim() !== "") {
-            apiUrl += `&name=${encodeURIComponent(filters.searchQuery.trim())}`;
-        }
+      if (dateMode === 'range' && dateRange[0] && dateRange[1]) {
+        currentFromDate = new Date(dateRange[0]);
+        currentToDate = new Date(dateRange[1]);
+      } else {
+        currentFromDate = fromDate instanceof Date ? fromDate : new Date(fromDate);
+        currentToDate = toDate instanceof Date ? toDate : new Date(toDate);
+      }
 
-        if (filters.classification && filters.classification.length > 0) {
-            const classificationValues = filters.classification.map(cls => cls.value);
-            apiUrl += `&salesClassification=${classificationValues.join(",")}`;
-        }
+      let apiUrl = buildApiUrlWithComparison(
+        '/api/product-stock/by-shop',
+        getShopeeId,
+        currentFromDate,
+        currentToDate,
+        100000,
+        0
+      );
 
-        const response = await axiosRequest.get(apiUrl);
-        const data = response.data;
-        const content = data.content || [];
+      if (filters.searchQuery && filters.searchQuery.trim() !== "") {
+        apiUrl += `&name=${encodeURIComponent(filters.searchQuery.trim())}`;
+      }
 
-        setAllSortedData(content);
-        setTotalElements(data?.totalElements || 0);
+      if (filters.classification && filters.classification.length > 0) {
+        const classificationValues = filters.classification.map(cls => cls.value);
+        apiUrl += `&salesClassification=${classificationValues.join(",")}`;
+      }
 
-        return content;
+      const response = await axiosRequest.get(apiUrl);
+      const data = response.data;
+      const content = data.content || [];
+
+      setAllSortedData(content);
+      setTotalElements(data?.totalElements || 0);
+
+      return content;
     } catch (error) {
-        toast.error("Gagal mengambil data tabel stock produk");
-        console.error('Gagal mengambil data tabel stock produk, kesalahan pada server:', error);
-        return [];
+      toast.error("Gagal mengambil data tabel stock produk");
+      console.error('Gagal mengambil data tabel stock produk, kesalahan pada server:', error);
+      return [];
     } finally {
-        setIsTableFilterLoading(false);
+      setIsTableFilterLoading(false);
     }
   }
 
-  // const fetchTableData = async (fromDate, toDate, page = 1, filters = {}) => {
-  const fetchTableData = async (page = 1, filters = {}, customItemsPerPage = null) => {
+  const fetchTableData = async (fromDate, toDate, page = 1, filters = {}, customItemsPerPage = null) => {
     setIsTableFilterLoading(true);
 
     try {
-      // let currentFromDate, currentToDate;
+      let currentFromDate, currentToDate;
 
-      // if (dateMode === 'range' && dateRange[0] && dateRange[1]) {
-      //   currentFromDate = new Date(dateRange[0]);
-      //   currentToDate = new Date(dateRange[1]);
-      // } else {
-      //   currentFromDate = fromDate instanceof Date ? fromDate : new Date(fromDate);
-      //   currentToDate = toDate instanceof Date ? toDate : new Date(toDate);
-      // }
+      if (dateMode === 'range' && dateRange[0] && dateRange[1]) {
+        currentFromDate = new Date(dateRange[0]);
+        currentToDate = new Date(dateRange[1]);
+      } else {
+        currentFromDate = fromDate instanceof Date ? fromDate : new Date(fromDate);
+        currentToDate = toDate instanceof Date ? toDate : new Date(toDate);
+      }
 
       const effectiveItemsPerPage = customItemsPerPage || itemsPerPage;
 
       let apiUrl = buildApiUrlWithComparison(
-        // '/api/product-stock/by-shop',
-        '/api/product-stock/newest',
+        '/api/product-stock/by-shop',
         getShopeeId,
-        // currentFromDate,
-        // currentToDate,
+        currentFromDate,
+        currentToDate,
         effectiveItemsPerPage,
         page
       );
@@ -347,23 +353,18 @@ export default function PerformanceStockPage() {
       if (filters.searchQuery && filters.searchQuery.trim() !== "") {
         apiUrl += `&name=${encodeURIComponent(filters.searchQuery.trim())}`;
       }
-      
-      // if (filters.statusFilter && filters.statusFilter !== "all") {
-      //   apiUrl += `&state=${filters.statusFilter}`;
-      // }
 
       if (filters.classification && filters.classification.length > 0) {
         const classificationValues = filters.classification.map(cls => cls.value);
         apiUrl += `&salesClassification=${classificationValues.join(",")}`;
       }
 
-
       const response = await axiosRequest.get(apiUrl);
       const data = response.data;
       const content = data.content || [];
 
-      // setOriginalFilteredData(content);
       setFilteredData(content);
+      setTanggal(content.timeGetted || "-");
       setTotalPages(data?.totalPages || 1);
       setTotalElements(data?.totalElements || 0);
 
@@ -382,10 +383,10 @@ export default function PerformanceStockPage() {
     const endIndex = startIndex + itemsPerPage;
     const paginatedData = data.slice(startIndex, endIndex);
     const totalPages = Math.ceil(data.length / itemsPerPage);
-    
+
     setFilteredData(paginatedData);
     setTotalPages(totalPages);
-    
+
     return paginatedData;
   };
 
@@ -396,26 +397,23 @@ export default function PerformanceStockPage() {
     } else {
       setIsContentLoading(true);
     }
-    
+
     try {
       const currentFilters = {
         searchQuery: debouncedSearchTerm,
-        // statusFilter: statusProductStockFilter,
         classification: selectedClassificationOption
       };
 
       await Promise.all([
         fetchChartData(fromDate, toDate),
-        // fetchTableData(fromDate, toDate, page, currentFilters)
-        // fetchTableData(page, currentFilters)
-        isSortingMode ? 
-                    fetchAllTableData(currentFilters) : 
-                    fetchTableData(page, currentFilters)
+        isSortingMode ?
+          fetchAllTableData(fromDate, toDate, currentFilters) :
+          fetchTableData(fromDate, toDate, page, currentFilters)
       ]);
 
       if (isSortingMode && allSortedData.length > 0) {
-                applyFrontendPagination(allSortedData, page, itemsPerPage);
-            }
+        applyFrontendPagination(allSortedData, page, itemsPerPage);
+      }
     } catch (error) {
       toast.error("Gagal mengambil data stock produk");
       console.error('Gagal mengambil data stock produk, kesalahan pada server:', error);
@@ -428,22 +426,15 @@ export default function PerformanceStockPage() {
   const buildCurrentFilters = () => {
     return {
       searchQuery: debouncedSearchTerm,
-      // statusFilter: statusProductStockFilter,
       classification: selectedClassificationOption,
     };
   };
 
   const handleProductClick = (product) => {
-    // if (selectedProduct?.productId === product.productId) {
-    //   setSelectedProduct(null);
-    // } else {
-    //   setSelectedProduct(product);
-    // }
     const productData = product.data && product.data[0] ? product.data[0] : product;
     setSelectedProduct((prev) => (prev?.productId === productData.productId ? null : productData));
-    // setSelectedProduct((prev) => (prev?.productId === product.productId ? null : product));
   };
-  
+
   function generateChartData(selectedDate = null, product = null) {
     let timeIntervals = [];
     let mode = "daily";
@@ -512,7 +503,7 @@ export default function PerformanceStockPage() {
       toDate = new Date();
       toDate.setHours(23, 59, 59, 999);
     }
-    
+
     let chartDataProducts = chartRawData;
     if (product) {
       chartDataProducts = chartRawData.filter((p) => p.productId === product.productId);
@@ -645,7 +636,6 @@ export default function PerformanceStockPage() {
     const selectedProductData = chartRawData.find((p) => p.productId === product.productId);
     if (!selectedProductData || !selectedProductData.data) return [];
 
-    // Check if product has variants in its data
     const allVariants = new Map();
     selectedProductData?.data.forEach((stockData) => {
       if (stockData?.modelStock) {
@@ -825,12 +815,12 @@ export default function PerformanceStockPage() {
   const getVisiblePageNumbers = () => {
     const pages = [];
     if (totalPages <= 10) {
-        for (let i = 1; i <= totalPages; i++) {
-          pages.push(i);
-        }
-        return pages;
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+      return pages;
     }
-    
+
     if (currentPage <= 3) {
       pages.push(1, 2, 3);
       if (totalPages > 4) {
@@ -840,7 +830,7 @@ export default function PerformanceStockPage() {
     } else if (currentPage >= totalPages - 2) {
       pages.push(1, 2);
       if (totalPages > 4) {
-          pages.push('...');
+        pages.push('...');
       }
       pages.push(totalPages - 2, totalPages - 1, totalPages);
     } else {
@@ -859,22 +849,14 @@ export default function PerformanceStockPage() {
       setCurrentPage(pageNumber);
 
       if (isSortingMode) {
-                // Frontend pagination for sorted data
-                applyFrontendPagination(allSortedData, pageNumber, itemsPerPage);
-            } else {
-                // Backend pagination for normal data
-                const currentFilters = buildCurrentFilters();
-                fetchTableData(pageNumber, currentFilters);
-            }
-
-      // const currentFilters = buildCurrentFilters();
-      // fetchTableData(pageNumber, currentFilters);
-
-      // const { fromDate, toDate } = getCurrentDateRange();
-      // if (fromDate && toDate) {
-      //   const currentFilters = buildCurrentFilters();
-      //   fetchTableData(fromDate, toDate, pageNumber, currentFilters);
-      // }
+        applyFrontendPagination(allSortedData, pageNumber, itemsPerPage);
+      } else {
+        const { fromDate, toDate } = getCurrentDateRange();
+        if (fromDate && toDate) {
+          const currentFilters = buildCurrentFilters();
+          fetchTableData(fromDate, toDate, pageNumber, currentFilters);
+        }
+      }
     }
   };
 
@@ -884,16 +866,14 @@ export default function PerformanceStockPage() {
     setCurrentPage(1);
 
     if (isSortingMode) {
-        // Recalculate frontend pagination
-        applyFrontendPagination(allSortedData, 1, newItemsPerPage);
+      applyFrontendPagination(allSortedData, 1, newItemsPerPage);
     } else {
-        // Fetch new data with new items per page
+      const { fromDate, toDate } = getCurrentDateRange();
+      if (fromDate && toDate) {
         const currentFilters = buildCurrentFilters();
-        fetchTableData(1, currentFilters, newItemsPerPage);
+        fetchTableData(fromDate, toDate, 1, currentFilters, newItemsPerPage);
+      }
     }
-
-    // const currentFilters = buildCurrentFilters();
-    // fetchTableData(1, currentFilters);
   };
 
   const renderPagination = () => {
@@ -1094,7 +1074,6 @@ export default function PerformanceStockPage() {
     { key: "stock", label: "Stok", tooltip: "Stok merupakan total keseluruhan stok yang dimiliki Penjual, termasuk stok yang dikunci untuk promosi. Jika suatu produk memiliki stok yang dikunci untuk promosi, maka jumlah stok yang akan ditampilkan sudah termasuk stok yang tersedia untuk dijual." },
     { key: "code", label: "Kode" },
     { key: "salesAvailability", label: "Availability" },
-    // { key: "status", label: "Status" },
     { key: "salesClassification", label: "Sales Clasification" },
   ];
 
@@ -1131,182 +1110,92 @@ export default function PerformanceStockPage() {
   };
 
 
-  // UPDATED: handleSortStock with filter preservation
-    const handleSortStock = async (order) => {
-        setIsTableFilterLoading(true);
+  const handleSortStock = async (order) => {
+    setIsTableFilterLoading(true);
 
-        try {
-            if (sortOrderData === order) {
-                // RESET SORT - Back to normal pagination mode
-                setSortOrderData(null);
-                setIsSortingMode(false);
-                setCurrentPage(1);
+    try {
+      const { fromDate, toDate } = getCurrentDateRange();
 
-                // Fetch normal paginated data
-                const currentFilters = buildCurrentFilters();
-                await fetchTableData(1, currentFilters);
+      if (!fromDate || !toDate) {
+        toast.error("Tanggal tidak valid");
+        return;
+      }
 
-            } else {
-                // APPLY SORT - Switch to sorting mode
-                setSortOrderData(order);
-                setIsSortingMode(true);
-                setCurrentPage(1);
+      if (sortOrderData === order) {
+        setSortOrderData(null);
+        setIsSortingMode(false);
+        setCurrentPage(1);
 
-                // Fetch ALL data with current filters
-                const currentFilters = buildCurrentFilters();
-                const allData = await fetchAllTableData(currentFilters);
+        const currentFilters = buildCurrentFilters();
+        await fetchTableData(fromDate, toDate, 1, currentFilters);
 
-                // Sort ALL data
-                const sortedData = [...allData].sort((a, b) => {
-                    const aStock = (a.data && a.data[0] && a.data[0].totalAvailableStock) || 0;
-                    const bStock = (b.data && b.data[0] && b.data[0].totalAvailableStock) || 0;
-                    return order === "asc" ? aStock - bStock : bStock - aStock;
-                });
+      } else {
+        setSortOrderData(order);
+        setIsSortingMode(true);
+        setCurrentPage(1);
 
-                setAllSortedData(sortedData);
+        const currentFilters = buildCurrentFilters();
+        const allData = await fetchAllTableData(fromDate, toDate, currentFilters);
 
-                // Apply frontend pagination to sorted data
-                applyFrontendPagination(sortedData, 1, itemsPerPage);
-            }
-        } catch (error) {
-            console.error('Error in sorting:', error);
-            toast.error("Gagal mengurutkan data");
-        } finally {
-            setIsTableFilterLoading(false);
+        const sortedData = [...allData].sort((a, b) => {
+          const aStock = (a.data && a.data[0] && a.data[0].totalAvailableStock) || 0;
+          const bStock = (b.data && b.data[0] && b.data[0].totalAvailableStock) || 0;
+          return order === "asc" ? aStock - bStock : bStock - aStock;
+        });
+
+        setAllSortedData(sortedData);
+
+        applyFrontendPagination(sortedData, 1, itemsPerPage);
+      }
+    } catch (error) {
+      console.error('Error in sorting:', error);
+      toast.error("Gagal mengurutkan data");
+    } finally {
+      setIsTableFilterLoading(false);
+    }
+  };
+
+  const handleRefreshData = async () => {
+    setIsRefreshLoading(true);
+    setTanggal("Loading mengambil data");
+
+    try {
+      const refreshResponse = await axiosRequest.get(
+        `/api/product-stock/refresh?shopId=${getShopeeId}`
+      );
+
+      if (refreshResponse.data === true) {
+        const { fromDate, toDate } = getCurrentDateRange();
+        if (fromDate && toDate) {
+          const currentFilters = buildCurrentFilters();
+
+          if (isSortingMode) {
+            const allData = await fetchAllTableData(fromDate, toDate, currentFilters);
+
+            const sortedData = [...allData].sort((a, b) => {
+              const aStock = (a.data && a.data[0] && a.data[0].totalAvailableStock) || 0;
+              const bStock = (b.data && b.data[0] && b.data[0].totalAvailableStock) || 0;
+              return sortOrderData === "asc" ? aStock - bStock : bStock - aStock;
+            });
+
+            setAllSortedData(sortedData);
+            applyFrontendPagination(sortedData, currentPage, itemsPerPage);
+          } else {
+            await fetchTableData(fromDate, toDate, currentPage, currentFilters);
+          }
         }
-    };
-
-  // const handleSortStock = async (order) => {
-  //       setIsTableFilterLoading(true);
-
-  //       try {
-  //           if (sortOrderData === order) {
-  //               // RESET SORT - Back to normal pagination mode
-  //               setSortOrderData(null);
-  //               setIsSortingMode(false);
-  //               setCurrentPage(1);
-
-  //               // Fetch normal paginated data
-  //               const currentFilters = buildCurrentFilters();
-  //               await fetchTableData(1, currentFilters);
-
-  //           } else {
-  //               // APPLY SORT - Switch to sorting mode
-  //               setSortOrderData(order);
-  //               setIsSortingMode(true);
-  //               setCurrentPage(1);
-
-  //               // Fetch ALL data with current filters
-  //               const currentFilters = buildCurrentFilters();
-  //               const allData = await fetchAllTableData(currentFilters);
-
-  //               // Sort ALL data
-  //               const sortedData = [...allData].sort((a, b) => {
-  //                   const aStock = (a.data && a.data[0] && a.data[0].totalAvailableStock) || 0;
-  //                   const bStock = (b.data && b.data[0] && b.data[0].totalAvailableStock) || 0;
-  //                   return order === "asc" ? aStock - bStock : bStock - aStock;
-  //               });
-
-  //               setAllSortedData(sortedData);
-
-  //               // Apply frontend pagination to sorted data
-  //               applyFrontendPagination(sortedData, 1, itemsPerPage);
-  //           }
-  //       } catch (error) {
-  //           console.error('Error in sorting:', error);
-  //           toast.error("Gagal mengurutkan data");
-  //       } finally {
-  //           setIsTableFilterLoading(false);
-  //       }
-  //   };
-
-  // const handleSortStock = async (order) => {
-  //       setIsTableFilterLoading(true);
-        
-  //       try {
-  //           if (sortOrderData === order) {
-  //               // RESET SORT - Back to normal pagination mode
-  //               setSortOrderData(null);
-  //               setIsSortingMode(false);
-  //               setCurrentPage(1);
-                
-  //               // Fetch normal paginated data
-  //               const currentFilters = buildCurrentFilters();
-  //               await fetchTableData(1, currentFilters);
-                
-  //           } else {
-  //               // APPLY SORT - Switch to sorting mode
-  //               setSortOrderData(order);
-  //               setIsSortingMode(true);
-  //               setCurrentPage(1);
-                
-  //               // Fetch ALL data first
-  //               const currentFilters = buildCurrentFilters();
-  //               const allData = await fetchAllTableData(currentFilters);
-                
-  //               // Sort ALL data
-  //               const sortedData = [...allData].sort((a, b) => {
-  //                   const aStock = (a.data && a.data[0] && a.data[0].totalAvailableStock) || 0;
-  //                   const bStock = (b.data && b.data[0] && b.data[0].totalAvailableStock) || 0;
-  //                   return order === "asc" ? aStock - bStock : bStock - aStock;
-  //               });
-                
-  //               setAllSortedData(sortedData);
-                
-  //               // Apply frontend pagination to sorted data
-  //               applyFrontendPagination(sortedData, 1, itemsPerPage);
-  //           }
-  //       } catch (error) {
-  //           console.error('Error in sorting:', error);
-  //           toast.error("Gagal mengurutkan data");
-  //       } finally {
-  //           setIsTableFilterLoading(false);
-  //       }
-  //   };
-
-//   const handleSortStock = (order) => {
-//     setIsTableFilterLoading(true);
-
-//     setTimeout(() => {
-//         if (sortOrderData === order) {
-//             // Reset sort - show original data
-//             setSortOrderData(null);
-//             setFilteredData([...originalFilteredData]);
-//         } else {
-//             // Apply sort
-//             setSortOrderData(order);
-//             const sortedData = [...originalFilteredData].sort((a, b) => {
-//                 // UPDATED: Direct access to product data without getLatestStockData
-//                 const aStock = (a.data && a.data[0] && a.data[0].totalAvailableStock) || 0;
-//                 const bStock = (b.data && b.data[0] && b.data[0].totalAvailableStock) || 0;
-//                 return order === "asc" ? aStock - bStock : bStock - aStock;
-//             });
-//             setFilteredData(sortedData);
-//         }
-//         setIsTableFilterLoading(false);
-//     }, 100);
-
-//     // if (sortOrderData === order) {
-//     //     setSortOrderData(null);
-//     //     const currentFilters = buildCurrentFilters();
-//     //     fetchTableData(currentPage, currentFilters);
-//     //     // const { fromDate, toDate } = getCurrentDateRange();
-//     //     // if (fromDate && toDate) {
-//     //     //   const currentFilters = buildCurrentFilters();
-//     //     //   fetchTableData(fromDate, toDate, currentPage, currentFilters);
-//     //     // }
-//     // } else {
-//     //     setSortOrderData(order);
-//     //     const sortedData = [...filteredData].sort((a, b) => {
-//     //       const aLatestData = getLatestStockData(a);
-//     //       const bLatestData = getLatestStockData(b);
-//     //       const aStock = aLatestData?.totalAvailableStock || 0;
-//     //       const bStock = bLatestData?.totalAvailableStock || 0;
-//     //       return order === "asc" ? aStock - bStock : bStock - aStock;
-//     //     });
-//     //     setFilteredData(sortedData);
-//     // }
-// };
+      } else {
+        toast.error("Gagal refresh data");
+        setTanggal("-");
+      }
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+      toast.error("Gagal refresh data");
+      setTanggal("-");
+    } finally {
+      setIsRefreshLoading(false);
+    }
+  };
 
   const toggleOpenCalendar = () => {
     if (showCalendar) {
@@ -1321,18 +1210,18 @@ export default function PerformanceStockPage() {
   const memoizedChartData = React.useMemo(() => {
     if (!chartRawData.length) return [];
 
-    const currentDate = dateMode === 'preset' ? date : 
+    const currentDate = dateMode === 'preset' ? date :
       dateMode === 'range' ? dateRange : date;
-    
+
     return generateChartData(currentDate, selectedProduct);
   }, [chartRawData, date, dateRange, dateMode, selectedProduct]);
 
   const memoizedVariantsChartData = React.useMemo(() => {
     if (!selectedProduct || !chartRawData.length) return [];
 
-    const currentDate = dateMode === 'preset' ? date : 
+    const currentDate = dateMode === 'preset' ? date :
       dateMode === 'range' ? dateRange : date;
-    
+
     return generateVariantsChartData(currentDate, selectedProduct);
   }, [chartRawData, date, dateRange, dateMode, selectedProduct]);
 
@@ -1347,7 +1236,7 @@ export default function PerformanceStockPage() {
   useEffect(() => {
     if (!chartRef.current || !chartData.length) return;
 
-    const timeoutId = setTimeout(() => { 
+    const timeoutId = setTimeout(() => {
       if (chartInstanceRef.current && !chartInstanceRef.current.isDisposed()) {
         chartInstanceRef.current.dispose();
       }
@@ -1385,7 +1274,7 @@ export default function PerformanceStockPage() {
           smooth: true,
           showSymbol: false,
           data: chartData.map((item) => item.totalStock),
-          lineStyle: { color: "#5470C6", width: 2},
+          lineStyle: { color: "#5470C6", width: 2 },
           emphasis: { focus: 'series' }
         },
       ];
@@ -1517,81 +1406,37 @@ export default function PerformanceStockPage() {
     };
   }, [chartData, variantsChartData, selectedProduct]);
 
-   useEffect(() => {
-        setCurrentPage(1);
 
-        // FIXED: Don't reset sorting mode when filters change
-        // Instead, re-apply filters with current sorting state
-        
-        if (isSortingMode) {
-            // If sorting is active, refetch all data and re-apply sort
-            const refetchAndSort = async () => {
-                const currentFilters = buildCurrentFilters();
-                const allData = await fetchAllTableData(currentFilters);
-                
-                // Re-apply current sort order
-                const sortedData = [...allData].sort((a, b) => {
-                    const aStock = (a.data && a.data[0] && a.data[0].totalAvailableStock) || 0;
-                    const bStock = (b.data && b.data[0] && b.data[0].totalAvailableStock) || 0;
-                    return sortOrderData === "asc" ? aStock - bStock : bStock - aStock;
-                });
-                
-                setAllSortedData(sortedData);
-                applyFrontendPagination(sortedData, 1, itemsPerPage);
-            };
-            
-            refetchAndSort();
-        } else {
-            // Normal mode: fetch paginated data
-            const currentFilters = buildCurrentFilters();
-            fetchTableData(1, currentFilters);
-        }
-    }, [
-        debouncedSearchTerm,
-        selectedClassificationOption,
-    ]);
-  //  useEffect(() => {
-  //       setCurrentPage(1);
-        
-  //       // Reset sorting mode when filters change
-  //       if (isSortingMode) {
-  //           setSortOrderData(null);
-  //           setIsSortingMode(false);
-  //       }
-        
-  //       const currentFilters = buildCurrentFilters();
-  //       fetchTableData(1, currentFilters);
-  //   }, [
-  //       debouncedSearchTerm,
-  //       selectedClassificationOption,
-  //   ]);
+  useEffect(() => {
+    setCurrentPage(1);
 
-  // useEffect(() => {
-  //   setCurrentPage(1);
-  //   const currentFilters = buildCurrentFilters();
-  //   fetchTableData(1, currentFilters);
+    const { fromDate, toDate } = getCurrentDateRange();
+    if (!fromDate || !toDate) return;
 
-  //   // const { fromDate, toDate } = getCurrentDateRange();
-  //   // if (fromDate && toDate) {
-  //   //   const currentFilters = buildCurrentFilters();
-  //   //   fetchTableData(fromDate, toDate, 1, currentFilters);
-  //   // }
-  // }, [
-  //   debouncedSearchTerm, 
-  //   // statusProductStockFilter, 
-  //   selectedClassificationOption,
-  //   // dateMode, 
-  //   // date, 
-  //   // dateRange,
-  //   itemsPerPage
-  // ]);
+    if (isSortingMode) {
+      const refetchAndSort = async () => {
+        const currentFilters = buildCurrentFilters();
+        const allData = await fetchAllTableData(fromDate, toDate, currentFilters);
 
-  // useEffect(() => {
-  //       if (isSortingMode && allSortedData.length > 0) {
-  //           // Recalculate frontend pagination for sorted data
-  //           applyFrontendPagination(allSortedData, 1, itemsPerPage);
-  //       }
-  //   }, [itemsPerPage]);
+        const sortedData = [...allData].sort((a, b) => {
+          const aStock = (a.data && a.data[0] && a.data[0].totalAvailableStock) || 0;
+          const bStock = (b.data && b.data[0] && b.data[0].totalAvailableStock) || 0;
+          return sortOrderData === "asc" ? aStock - bStock : bStock - aStock;
+        });
+
+        setAllSortedData(sortedData);
+        applyFrontendPagination(sortedData, 1, itemsPerPage);
+      };
+
+      refetchAndSort();
+    } else {
+      const currentFilters = buildCurrentFilters();
+      fetchTableData(fromDate, toDate, 1, currentFilters);
+    }
+  }, [
+    debouncedSearchTerm,
+    selectedClassificationOption,
+  ]);
 
   useEffect(() => {
     const today = new Date();
@@ -1603,16 +1448,12 @@ export default function PerformanceStockPage() {
     fetchData(fromDate, toDate, 1);
   }, []);
 
-  const [hoveredColumnKey, setHoveredColumnKey] = useState(null);
-  const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
-  const iconRefs = useRef({});
-
   const updateTooltipPosition = (key) => {
     if (iconRefs.current[key]) {
       const rect = iconRefs.current[key].getBoundingClientRect();
       const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
       const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
-      
+
       setTooltipPosition({
         top: rect.top + scrollTop - 5,
         left: rect.left + scrollLeft - 10
@@ -1669,7 +1510,7 @@ export default function PerformanceStockPage() {
                             if (selectedDate[0] && selectedDate[1]) {
                               const startDate = getLocalDateString(selectedDate[0]);
                               const endDate = getLocalDateString(selectedDate[1]);
-                              
+
                               if (startDate === endDate) {
                                 handleDateSelection(startDate, 'single');
                               } else {
@@ -1751,106 +1592,21 @@ export default function PerformanceStockPage() {
                 </div>
               ) : (
                 <>
-                  <div
-                    ref={chartRef}
-                    style={{ width: "100%", height: "340px" }}
-                    className="mb-2"
-                  ></div>
+                {
+                  isChartLoading ? (
+                    <div className="d-flex justify-content-center align-items-start" style={{ height: "340px" }}>
+                      <Loading size={40} />
+                    </div>
+                  ) : (
+                    <div
+                      ref={chartRef}
+                      style={{ width: "100%", height: "340px" }}
+                      className="mb-2"
+                    ></div>
+                  )
+                }
                   {/* Filter & Table */}
                   <div className="d-flex flex-column gap-3 gap-md-2">
-                    {/* Status filter */}
-                    {/* <div
-                      className="d-flex align-items-center gap-1 gap-md-2 flex-wrap mt-2"
-                      style={{ width: "fit-content", listStyleType: "none" }}
-                    >
-                      <span>Status Produk</span>
-                      <div className="d-flex gap-1 md-gap-2 flex-wrap">
-                        <div
-                          className={`status-button-filter rounded-pill d-flex align-items-center  ${statusProductStockFilter === "all"
-                              ? "custom-font-color custom-border-select fw-bold"
-                              : "border border-secondary-subtle"
-                            }`}
-                          onClick={() => setStatusProductStockFilter("all")}
-                          style={{
-                            cursor: "pointer",
-                            fontSize: "12px",
-                            padding: "6px 12px",
-                          }}
-                        >
-                          Semua
-                        </div>
-                        <div
-                          className={`status-button-filter rounded-pill d-flex align-items-center ${statusProductStockFilter === "scheduled"
-                              ? "custom-font-color custom-border-select fw-bold"
-                              : "border border-secondary-subtle"
-                            }`}
-                          onClick={() => setStatusProductStockFilter("scheduled")}
-                          style={{
-                            cursor: "pointer",
-                            fontSize: "12px",
-                            padding: "6px 12px",
-                          }}
-                        >
-                          Terjadwal
-                        </div>
-                        <div
-                          className={`status-button-filter rounded-pill d-flex align-items-center  ${statusProductStockFilter === "ongoing"
-                              ? "custom-font-color custom-border-select fw-bold"
-                              : "border border-secondary-subtle"
-                            }`}
-                          onClick={() => setStatusProductStockFilter("ongoing")}
-                          style={{
-                            cursor: "pointer",
-                            fontSize: "12px",
-                            padding: "6px 12px",
-                          }}
-                        >
-                          Berjalan
-                        </div>
-                        <div
-                          className={`status-button-filter rounded-pill d-flex align-items-center  ${statusProductStockFilter === "closed"
-                              ? "custom-font-color custom-border-select fw-bold"
-                              : "border border-secondary-subtle"
-                            }`}
-                          onClick={() => setStatusProductStockFilter("closed")}
-                          style={{
-                            cursor: "pointer",
-                            fontSize: "12px",
-                            padding: "6px 12px",
-                          }}
-                        >
-                          Nonaktif
-                        </div>
-                        <div
-                          className={`status-button-filter rounded-pill d-flex align-items-center ${statusProductStockFilter === "ended"
-                              ? "custom-font-color custom-border-select fw-bold"
-                              : "border border-secondary-subtle"
-                            }`}
-                          onClick={() => setStatusProductStockFilter("ended")}
-                          style={{
-                            cursor: "pointer",
-                            fontSize: "12px",
-                            padding: "6px 12px",
-                          }}
-                        >
-                          Berakhir
-                        </div>
-                        <div
-                          className={`status-button-filter rounded-pill d-flex align-items-center ${statusProductStockFilter === "deleted"
-                              ? "custom-font-color custom-border-select fw-bold"
-                              : "border border-secondary-subtle"
-                            }`}
-                          onClick={() => setStatusProductStockFilter("deleted")}
-                          style={{
-                            cursor: "pointer",
-                            fontSize: "12px",
-                            padding: "6px 12px",
-                          }}
-                        >
-                          Dihapus
-                        </div>
-                      </div>
-                    </div> */}
                     {/* Other filter*/}
                     <div className="d-flex flex-column mb-1 sm-mb-3 gap-2 mt-2">
                       <div
@@ -1910,6 +1666,23 @@ export default function PerformanceStockPage() {
                         </div>
                         {/* Column filter */}
                         <div id="container-other-filters-right">
+                          <p>{isRefreshLoading ? "Loading mengambil data" : tanggal}</p>
+                          <button
+                            className="btn btn-primary w-100"
+                            type="button"
+                            disabled={isRefreshLoading}
+                            onClick={handleRefreshData}
+                          >
+                            {isRefreshLoading ? (
+                              <>
+                                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                Refresh...
+                              </>
+                            ) : (
+                              "Refresh data Terbaru"
+                            )}
+                          </button>
+
                           <button
                             className="btn btn-primary dropdown-toggle w-100"
                             type="button"
@@ -1968,242 +1741,227 @@ export default function PerformanceStockPage() {
                           <Loading size={40} />
                         </div>
                       )}
-                      {/* {isTableFilterLoading ? (
-                        <div className="d-flex justify-content-center align-items-center" style={{ height: "200px" }}>
-                          <Loading size={30} />
-                        </div>
-                      ) : (                       */}
-                        <div className="table-responsive" style={{ borderRadius: "4px" }}>
-                          <table
-                            className="table table-centered"
-                            style={{
-                              width: "100%",
-                              minWidth: "max-content",
-                              maxWidth: "none",
-                              overflowX: "visible",
-                            }}
-                          >
-                            {/* Head table */}
-                            <thead className="table-light">
-                              <tr>
-                                {filteredData.length > 0 && <th scope="col"></th>}
-                                {allColumns
-                                  .filter((col) => selectedColumns.includes(col.key))
-                                  .map((col) => (
-                                    <th key={col.key}>
-                                      <div className="d-flex justify-content-start gap-1 align-items-center fw-bold">
-                                        {col.label}
-                                        {col.tooltip && (
-                                          <div
-                                            ref={(el) => iconRefs.current[col.key] = el}
-                                            style={{ cursor: "pointer", position: "relative" }}
-                                            onMouseEnter={() => handleMouseEnter(col.key)}
-                                            onMouseLeave={handleMouseLeave}
+                      <div className="table-responsive" style={{ borderRadius: "4px" }}>
+                        <table
+                          className="table table-centered"
+                          style={{
+                            width: "100%",
+                            minWidth: "max-content",
+                            maxWidth: "none",
+                            overflowX: "visible",
+                          }}
+                        >
+                          {/* Head table */}
+                          <thead className="table-light">
+                            <tr>
+                              {filteredData.length > 0 && <th scope="col"></th>}
+                              {allColumns
+                                .filter((col) => selectedColumns.includes(col.key))
+                                .map((col) => (
+                                  <th key={col.key}>
+                                    <div className="d-flex justify-content-start gap-1 align-items-center fw-bold">
+                                      {col.label}
+                                      {col.tooltip && (
+                                        <div
+                                          ref={(el) => iconRefs.current[col.key] = el}
+                                          style={{ cursor: "pointer", position: "relative" }}
+                                          onMouseEnter={() => handleMouseEnter(col.key)}
+                                          onMouseLeave={handleMouseLeave}
+                                        >
+                                          <AiOutlineQuestionCircle />
+                                        </div>
+                                      )}
+                                      {col.key === "stock" && (
+                                        <div className="d-flex flex-column">
+                                          <span
+                                            title="Sort Ascending"
+                                            style={{
+                                              color: sortOrderData === "asc" ? "#007bff" : "#969696FF",
+                                              lineHeight: '1',
+                                              cursor: 'pointer',
+                                              userSelect: 'none',
+                                              fontSize: '10px'
+                                            }}
+                                            onClick={() => handleSortStock("asc")}
                                           >
-                                            <AiOutlineQuestionCircle />
-                                          </div>
-                                        )}
-                                        {col.key === "stock" && (
-                                          <div className="d-flex flex-column">
-                                            <span
-                                              title="Sort Ascending"
-                                              style={{
-                                                color: sortOrderData === "asc" ? "#007bff" : "#969696FF",
-                                                lineHeight: '1',
-                                                cursor: 'pointer',
-                                                userSelect: 'none',
-                                                fontSize: '10px'
-                                              }}
-                                              onClick={() => handleSortStock("asc")}
-                                            >
-                                              <FaAngleUp />
-                                            </span>
-                                            <span
-                                              title="Sort Descending"
-                                              style={{
-                                                color: sortOrderData === "desc" ? "#007bff" : "#969696FF",
-                                                lineHeight: '1',
-                                                cursor: 'pointer',
-                                                userSelect: 'none',
-                                                fontSize: '10px'
-                                              }}
-                                              onClick={() => handleSortStock("desc")}
-                                            >
-                                              <FaAngleDown />
-                                            </span>
-                                          </div>
-                                        )}
-                                      </div>
-                                    </th>
-                                  ))}
-                              </tr>
-                            </thead>
-                            {hoveredColumnKey && createPortal(
+                                            <FaAngleUp />
+                                          </span>
+                                          <span
+                                            title="Sort Descending"
+                                            style={{
+                                              color: sortOrderData === "desc" ? "#007bff" : "#969696FF",
+                                              lineHeight: '1',
+                                              cursor: 'pointer',
+                                              userSelect: 'none',
+                                              fontSize: '10px'
+                                            }}
+                                            onClick={() => handleSortStock("desc")}
+                                          >
+                                            <FaAngleDown />
+                                          </span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </th>
+                                ))}
+                            </tr>
+                          </thead>
+                          {hoveredColumnKey && createPortal(
+                            <div
+                              style={{
+                                position: 'absolute',
+                                top: tooltipPosition.top,
+                                left: tooltipPosition.left,
+                                backgroundColor: '#fff',
+                                color: '#000',
+                                padding: '8px 10px',
+                                borderRadius: '4px',
+                                boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)',
+                                zIndex: 10000,
+                                width: '200px',
+                                maxWidth: '200px',
+                                whiteSpace: 'normal',
+                                fontSize: '12px',
+                                border: '1px solid #ddd',
+                                transform: 'translateY(-100%)'
+                              }}
+                            >
+                              {allColumns.find(col => col.key === hoveredColumnKey)?.tooltip}
                               <div
                                 style={{
                                   position: 'absolute',
-                                  top: tooltipPosition.top,
-                                  left: tooltipPosition.left,
-                                  backgroundColor: '#fff',
-                                  color: '#000',
-                                  padding: '8px 10px',
-                                  borderRadius: '4px',
-                                  boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)',
-                                  zIndex: 10000,
-                                  width: '200px',
-                                  maxWidth: '200px',
-                                  whiteSpace: 'normal',
-                                  fontSize: '12px',
-                                  border: '1px solid #ddd',
-                                  transform: 'translateY(-100%)'
+                                  bottom: '-6px',
+                                  left: '10px',
+                                  width: '0',
+                                  height: '0',
+                                  borderLeft: '6px solid transparent',
+                                  borderRight: '6px solid transparent',
+                                  borderTop: '6px solid #fff'
                                 }}
-                              >
-                                {allColumns.find(col => col.key === hoveredColumnKey)?.tooltip}
-                                <div
-                                  style={{
-                                    position: 'absolute',
-                                    bottom: '-6px',
-                                    left: '10px',
-                                    width: '0',
-                                    height: '0',
-                                    borderLeft: '6px solid transparent',
-                                    borderRight: '6px solid transparent',
-                                    borderTop: '6px solid #fff'
-                                  }}
-                                />
-                              </div>,
-                              document.body
-                            )}
-                            {/* Body Table */}
-                            <tbody>
-                              {filteredData.length > 0 ? (
-                                filteredData.map((entry) => {
-                                  // const latestStockData = getLatestStockData(entry);
-                                  const productData = entry.data && entry.data[0] ? entry.data[0] : {};
-                                  return (
-                                    <React.Fragment key={entry.productId || productData.productId}>
-                                      <tr>
-                                        {filteredData.length > 0 && (
-                                          <td
-                                            onClick={() => toggleRow(productData.productId)}
-                                            style={{ cursor: "pointer", width: "20px" }}
-                                          >
-                                            {expandedVariantProduct[productData.productId] ? <FaAngleUp /> : <FaAngleDown />}
-                                          </td>
-                                        )}
-
-                                        {selectedColumns.includes("name") && (
-                                          <td
-                                            style={{
-                                              width: "500px",
-                                              cursor: "pointer",
-                                              color: selectedProduct?.productId == productData.productId ? "#F6881F" : "",
-                                            }}
-                                            onClick={() => handleProductClick(entry)}
-                                          >
-                                            {productData?.name || "-"}
-                                          </td>
-                                        )}
-
-                                        {selectedColumns.includes("stock") && (
-                                          <td style={{ width: "160px" }}>
-                                            <div className="d-flex flex-column align-items-start">
-                                              <span>{productData?.totalAvailableStock === undefined || productData?.totalAvailableStock === null ? "-" : productData?.totalAvailableStock} Stok</span>
-                                            </div>
-                                          </td>
-                                        )}
-
-                                        {selectedColumns.includes("code") && (
-                                          <td style={{ width: "160px" }}>{productData?.productId === undefined || productData?.productId === null ? "-" : productData?.productId}</td>
-                                          // <td>{productData?.parentSku === undefined || productData?.parentSku === null ? "-" : productData?.parentSku}</td>
-                                        )}
-
-                                        {selectedColumns.includes("salesAvailability") && (
-                                          <td style={{ width: "200px" }}>
-                                            <span className={`badge text-${productData?.isSalesAvailable === true ? "success" : "danger"}`}>
-                                              {productData?.salesAvailability === undefined || productData?.salesAvailability === null ? "-" : productData?.salesAvailability}
-                                            </span>
-                                          </td>
-                                        )}
-
-                                        {/* {selectedColumns.includes("status") && (
-                                          <td style={{ width: "160px" }}>
-                                            {
-                                              productData.state === null || productData.state === undefined ? "-" : convertStatusToLabel(productData.state)
-                                            }
-                                          </td>
-                                        )} */}
-
-                                        {selectedColumns.includes("salesClassification") && (
-                                          <td style={{ width: "200px" }}>
-                                            <div className="d-flex gap-1 align-items-center">
-                                              <div
-                                                className="marker"
-                                                style={{
-                                                  backgroundColor: formatStyleSalesClassification(entry.data[0].salesClassification).backgroundColor,
-                                                }}
-                                              ></div>
-                                              <span
-                                                style={{
-                                                  fontSize: "14px",
-                                                }}
-                                              >
-                                                {
-                                                  entry.data[0].salesClassification === undefined || entry.data[0].salesClassification === null ? "-" : formatStyleSalesClassification(entry.data[0].salesClassification).label
-                                                }
-                                              </span>
-                                            </div>
-                                          </td>
-                                        )}
-
-                                      </tr>
-                                      {expandedVariantProduct[productData.productId] && (
-                                        productData?.modelStocks && productData.modelStocks.length > 0 ? (
-                                          <tr className="bg-light">
-                                            <td
-                                              colSpan={selectedColumns.length + 1}
-                                              style={{ padding: "4px 4px", border: "none" }}
-                                            >
-                                              <ul className="list-group">
-                                                {productData.modelStocks.map((variant) => (
-                                                  <li
-                                                    key={variant.id}
-                                                    className="list-group-item d-flex justify-content-start gap-2"
-                                                  >
-                                                    <span style={{ width: "8px" }}></span>
-                                                    <span style={{ width: "615px" }}>
-                                                      {variant.name}
-                                                    </span>
-                                                    <span>{variant.totalAvailableStock || 0} Stok</span>
-                                                  </li>
-                                                ))}
-                                              </ul>
-                                            </td>
-                                          </tr>
-                                        ) : (
-                                          <tr className="bg-light">
-                                            <td
-                                              colSpan={selectedColumns.length + 1}
-                                              style={{ padding: "12px 4px", border: "none", borderRadius: "4px" }}
-                                            >
-                                              <span>Tidak ada varian untuk produk ini</span>
-                                            </td>
-                                          </tr>
-                                        )
+                              />
+                            </div>,
+                            document.body
+                          )}
+                          {/* Body Table */}
+                          <tbody>
+                            {filteredData.length > 0 ? (
+                              filteredData.map((entry) => {
+                                const productData = entry.data && entry.data[0] ? entry.data[0] : {};
+                                return (
+                                  <React.Fragment key={entry.productId || productData.productId}>
+                                    <tr>
+                                      {filteredData.length > 0 && (
+                                        <td
+                                          onClick={() => toggleRow(productData.productId)}
+                                          style={{ cursor: "pointer", width: "20px" }}
+                                        >
+                                          {expandedVariantProduct[productData.productId] ? <FaAngleUp /> : <FaAngleDown />}
+                                        </td>
                                       )}
-                                    </React.Fragment>
-                                  );
-                                })
-                              ) : (
-                                <tr>
-                                  <td colSpan={selectedColumns.length + 1} className="text-left">
-                                    Data tidak tersedia
-                                  </td>
-                                </tr>
-                              )}
-                            </tbody>
-                          </table>
-                        </div>
+
+                                      {selectedColumns.includes("name") && (
+                                        <td
+                                          style={{
+                                            width: "500px",
+                                            cursor: "pointer",
+                                            color: selectedProduct?.productId == productData.productId ? "#F6881F" : "",
+                                          }}
+                                          onClick={() => handleProductClick(entry)}
+                                        >
+                                          {productData?.name || "-"}
+                                        </td>
+                                      )}
+
+                                      {selectedColumns.includes("stock") && (
+                                        <td style={{ width: "160px" }}>
+                                          <div className="d-flex flex-column align-items-start">
+                                            <span>{productData?.totalAvailableStock === undefined || productData?.totalAvailableStock === null ? "-" : productData?.totalAvailableStock} Stok</span>
+                                          </div>
+                                        </td>
+                                      )}
+
+                                      {selectedColumns.includes("code") && (
+                                        <td style={{ width: "160px" }}>{productData?.productId === undefined || productData?.productId === null ? "-" : productData?.productId}</td>
+                                      )}
+
+                                      {selectedColumns.includes("salesAvailability") && (
+                                        <td style={{ width: "200px" }}>
+                                          <span className={`badge text-${productData?.isSalesAvailable === true ? "success" : "danger"}`}>
+                                            {productData?.salesAvailability === undefined || productData?.salesAvailability === null ? "-" : productData?.salesAvailability}
+                                          </span>
+                                        </td>
+                                      )}
+
+                                      {selectedColumns.includes("salesClassification") && (
+                                        <td style={{ width: "200px" }}>
+                                          <div className="d-flex gap-1 align-items-center">
+                                            <div
+                                              className="marker"
+                                              style={{
+                                                backgroundColor: formatStyleSalesClassification(entry.data[0].salesClassification).backgroundColor,
+                                              }}
+                                            ></div>
+                                            <span
+                                              style={{
+                                                fontSize: "14px",
+                                              }}
+                                            >
+                                              {
+                                                entry.data[0].salesClassification === undefined || entry.data[0].salesClassification === null ? "-" : formatStyleSalesClassification(entry.data[0].salesClassification).label
+                                              }
+                                            </span>
+                                          </div>
+                                        </td>
+                                      )}
+
+                                    </tr>
+                                    {expandedVariantProduct[productData.productId] && (
+                                      productData?.modelStocks && productData.modelStocks.length > 0 ? (
+                                        <tr className="bg-light">
+                                          <td
+                                            colSpan={selectedColumns.length + 1}
+                                            style={{ padding: "4px 4px", border: "none" }}
+                                          >
+                                            <ul className="list-group">
+                                              {productData.modelStocks.map((variant) => (
+                                                <li
+                                                  key={variant.id}
+                                                  className="list-group-item d-flex justify-content-start gap-2"
+                                                >
+                                                  <span style={{ width: "8px" }}></span>
+                                                  <span style={{ width: "615px" }}>
+                                                    {variant.name}
+                                                  </span>
+                                                  <span>{variant.totalAvailableStock || 0} Stok</span>
+                                                </li>
+                                              ))}
+                                            </ul>
+                                          </td>
+                                        </tr>
+                                      ) : (
+                                        <tr className="bg-light">
+                                          <td
+                                            colSpan={selectedColumns.length + 1}
+                                            style={{ padding: "12px 4px", border: "none", borderRadius: "4px" }}
+                                          >
+                                            <span>Tidak ada varian untuk produk ini</span>
+                                          </td>
+                                        </tr>
+                                      )
+                                    )}
+                                  </React.Fragment>
+                                );
+                              })
+                            ) : (
+                              <tr>
+                                <td colSpan={selectedColumns.length + 1} className="text-left">
+                                  Data tidak tersedia
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
                       {/* )} */}
                     </div>
                     {/* Pagination */}
