@@ -19,6 +19,7 @@ export default function PerformanceStockPage() {
   // Data
   const [chartRawData, setChartRawData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
+  const [rawTableData, setRawTableData] = useState([]);
   const [chartData, setChartData] = useState([]);
   const chartRef = useRef(null);
   const [variantsChartData, setVariantsChartData] = useState([]);
@@ -312,6 +313,7 @@ export default function PerformanceStockPage() {
       const data = response.data;
       const content = data.content || [];
 
+      setRawTableData(content);
       setAllSortedData(content);
       setTotalElements(data?.totalElements || 0);
 
@@ -391,7 +393,7 @@ export default function PerformanceStockPage() {
   };
 
   const fetchData = async (fromDate, toDate, page = 1) => {
-    const isInitialLoad = !chartRawData.length;
+    const isInitialLoad = !rawTableData.length;
     if (isInitialLoad) {
       setIsLoading(true);
     } else {
@@ -404,13 +406,20 @@ export default function PerformanceStockPage() {
         classification: selectedClassificationOption
       };
 
-      await Promise.all([
-        fetchChartData(fromDate, toDate),
-        isSortingMode ?
-          fetchAllTableData(fromDate, toDate, currentFilters) :
-          fetchTableData(fromDate, toDate, page, currentFilters)
-      ]);
+      // Lalu fetch data tabel (sesuai sorting mode)
+      if (isSortingMode) {
+        await fetchAllTableData(fromDate, toDate, currentFilters);
+        setIsLoading(false);
+      } else {
+        await fetchTableData(fromDate, toDate, page, currentFilters);
+        setIsLoading(false);
+      }
 
+      // Fetch chart data dulu
+      await fetchChartData(fromDate, toDate);
+
+
+      // Apply pagination kalau sorting mode aktif dan data tersedia
       if (isSortingMode && allSortedData.length > 0) {
         applyFrontendPagination(allSortedData, page, itemsPerPage);
       }
@@ -422,6 +431,40 @@ export default function PerformanceStockPage() {
       setIsContentLoading(false);
     }
   };
+
+
+  // const fetchData = async (fromDate, toDate, page = 1) => {
+  //   const isInitialLoad = !rawTableData.length;
+  //   if (isInitialLoad) {
+  //     setIsLoading(true);
+  //   } else {
+  //     setIsContentLoading(true);
+  //   }
+
+  //   try {
+  //     const currentFilters = {
+  //       searchQuery: debouncedSearchTerm,
+  //       classification: selectedClassificationOption
+  //     };
+
+  //     await Promise.all([
+  //       fetchChartData(fromDate, toDate),
+  //       isSortingMode ?
+  //         fetchAllTableData(fromDate, toDate, currentFilters) :
+  //         fetchTableData(fromDate, toDate, page, currentFilters)
+  //     ]);
+
+  //     if (isSortingMode && allSortedData.length > 0) {
+  //       applyFrontendPagination(allSortedData, page, itemsPerPage);
+  //     }
+  //   } catch (error) {
+  //     toast.error("Gagal mengambil data stock produk");
+  //     console.error('Gagal mengambil data stock produk, kesalahan pada server:', error);
+  //   } finally {
+  //     setIsLoading(false);
+  //     setIsContentLoading(false);
+  //   }
+  // };
 
   const buildCurrentFilters = () => {
     return {
@@ -1470,6 +1513,7 @@ export default function PerformanceStockPage() {
     setHoveredColumnKey(null);
   };
 
+  console.log("test", isLoading)
   return (
     <>
       <BaseLayout>
